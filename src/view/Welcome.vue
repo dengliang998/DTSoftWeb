@@ -14,7 +14,7 @@
 
     <!-- 数据统计概览 -->
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6" v-for="(stat, index) in statsData" :key="index">
+      <el-col v-for="(stat, index) in statsData" :key="index" :span="6">
         <el-card class="stat-card" shadow="hover" @click="handleStatClick(stat)">
           <div class="stat-content">
             <div class="stat-icon" :style="{ background: stat.color }">
@@ -38,12 +38,7 @@
         </div>
       </template>
       <div class="quick-nav-grid">
-        <div 
-          v-for="(nav, index) in quickNavList" 
-          :key="index" 
-          class="nav-item"
-          @click="navigateTo(nav)"
-        >
+        <div v-for="(nav, index) in quickNavList" :key="index" class="nav-item" @click="navigateTo(nav)">
           <div class="nav-icon" :style="{ background: nav.color }">
             <el-icon><component :is="nav.icon" /></el-icon>
           </div>
@@ -55,14 +50,26 @@
 </template>
 
 <script>
-import axios from '@/api/http';
-import { 
-  ChatDotRound, Sunny, Moon, Coffee, Star, Cloudy, Lightning,
-  Grid, User, Avatar, Operation, Setting, Document, DocumentCopy
-} from '@element-plus/icons-vue';
+import axios from '@/api/http'
+import {
+  ChatDotRound,
+  Sunny,
+  Moon,
+  Coffee,
+  Star,
+  Cloudy,
+  Lightning,
+  Grid,
+  User,
+  Avatar,
+  Operation,
+  Setting,
+  Document,
+  DocumentCopy
+} from '@element-plus/icons-vue'
 
 export default {
-  name: "Welcome",
+  name: 'Welcome',
   components: {
     ChatDotRound,
     Sunny,
@@ -90,10 +97,34 @@ export default {
       currentTime: '',
       // 统计数据
       statsData: [
-        { label: '用户总数', value: 0, icon: 'User', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', path: '/user/organization' },
-        { label: '角色数量', value: 0, icon: 'Avatar', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', path: '/role/rolesmenu' },
-        { label: '应用配置', value: 0, icon: 'Setting', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', path: '/DynamicApp/DynamicApiConfig' },
-        { label: '操作日志', value: 0, icon: 'Document', color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', path: '/log/logaction' }
+        {
+          label: '用户总数',
+          value: 0,
+          icon: 'User',
+          color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          path: '/user/organization'
+        },
+        {
+          label: '角色数量',
+          value: 0,
+          icon: 'Avatar',
+          color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          path: '/role/rolesmenu'
+        },
+        {
+          label: '应用配置',
+          value: 0,
+          icon: 'Setting',
+          color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          path: '/DynamicApp/DynamicApiConfig'
+        },
+        {
+          label: '操作日志',
+          value: 0,
+          icon: 'Document',
+          color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+          path: '/log/logaction'
+        }
       ],
       // 快捷导航
       quickNavList: [
@@ -103,40 +134,40 @@ export default {
         { name: '应用配置', icon: 'Setting', color: '#43e97b', path: '/DynamicApp/DynamicApiConfig' },
         { name: '操作日志', icon: 'Document', color: '#fee140', path: '/log/logaction' },
         { name: '附件管理', icon: 'DocumentCopy', color: '#a8edea', path: '/attachment/attachmentlist' }
-      ],
-    };
+      ]
+    }
   },
   created() {
-    this.updateGreeting();
-    this.updateTime();
-    this.loadStatsData();
+    this.updateGreeting()
+    this.updateTime()
+    this.loadStatsData()
     // 每秒更新一次时间
     setInterval(() => {
-      this.updateTime();
-    }, 1000);
+      this.updateTime()
+    }, 1000)
     // 每分钟更新一次问候
     setInterval(() => {
-      this.updateGreeting();
-    }, 60000);
+      this.updateGreeting()
+    }, 60000)
     // 每 5 分钟刷新一次统计数据
     setInterval(() => {
-      this.loadStatsData();
-    }, 300000);
+      this.loadStatsData()
+    }, 300000)
   },
   methods: {
     // 更新当前时间
     updateTime() {
-      const now = new Date();
-      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const weekDay = weekDays[now.getDay()];
-      
-      this.currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekDay}`;
+      const now = new Date()
+      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const seconds = String(now.getSeconds()).padStart(2, '0')
+      const weekDay = weekDays[now.getDay()]
+
+      this.currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekDay}`
     },
     // 加载统计数据
     async loadStatsData() {
@@ -145,102 +176,102 @@ export default {
         const userRes = await axios.post('/api/User/GetUserList', {
           PageNum: 1,
           PageSize: 1
-        });
+        })
         if (userRes.data.success) {
-          this.statsData[0].value = userRes.data.Total || 0;
+          this.statsData[0].value = userRes.data.Total || 0
         }
 
         // 获取角色统计
         const roleRes = await axios.post('/api/Role/GetRoleList', {
           PageNum: 1,
           PageSize: 1
-        });
+        })
         if (roleRes.data.success) {
-          this.statsData[1].value = roleRes.data.Total || 0;
+          this.statsData[1].value = roleRes.data.Total || 0
         }
 
         // 获取应用配置统计
         const appRes = await axios.get('/api/DynamicApp/GetDynamicAppConfigs', {
           params: { PageNum: 1, PageSize: 1 }
-        });
+        })
         if (appRes.data.success) {
-          this.statsData[2].value = appRes.data.total || 0;
+          this.statsData[2].value = appRes.data.total || 0
         }
 
         // 获取操作日志统计
         const logRes = await axios.post('/api/Log/GetLogActionList', {
           PageNum: 1,
           PageSize: 1
-        });
+        })
         if (logRes.data.success) {
-          this.statsData[3].value = logRes.data.Total || 0;
+          this.statsData[3].value = logRes.data.Total || 0
         }
       } catch (error) {
-        console.error('加载统计数据失败：', error);
+        console.error('加载统计数据失败：', error)
       }
     },
     // 快捷导航
     navigateTo(nav) {
       if (nav.path) {
-        this.$router.push(nav.path);
+        this.$router.push(nav.path)
       }
     },
     // 统计数据点击
     handleStatClick(stat) {
       if (stat.path) {
-        this.$router.push(stat.path);
+        this.$router.push(stat.path)
       }
     },
     updateGreeting() {
-      const hour = new Date().getHours();
-      
+      const hour = new Date().getHours()
+
       // 根据时间段设置不同的问候语和图标
       if (hour >= 5 && hour < 8) {
         // 清晨
-        this.greetingTitle = '早安，新的一天开始了！';
-        this.greetingSubtitle = '清晨的阳光格外温暖，愿您今天充满活力';
-        this.greetingIcon = '🌅';
-        this.greetingClass = 'morning';
+        this.greetingTitle = '早安，新的一天开始了！'
+        this.greetingSubtitle = '清晨的阳光格外温暖，愿您今天充满活力'
+        this.greetingIcon = '🌅'
+        this.greetingClass = 'morning'
       } else if (hour >= 8 && hour < 11) {
         // 上午
-        this.greetingTitle = '上午好，精力充沛的时光！';
-        this.greetingSubtitle = '美好的一天从此刻开始，工作效率最高的时候';
-        this.greetingIcon = '☀️';
-        this.greetingClass = 'morning';
+        this.greetingTitle = '上午好，精力充沛的时光！'
+        this.greetingSubtitle = '美好的一天从此刻开始，工作效率最高的时候'
+        this.greetingIcon = '☀️'
+        this.greetingClass = 'morning'
       } else if (hour >= 11 && hour < 13) {
         // 中午
-        this.greetingTitle = '中午好，该休息了！';
-        this.greetingSubtitle = '忙碌了一上午，记得好好吃午饭哦';
-        this.greetingIcon = '🍽️';
-        this.greetingClass = 'noon';
+        this.greetingTitle = '中午好，该休息了！'
+        this.greetingSubtitle = '忙碌了一上午，记得好好吃午饭哦'
+        this.greetingIcon = '🍽️'
+        this.greetingClass = 'noon'
       } else if (hour >= 13 && hour < 17) {
         // 下午
-        this.greetingTitle = '下午好，继续加油！';
-        this.greetingSubtitle = '喝杯咖啡提提神，保持专注和高效';
-        this.greetingIcon = '☕';
-        this.greetingClass = 'afternoon';
+        this.greetingTitle = '下午好，继续加油！'
+        this.greetingSubtitle = '喝杯咖啡提提神，保持专注和高效'
+        this.greetingIcon = '☕'
+        this.greetingClass = 'afternoon'
       } else if (hour >= 17 && hour < 19) {
         // 傍晚
-        this.greetingTitle = '傍晚好，快下班啦！';
-        this.greetingSubtitle = '夕阳西下，收拾好心情准备回家吧';
-        this.greetingIcon = '🌇';
-        this.greetingClass = 'evening';
+        this.greetingTitle = '傍晚好，快下班啦！'
+        this.greetingSubtitle = '夕阳西下，收拾好心情准备回家吧'
+        this.greetingIcon = '🌇'
+        this.greetingClass = 'evening'
       } else if (hour >= 19 && hour < 22) {
         // 晚上
-        this.greetingTitle = '晚上好，辛苦了一天！';
-        this.greetingSubtitle = '放松一下，享受属于自己的美好时光';
-        this.greetingIcon = '🌙';
-        this.greetingClass = 'night';
+        this.greetingTitle = '晚上好，辛苦了一天！'
+        this.greetingSubtitle = '放松一下，享受属于自己的美好时光'
+        this.greetingIcon = '🌙'
+        this.greetingClass = 'night'
       } else {
         // 深夜
-        this.greetingTitle = '夜深了，注意休息！';
-        this.greetingSubtitle = '早点休息，明天又是新的一天';
-        this.greetingIcon = '🌟';
-        this.greetingClass = 'late-night';
+        this.greetingTitle = '夜深了，注意休息！'
+        this.greetingSubtitle = '早点休息，明天又是新的一天'
+        this.greetingIcon = '🌟'
+        this.greetingClass = 'late-night'
       }
 
       // 设置温馨提示
-      this.updateTips(hour);
+      this.updateTips(hour)
     },
     updateTips(hour) {
       const allTips = {
@@ -280,25 +311,25 @@ export default {
           { icon: 'Cloudy', text: '放下手机，准备进入甜美的梦乡' },
           { icon: 'Star', text: '充足的睡眠是最好的补品' }
         ]
-      };
+      }
 
       // 根据时间段选择提示
       if (hour >= 5 && hour < 11) {
-        this.tips = allTips.morning;
+        this.tips = allTips.morning
       } else if (hour >= 11 && hour < 13) {
-        this.tips = allTips.noon;
+        this.tips = allTips.noon
       } else if (hour >= 13 && hour < 17) {
-        this.tips = allTips.afternoon;
+        this.tips = allTips.afternoon
       } else if (hour >= 17 && hour < 19) {
-        this.tips = allTips.evening;
+        this.tips = allTips.evening
       } else if (hour >= 19 && hour < 22) {
-        this.tips = allTips.night;
+        this.tips = allTips.night
       } else {
-        this.tips = allTips['late-night'];
+        this.tips = allTips['late-night']
       }
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -359,7 +390,8 @@ export default {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

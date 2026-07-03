@@ -6,29 +6,25 @@
         <img class="header-logo" src="../assets/imgs/homelogo.png" alt="" />
         <span class="header-title">{{ systemTitle }}</span>
       </div>
-      
+
       <!-- 侧边栏折叠按钮 -->
       <div class="collapse-btn" @click="toggleCollapse">
         <el-icon v-if="isCollapse"><Expand /></el-icon>
         <el-icon v-else><Fold /></el-icon>
       </div>
-      
+
       <!-- 顶部一级菜单 -->
       <div class="top-menu">
-        <el-menu 
+        <el-menu
           :default-active="activeTopMenu"
           mode="horizontal"
           background-color="transparent"
           text-color="#d1d5db"
           active-text-color="#ffffff"
-          @select="handleTopMenuSelect"
           :ellipsis="false"
+          @select="handleTopMenuSelect"
         >
-          <el-menu-item 
-            :index="item.id + ''" 
-            v-for="item in fatherMenuList" 
-            :key="item.id"
-          >
+          <el-menu-item v-for="item in fatherMenuList" :key="item.id" :index="item.id + ''">
             <el-icon v-if="item.Icon">
               <component :is="getIconComponent(item.Icon)" />
             </el-icon>
@@ -36,12 +32,12 @@
           </el-menu-item>
         </el-menu>
       </div>
-      
+
       <div class="header-right">
         <!-- 用户信息区域 -->
         <div class="header-user-info">
           <span class="user-name">{{ UserDisplayName }}</span>
-          <el-dropdown @command="handleCommand" trigger="click">
+          <el-dropdown trigger="click" @command="handleCommand">
             <el-avatar :size="40" class="user-avatar" :src="circleUrl">
               <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
             </el-avatar>
@@ -56,38 +52,38 @@
         </div>
       </div>
     </header>
-    
+
     <!-- 页面主体区域 -->
     <div class="main-content">
       <!-- 侧边栏 -->
-      <aside class="sidebar-container" :class="{ 'collapsed': isCollapse }">
+      <aside class="sidebar-container" :class="{ collapsed: isCollapse }">
         <!-- 侧边栏菜单区 -->
-        <el-menu 
-          :default-active="$route.path" 
-          :router="true" 
-          :collapse-transition="true" 
+        <el-menu
+          :default-active="$route.path"
+          :router="true"
+          :collapse-transition="true"
           :collapse="isCollapse"
-          unique-opened 
-          background-color="#1f2937" 
+          unique-opened
+          background-color="#1f2937"
           text-color="#d1d5db"
           active-text-color="#ffffff"
         >
           <!-- 菜单列表 -->
           <template v-for="item in childrenMenuList" :key="item.id">
             <!-- 有子菜单的情况 -->
-            <el-sub-menu :index="item.id + ''" v-if="item.children && item.children.length > 0">
+            <el-sub-menu v-if="item.children && item.children.length > 0" :index="item.id + ''">
               <template #title>
                 <el-icon v-if="item.Icon">
                   <component :is="getIconComponent(item.Icon)" />
                 </el-icon>
                 <span>{{ item.MenuName }}</span>
               </template>
-              
+
               <!-- 子菜单项 -->
-              <el-menu-item 
-                :index="'/' + subItem.path" 
-                v-for="subItem in item.children" 
+              <el-menu-item
+                v-for="subItem in item.children"
                 :key="subItem.id"
+                :index="'/' + subItem.path"
                 @click="saveNavState('/' + subItem.path)"
               >
                 <el-icon v-if="subItem.Icon">
@@ -98,13 +94,9 @@
                 </template>
               </el-menu-item>
             </el-sub-menu>
-            
+
             <!-- 无子菜单的情况 -->
-            <el-menu-item 
-              :index="'/' + item.path" 
-              v-else
-              @click="saveNavState('/' + item.path)"
-            >
+            <el-menu-item v-else :index="'/' + item.path" @click="saveNavState('/' + item.path)">
               <el-icon v-if="item.Icon">
                 <component :is="getIconComponent(item.Icon)" />
               </el-icon>
@@ -115,28 +107,22 @@
           </template>
         </el-menu>
       </aside>
-      
+
       <!-- 右侧主体内容 -->
       <main class="main-container">
         <!-- 标签页区域 -->
         <div class="tabs-container">
-          <el-tabs
-            v-model="activeTab"
-            type="card"
-            @tab-click="handleTabClick"
-            @tab-remove="handleTabRemove"
-          >
+          <el-tabs v-model="activeTab" type="card" @tab-click="handleTabClick" @tab-remove="handleTabRemove">
             <el-tab-pane
               v-for="tab in openedTabs"
               :key="tab.path"
               :label="tab.title"
               :name="tab.path"
               :closable="tab.path !== '/welcome'"
-            >
-            </el-tab-pane>
+            ></el-tab-pane>
           </el-tabs>
         </div>
-        
+
         <!-- 路由占位符，添加过渡动画 -->
         <div class="content-wrapper">
           <router-view v-slot="{ Component }">
@@ -149,10 +135,10 @@
         </div>
       </main>
     </div>
-    
+
     <!-- 修改密码的对话框 -->
-    <el-dialog title="修改密码" v-model="ModifyPwdDialogVisible" width="30%" @close="ModifyPwdDialogClosed">
-      <el-form :model="ModifyPwdForm" ref="ModifyPwdFormRef" label-width="70px" class="modify-pwd-form">
+    <el-dialog v-model="ModifyPwdDialogVisible" title="修改密码" width="30%" @close="ModifyPwdDialogClosed">
+      <el-form ref="ModifyPwdFormRef" :model="ModifyPwdForm" label-width="70px" class="modify-pwd-form">
         <el-form-item label="原密码" prop="OldPwd">
           <el-input v-model="ModifyPwdForm.OldPwd" show-password></el-input>
         </el-form-item>
@@ -171,10 +157,10 @@
         </span>
       </template>
     </el-dialog>
-    
+
     <!-- 修改用户的对话框 -->
-    <el-dialog title="修改用户信息" v-model="UserDialogVisible" width="50%" @close="UserDialogClosed">
-      <UserInfo-components :Account="LoginAcc" OpenType="Edit" ref="UserInfo"></UserInfo-components>
+    <el-dialog v-model="UserDialogVisible" title="修改用户信息" width="50%" @close="UserDialogClosed">
+      <UserInfo-components ref="UserInfo" :Account="LoginAcc" OpenType="Edit"></UserInfo-components>
       <!-- 底部区域 -->
       <template #footer>
         <span class="dialog-footer">
@@ -187,13 +173,52 @@
 </template>
 
 <script>
-import axios from '@/api/http';
+import axios from '@/api/http'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import UserInfoComponents from "../components/user/UserInfoComponents.vue";
+import UserInfoComponents from '../components/user/UserInfoComponents.vue'
 import { fetchAndCacheSystemInfo, getCachedSystemName } from '@/utils/sysConfig'
 export default {
+  name: 'Home',
   components: {
-    UserInfoComponents,
+    UserInfoComponents
+  },
+  data() {
+    return {
+      systemTitle: 'DT Program',
+      LoginAcc: localStorage.getItem('UserAcc'),
+      UserDisplayName: '',
+      circleUrl: '',
+      //完整的菜单数据存放的位置
+      menuList: [],
+      //一级菜单数据存放的位置
+      fatherMenuList: [],
+      //子菜单数据存放的位置
+      childrenMenuList: [],
+      //是否展示或折叠菜单
+      isCollapse: false,
+      //被激活的链接地址
+      activePath: '',
+      //被激活的顶部菜单
+      activeTopMenu: '',
+      ModifyPwdDialogVisible: false,
+      ModifyPwdForm: { Account: '', OldPwd: '', NewPwd: '', ConfirmPwd: '' },
+      editDialogVisible: false,
+      UserDialogVisible: false,
+      // 缓存的视图组件
+      cachedViews: [],
+      // 已打开的标签页列表
+      openedTabs: [],
+      // 当前激活的标签页
+      activeTab: ''
+    }
+  },
+  watch: {
+    // 监听路由变化，自动添加标签页
+    $route(to) {
+      if (to.path) {
+        this.addTab(to.path)
+      }
+    }
   },
   created() {
     // 初始化系统名称（用于头部标题）
@@ -206,228 +231,178 @@ export default {
       .catch(() => {})
 
     // 在创建的生命周期执行获取菜单操作
-    this.getAllMenuList();
+    this.getAllMenuList()
     // 在创建生命周期函数的时候获取保存的路径并赋值到数据中
     //this.activePath = window.sessionStorage.getItem('activePath')
-    const me = this;
-    const params = new URLSearchParams();
-    params.append("account", localStorage.getItem("UserAcc"));
+    const me = this
+    const params = new URLSearchParams()
+    params.append('account', localStorage.getItem('UserAcc'))
     axios
-      .post("/api/User/GetUserDetailByAccount", params)
+      .post('/api/User/GetUserDetailByAccount', params)
       .then(function (response) {
         if (response.data.success) {
-          me.UserDisplayName = response.data.DisplayName;
+          me.UserDisplayName = response.data.DisplayName
           //加载头像
-          me.circleUrl =
-            "/api/User/GetUserAvatar?Account=" + localStorage.getItem("UserAcc");
+          me.circleUrl = '/api/User/GetUserAvatar?Account=' + localStorage.getItem('UserAcc')
         } else {
-          me.$message.error("用户信息初始化失败：" + response.data.Msg);
+          me.$message.error('用户信息初始化失败：' + response.data.Msg)
         }
       })
       .catch(function () {
-        me.$message.error("用户信息初始化失败，请稍后重试！");
-      });
-    
+        me.$message.error('用户信息初始化失败，请稍后重试！')
+      })
+
     // 初始化默认标签页
-    this.initDefaultTab();
+    this.initDefaultTab()
     // 如果刷新时当前路由不是欢迎页，也加入标签并加入缓存
     if (this.$route && this.$route.path && this.$route.path !== '/welcome' && this.$route.path !== '/login') {
-      this.addTab(this.$route.path);
-    }
-  },
-  name: "home",
-  data() {
-    return {
-      systemTitle: "DT Program",
-      LoginAcc: localStorage.getItem("UserAcc"),
-      UserDisplayName: "",
-      circleUrl: "",
-      //完整的菜单数据存放的位置
-      menuList: [],
-      //一级菜单数据存放的位置
-      fatherMenuList: [],
-      //子菜单数据存放的位置
-      childrenMenuList: [],
-      //是否展示或折叠菜单
-      isCollapse: false,
-      //被激活的链接地址
-      activePath: "",
-      //被激活的顶部菜单
-      activeTopMenu: "",
-      ModifyPwdDialogVisible: false,
-      ModifyPwdForm: { Account: "", OldPwd: "", NewPwd: "", ConfirmPwd: "" },
-      editDialogVisible: false,
-      UserDialogVisible: false,
-      // 缓存的视图组件
-      cachedViews: [],
-      // 已打开的标签页列表
-      openedTabs: [],
-      // 当前激活的标签页
-      activeTab: ""
-    };
-  },
-  watch: {
-    // 监听路由变化，自动添加标签页
-    $route(to) {
-      if (to.path) {
-        this.addTab(to.path);
-      }
+      this.addTab(this.$route.path)
     }
   },
   methods: {
     getCacheNameByPath(path) {
       try {
-        const resolved = this.$router.resolve(path);
-        const lastMatched = resolved?.matched?.[resolved.matched.length - 1];
-        return (
-          lastMatched?.meta?.cacheName ||
-          resolved?.meta?.cacheName ||
-          resolved?.name ||
-          lastMatched?.name ||
-          ""
-        );
+        const resolved = this.$router.resolve(path)
+        const lastMatched = resolved?.matched?.[resolved.matched.length - 1]
+        return lastMatched?.meta?.cacheName || resolved?.meta?.cacheName || resolved?.name || lastMatched?.name || ''
       } catch (e) {
-        return "";
+        return ''
       }
     },
     refreshOpenedTabsTitles() {
-      if (!Array.isArray(this.openedTabs) || this.openedTabs.length === 0) return;
+      if (!Array.isArray(this.openedTabs) || this.openedTabs.length === 0) return
       this.openedTabs = this.openedTabs.map((tab) => {
-        if (!tab || !tab.path) return tab;
-        if (tab.path === "/welcome") return { ...tab, title: tab.title || "首页", cacheName: tab.cacheName || "Welcome" };
-        const title = this.getMenuTitleByPath(tab.path);
+        if (!tab || !tab.path) return tab
+        if (tab.path === '/welcome')
+          return { ...tab, title: tab.title || '首页', cacheName: tab.cacheName || 'Welcome' }
+        const title = this.getMenuTitleByPath(tab.path)
         return {
           ...tab,
-          title: title && title !== "页面" ? title : tab.title,
-          cacheName: tab.cacheName || this.getCacheNameByPath(tab.path),
-        };
-      });
-      this.rebuildCachedViews();
+          title: title && title !== '页面' ? title : tab.title,
+          cacheName: tab.cacheName || this.getCacheNameByPath(tab.path)
+        }
+      })
+      this.rebuildCachedViews()
     },
     rebuildCachedViews() {
-      const unique = new Set();
+      const unique = new Set()
       for (const tab of this.openedTabs) {
-        if (tab && tab.cacheName) unique.add(tab.cacheName);
+        if (tab && tab.cacheName) unique.add(tab.cacheName)
       }
-      this.cachedViews = Array.from(unique);
+      this.cachedViews = Array.from(unique)
     },
     toPascalCase(name) {
       return String(name)
-        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-        .replace(/[_\-\s]+/g, " ")
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_\-\s]+/g, ' ')
         .trim()
-        .split(" ")
+        .split(' ')
         .filter(Boolean)
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-        .join("");
+        .join('')
     },
     // 判断头像下拉菜单指令
     handleCommand(command) {
-      if (command == "logout") {
-        this.logout();
-      } else if (command === "ModifyPwdDialog") {
-        this.ModifyPwdDialog();
-      } else if (command === "ModifyAccountInfoDialog") {
-        this.UserDialogVisible = true;
+      if (command == 'logout') {
+        this.logout()
+      } else if (command === 'ModifyPwdDialog') {
+        this.ModifyPwdDialog()
+      } else if (command === 'ModifyAccountInfoDialog') {
+        this.UserDialogVisible = true
       }
     },
     // 退出登录
     logout() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("UserAcc");
-      document.cookie = "UserAcc=; Max-Age=0; path=/";
+      localStorage.removeItem('token')
+      localStorage.removeItem('UserAcc')
+      document.cookie = 'UserAcc=; Max-Age=0; path=/'
       //回到登录页面
-      this.$router.push("/login");
+      this.$router.push('/login')
     },
     getIconComponent(iconName) {
-      if (!iconName) return null;
-      const raw = String(iconName).trim();
-      const pascal = this.toPascalCase(raw);
+      if (!iconName) return null
+      const raw = String(iconName).trim()
+      const pascal = this.toPascalCase(raw)
       const aliasMap = {
-        "s-operation": "Operation",
-        "operation": "Operation",
-        "setting": "Setting",
-        "menu": "Menu",
-        "user": "User",
-        "tools": "Tools",
-        "platform": "Platform",
-      };
-      const alias = aliasMap[raw.toLowerCase()];
+        's-operation': 'Operation',
+        operation: 'Operation',
+        setting: 'Setting',
+        menu: 'Menu',
+        user: 'User',
+        tools: 'Tools',
+        platform: 'Platform'
+      }
+      const alias = aliasMap[raw.toLowerCase()]
 
       return (
-        ElementPlusIconsVue[raw] ||
-        ElementPlusIconsVue[pascal] ||
-        (alias ? ElementPlusIconsVue[alias] : null) ||
-        "Menu"
-      );
+        ElementPlusIconsVue[raw] || ElementPlusIconsVue[pascal] || (alias ? ElementPlusIconsVue[alias] : null) || 'Menu'
+      )
     },
     ModifyPwdDialog() {
-      this.ModifyPwdForm.OldPwd = "";
-      this.ModifyPwdForm.Account = localStorage.getItem("UserAcc");
+      this.ModifyPwdForm.OldPwd = ''
+      this.ModifyPwdForm.Account = localStorage.getItem('UserAcc')
       //打开修改密码对话框
-      this.ModifyPwdDialogVisible = true;
+      this.ModifyPwdDialogVisible = true
     },
     ModifyPassword() {
-      const me = this;
-      if (
-        me.ModifyPwdForm.OldPwd !== "" &&
-        me.ModifyPwdForm.NewPwd !== "" &&
-        me.ModifyPwdForm.ConfirmPwd !== ""
-      ) {
+      const me = this
+      if (me.ModifyPwdForm.OldPwd !== '' && me.ModifyPwdForm.NewPwd !== '' && me.ModifyPwdForm.ConfirmPwd !== '') {
         if (me.ModifyPwdForm.NewPwd === me.ModifyPwdForm.ConfirmPwd) {
-          const params = new URLSearchParams();
-          params.append("Account", me.ModifyPwdForm.Account);
-          params.append("OldPassWord", me.ModifyPwdForm.OldPwd);
-          params.append("NewPassWord", me.ModifyPwdForm.ConfirmPwd);
-          axios.post("/api/User/ModifyPassword", params)
+          const params = new URLSearchParams()
+          params.append('Account', me.ModifyPwdForm.Account)
+          params.append('OldPassWord', me.ModifyPwdForm.OldPwd)
+          params.append('NewPassWord', me.ModifyPwdForm.ConfirmPwd)
+          axios
+            .post('/api/User/ModifyPassword', params)
             .then(function (response) {
               if (response.data.success) {
-                me.$message.success(response.data.Msg);
-                me.ModifyPwdDialogVisible = false;
+                me.$message.success(response.data.Msg)
+                me.ModifyPwdDialogVisible = false
               } else {
-                me.$message.error("修改失败：" + response.data.Msg);
+                me.$message.error('修改失败：' + response.data.Msg)
               }
             })
             .catch(function (error) {
-              me.$message.error(error.message || "修改失败");
-            });
+              me.$message.error(error.message || '修改失败')
+            })
         } else {
-          me.$message.error("密码不一致");
+          me.$message.error('密码不一致')
         }
       } else {
-        me.$message.error("密码不能为空");
+        me.$message.error('密码不能为空')
       }
     },
     UpdateUserInfo() {
-      this.$refs.UserInfo.UpdateUserInfo();
-      this.UserDialogVisible = false;
+      this.$refs.UserInfo.UpdateUserInfo()
+      this.UserDialogVisible = false
     },
     UserDialogClosed() {
-      this.UserDialogVisible = false;
+      this.UserDialogVisible = false
     },
     // 获取所有菜单数据
     async getAllMenuList() {
-      const me = this;
-      axios.get("/api/Menu/GetMenu")
+      const me = this
+      axios
+        .get('/api/Menu/GetMenu')
         .then(function (response) {
-          const menuData = response.data.data || response.data;
+          const menuData = response.data.data || response.data
           const filterHiddenMenus = (menus) => {
-            return menus.filter(menu => {
+            return menus.filter((menu) => {
               if (menu.IsHidden === true || menu.IsHidden === 1) {
-                return false;
+                return false
               }
               if (menu.children && menu.children.length > 0) {
-                menu.children = filterHiddenMenus(menu.children);
+                menu.children = filterHiddenMenus(menu.children)
               }
-              return true;
-            });
-          };
-          
-          me.menuList = Array.isArray(menuData) ? filterHiddenMenus(menuData) : [];
-          
+              return true
+            })
+          }
+
+          me.menuList = Array.isArray(menuData) ? filterHiddenMenus(menuData) : []
+
           // 提取一级菜单（pid为0的菜单项）
-          me.fatherMenuList = me.menuList.filter(item => item.pid === 0);
-          
+          me.fatherMenuList = me.menuList.filter((item) => item.pid === 0)
+
           // 首页初次打开时不默认选中第一个一级菜单：
           // - 如果当前路由属于某个一级菜单下，则选中对应的一级菜单并加载其子菜单
           // - 否则仅加载第一个一级菜单的子菜单（不高亮任何一级菜单）
@@ -473,144 +448,144 @@ export default {
 
           // 菜单加载完成后，修正已打开标签页的标题（刷新时避免显示“页面”）
           me.$nextTick(() => {
-            me.refreshOpenedTabsTitles();
+            me.refreshOpenedTabsTitles()
             if (me.$route && me.$route.path && me.$route.path !== '/welcome' && me.$route.path !== '/login') {
-              me.addTab(me.$route.path);
-              me.refreshOpenedTabsTitles();
+              me.addTab(me.$route.path)
+              me.refreshOpenedTabsTitles()
             }
-          });
+          })
         })
-        .catch(function (error) { 
-          me.$message.error("获取菜单数据失败，请稍后重试！");
-        });
+        .catch(function (error) {
+          me.$message.error('获取菜单数据失败，请稍后重试！')
+        })
     },
-    
+
     getChildrenMenuList(menuId) {
-      const me = this;
+      const me = this
       const findChildren = (menus, parentId) => {
         for (const menu of menus) {
           if (menu.id === parentId) {
-            return menu.children || [];
+            return menu.children || []
           }
           if (menu.children && menu.children.length > 0) {
-            const result = findChildren(menu.children, parentId);
+            const result = findChildren(menu.children, parentId)
             if (result && result.length > 0) {
-              return result;
+              return result
             }
           }
         }
-        return [];
-      };
-      
-      me.childrenMenuList = findChildren(me.menuList, parseInt(menuId));
-      this.$nextTick(() => {});
+        return []
+      }
+
+      me.childrenMenuList = findChildren(me.menuList, parseInt(menuId))
+      this.$nextTick(() => {})
     },
-    
+
     // 处理顶部菜单选择
     handleTopMenuSelect(index) {
-      this.activeTopMenu = index;
+      this.activeTopMenu = index
       // 获取选中菜单的子菜单
-      this.getChildrenMenuList(parseInt(index));
+      this.getChildrenMenuList(parseInt(index))
     },
-    
+
     // 点击按钮切换菜单折叠和展开
     toggleCollapse() {
-      this.isCollapse = !this.isCollapse;
+      this.isCollapse = !this.isCollapse
     },
     // 保存链接的激活状态
     saveNavState(activePath) {
-      window.sessionStorage.setItem("activePath", activePath);
-      this.activePath = activePath;
+      window.sessionStorage.setItem('activePath', activePath)
+      this.activePath = activePath
       // 添加标签页
-      this.addTab(activePath);
+      this.addTab(activePath)
     },
-    
+
     // 添加标签页
     addTab(path) {
       // 如果是欢迎页面或登录页面，不添加标签
       if (path === '/welcome' || path === '/login') {
-        this.activeTab = path;
-        return;
+        this.activeTab = path
+        return
       }
-      
+
       // 获取菜单标题
-      const title = this.getMenuTitleByPath(path);
-      const cacheName = this.getCacheNameByPath(path);
-      
+      const title = this.getMenuTitleByPath(path)
+      const cacheName = this.getCacheNameByPath(path)
+
       // 检查标签页是否已存在
-      const existTab = this.openedTabs.find(tab => tab.path === path);
+      const existTab = this.openedTabs.find((tab) => tab.path === path)
       if (!existTab) {
         // 添加新标签页
         this.openedTabs.push({
           path: path,
           title: title,
           cacheName: cacheName
-        });
+        })
       } else {
-        if (!existTab.cacheName && cacheName) existTab.cacheName = cacheName;
-        if ((existTab.title === "页面" || !existTab.title) && title && title !== "页面") existTab.title = title;
+        if (!existTab.cacheName && cacheName) existTab.cacheName = cacheName
+        if ((existTab.title === '页面' || !existTab.title) && title && title !== '页面') existTab.title = title
       }
-      
+
       // 激活当前标签页
-      this.activeTab = path;
-      
+      this.activeTab = path
+
       // 重建缓存视图（按组件名缓存，而非菜单标题）
-      this.rebuildCachedViews();
+      this.rebuildCachedViews()
     },
-    
+
     // 根据路径获取菜单标题
     getMenuTitleByPath(path) {
       // 移除开头的斜杠
-      const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-      
+      const cleanPath = path.startsWith('/') ? path.substring(1) : path
+
       // 递归查找菜单项
       const findMenuByPath = (menus) => {
         for (const menu of menus) {
           if (menu.path === cleanPath) {
-            return menu.MenuName || menu.menuName || '未命名';
+            return menu.MenuName || menu.menuName || '未命名'
           }
           if (menu.children && menu.children.length > 0) {
-            const found = findMenuByPath(menu.children);
-            if (found) return found;
+            const found = findMenuByPath(menu.children)
+            if (found) return found
           }
         }
-        return null;
-      };
-      
-      return findMenuByPath(this.menuList) || '页面';
+        return null
+      }
+
+      return findMenuByPath(this.menuList) || '页面'
     },
-    
+
     // 处理标签页点击
     handleTabClick(tab) {
-      const path = tab.paneName;
+      const path = tab.paneName
       if (this.$route.path !== path) {
-        this.$router.push(path);
+        this.$router.push(path)
       }
     },
-    
+
     // 处理标签页关闭
     handleTabRemove(targetPath) {
       // 找到要关闭的标签页索引
-      const targetIndex = this.openedTabs.findIndex(tab => tab.path === targetPath);
-      if (targetIndex === -1) return;
-      
+      const targetIndex = this.openedTabs.findIndex((tab) => tab.path === targetPath)
+      if (targetIndex === -1) return
+
       // 如果关闭的是当前激活的标签页
       if (this.activeTab === targetPath) {
         // 获取下一个或上一个标签页
-        const nextTab = this.openedTabs[targetIndex + 1] || this.openedTabs[targetIndex - 1];
+        const nextTab = this.openedTabs[targetIndex + 1] || this.openedTabs[targetIndex - 1]
         if (nextTab) {
-          this.activeTab = nextTab.path;
-          this.$router.push(nextTab.path);
+          this.activeTab = nextTab.path
+          this.$router.push(nextTab.path)
         }
       }
-      
+
       // 从标签页列表中移除
-      this.openedTabs.splice(targetIndex, 1);
-      
+      this.openedTabs.splice(targetIndex, 1)
+
       // 重建缓存：只保留仍有标签页打开的组件名
-      this.rebuildCachedViews();
+      this.rebuildCachedViews()
     },
-    
+
     // 初始化默认标签页
     initDefaultTab() {
       // 添加欢迎页标签
@@ -618,15 +593,15 @@ export default {
         path: '/welcome',
         title: '首页',
         cacheName: 'Welcome'
-      });
-      this.activeTab = '/welcome';
-      this.rebuildCachedViews();
+      })
+      this.activeTab = '/welcome'
+      this.rebuildCachedViews()
     },
     ModifyPwdDialogClosed() {
-      this.$refs.ModifyPwdFormRef.resetFields();
-    },
-  },
-};
+      this.$refs.ModifyPwdFormRef.resetFields()
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -859,7 +834,9 @@ export default {
 /* 菜单项文字动画 */
 .sidebar-container .el-menu-item span,
 .sidebar-container .el-sub-menu__title span {
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
   transform: translateX(0);
 }
@@ -867,7 +844,9 @@ export default {
 /* 菜单项图标动画 */
 .sidebar-container .el-menu-item .el-icon,
 .sidebar-container .el-sub-menu__title .el-icon {
-  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 菜单项悬停效果 */
@@ -1058,8 +1037,6 @@ export default {
   transform: translateX(0);
 }
 
-
-
 /* 折叠状态下的样式 */
 .sidebar-container.collapsed .el-menu-item,
 .sidebar-container.collapsed .el-sub-menu__title {
@@ -1074,7 +1051,9 @@ export default {
 .sidebar-container.collapsed .el-sub-menu__title span {
   opacity: 0;
   transform: translateX(-10px);
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 折叠状态下的菜单项图标样式 */
@@ -1082,7 +1061,9 @@ export default {
 .sidebar-container.collapsed .el-sub-menu__title .el-icon {
   margin-right: 0;
   font-size: 18px;
-  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 折叠状态下的激活菜单项 */

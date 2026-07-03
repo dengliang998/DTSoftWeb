@@ -28,10 +28,10 @@ http.interceptors.response.use(
   (response) => {
     NProgress.done()
     // 检查响应数据中的 statusCode 或 StateCode 是否为 401
-    const statusCode = response.data?.statusCode || response.data?.StateCode;
+    const statusCode = response.data?.statusCode || response.data?.StateCode
     if (statusCode === 401) {
-      const message = response.data?.message || response.data?.Message || '登录已过期，请重新登录';
-      ElMessage.warning(message);
+      const message = response.data?.message || response.data?.Message || '登录已过期，请重新登录'
+      ElMessage.warning(message)
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
       router.push('/login')
@@ -41,8 +41,8 @@ http.interceptors.response.use(
   (error) => {
     NProgress.done()
     if (error.response && error.response.status === 401) {
-      const message = error.response.data?.message || error.response.data?.Message || '登录已过期，请重新登录';
-      ElMessage.warning(message);
+      const message = error.response.data?.message || error.response.data?.Message || '登录已过期，请重新登录'
+      ElMessage.warning(message)
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
       router.push('/login')

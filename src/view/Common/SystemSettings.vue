@@ -234,4 +234,3 @@ export default defineComponent({
   font-size: 12px;
 }
 </style>
-

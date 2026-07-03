@@ -3,28 +3,18 @@
     <div class="login_box">
       <!-- 头像区域 -->
       <div class="avatar_box">
-        <img :src="avatarUrl" @error="onAvatarError" alt="用户头像" />
+        <img :src="avatarUrl" alt="用户头像" @error="onAvatarError" />
       </div>
       <!-- 登录表单区域 -->
-      <el-form 
-        ref="loginFormRef" 
-        :model="loginForm" 
-        :rules="loginFormRules" 
-        label-width="0px" 
-        class="login_form"
-      >
+      <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">
         <!-- 用户名 -->
         <el-form-item prop="username">
-          <el-input 
-            v-model="loginForm.username" 
-            placeholder="请输入用户名"
-            prefix-icon="User"
-          ></el-input>
+          <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User"></el-input>
         </el-form-item>
         <!-- 密码 -->
         <el-form-item prop="password">
-          <el-input 
-            v-model="loginForm.password" 
+          <el-input
+            v-model="loginForm.password"
             type="password"
             placeholder="请输入密码"
             prefix-icon="Lock"
@@ -34,7 +24,7 @@
         </el-form-item>
         <!-- 按钮 -->
         <el-form-item class="btns">
-          <el-button type="primary" @click="login" class="login-btn">登录</el-button>
+          <el-button type="primary" class="login-btn" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -54,7 +44,7 @@ export default defineComponent({
     const router = useRouter()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
-    
+
     // 这是登录表单的数据绑定对象
     const loginForm = reactive({
       username: '',
@@ -63,19 +53,15 @@ export default defineComponent({
 
     // 默认头像URL
     const defaultAvatarUrl = 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png'
-    
+
     // 头像URL
     const avatarUrl = ref(defaultAvatarUrl)
     let avatarDebounceTimer = null
 
     // 这是表单的验证规则
     const loginFormRules = {
-      username: [
-        { required: true, message: '请输入登录名称', trigger: 'blur' }
-      ],
-      password: [
-        { required: true, message: '请输入登录密码', trigger: 'blur' }
-      ]
+      username: [{ required: true, message: '请输入登录名称', trigger: 'blur' }],
+      password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }]
     }
 
     // 当头像加载失败时，使用默认头像
@@ -88,7 +74,7 @@ export default defineComponent({
       if (loginForm.username) {
         // 构造头像URL
         const avatarApiUrl = `/api/User/GetUserAvatar?account=${encodeURIComponent(loginForm.username)}`
-        
+
         // 创建一个新的Image对象来检测图像是否可加载
         const img = new Image()
         img.onload = () => {
@@ -110,57 +96,66 @@ export default defineComponent({
     const login = () => {
       // 防止重复提交
       if (!loginFormRef.value) return
-      
+
       loginFormRef.value.validate((valid) => {
         if (!valid) return
-        
-        if (loginForm.username === "") {
-          ElMessage.error("用户名不能为空！")
+
+        if (loginForm.username === '') {
+          ElMessage.error('用户名不能为空！')
           return
-        } else if (loginForm.password === "") {
-          ElMessage.error("密码不能为空！")
+        } else if (loginForm.password === '') {
+          ElMessage.error('密码不能为空！')
           return
         }
-        
+
         // 新的登录接口参数格式
         const loginParams = {
           username: loginForm.username,
           password: loginForm.password
         }
-        
+
         //请求认证中心获取 token 完成登录
-        axios.post("/api/Auth/login", loginParams)
+        axios
+          .post('/api/Auth/login', loginParams)
           .then(function (response) {
             // 检查是否登录成功（支持多种响应格式）
-            const isSuccess = response.data.Code === 200 || 
-                             response.data.code === 200 || 
-                             response.data.success === true || 
-                             response.data.StateCode === 200;
-            
+            const isSuccess =
+              response.data.Code === 200 ||
+              response.data.code === 200 ||
+              response.data.success === true ||
+              response.data.StateCode === 200
+
             if (isSuccess) {
-              ElMessage.success(response.data.Message || response.data.message || "登录成功");
+              ElMessage.success(response.data.Message || response.data.message || '登录成功')
               // 获取 token（支持不同的字段命名）
-              const token = response.data.Data?.Token || 
-                           response.data.data?.token || 
-                           response.data.Data?.token || 
-                           response.data.data?.Token || 
-                           response.data.token;
+              const token =
+                response.data.Data?.Token ||
+                response.data.data?.token ||
+                response.data.Data?.token ||
+                response.data.data?.Token ||
+                response.data.token
               if (!token) {
-                ElMessage.error("登录失败：服务端未返回有效令牌");
-                return;
+                ElMessage.error('登录失败：服务端未返回有效令牌')
+                return
               }
-              localStorage.setItem("token", token);
-              localStorage.setItem("UserAcc", loginForm.username);
-              document.cookie = "UserAcc=" + loginForm.username;
-              router.push("/home");
+              localStorage.setItem('token', token)
+              localStorage.setItem('UserAcc', loginForm.username)
+              document.cookie = 'UserAcc=' + loginForm.username
+              router.push('/home')
             } else {
-              ElMessage.error("登录失败：" + (response.data.Message || response.data.message || response.data.Msg || "未知错误"));
+              ElMessage.error(
+                '登录失败：' + (response.data.Message || response.data.message || response.data.Msg || '未知错误')
+              )
             }
           })
           .catch(function (error) {
-            const errorMsg = error.response?.data?.Message || error.response?.data?.message || error.response?.data?.Msg || "登录失败，请稍后重试！";
-            ElMessage.error(errorMsg);
-          });
+            const errorMsg =
+              error.response?.data?.Message ||
+              error.response?.data?.message ||
+              error.response?.data?.Msg ||
+              '登录失败，请稍后重试！'
+            ElMessage.error(errorMsg)
+          })
       })
     }
 
@@ -215,7 +210,7 @@ export default defineComponent({
 <style lang="less" scoped>
 .login_container {
   height: 100%;
-  background-image: url("../assets/imgs/bg-optimized.jpg");
+  background-image: url('../assets/imgs/bg-optimized.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -31,4 +31,3 @@ export const setSystemInfo = ({ SystemName, LoginImg }) => {
     }
   })
 }
-

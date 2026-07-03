@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="选择用户" v-model="dialogVisible" width="60%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" title="选择用户" width="60%" @close="handleClose">
     <div class="user-selector-container">
       <el-row :gutter="20">
         <!-- 左侧部门树 -->
@@ -41,16 +41,16 @@
               @keyup.enter="loadUsers"
             >
               <template #append>
-                <el-button :icon="Search" @click="loadUsers" size="small"></el-button>
+                <el-button :icon="Search" size="small" @click="loadUsers"></el-button>
               </template>
             </el-input>
             <el-table
+              v-loading="loading"
               :data="userList"
               border
               stripe
-              @selection-change="handleSelectionChange"
               height="220"
-              v-loading="loading"
+              @selection-change="handleSelectionChange"
             >
               <el-table-column type="selection" width="55"></el-table-column>
               <el-table-column label="账号" prop="Account" show-overflow-tooltip></el-table-column>
@@ -58,16 +58,15 @@
               <el-table-column label="职位" prop="Position" show-overflow-tooltip></el-table-column>
             </el-table>
             <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
               :current-page="queryInfo.PageNum"
               :page-sizes="[10, 20, 50, 100]"
               :page-size="queryInfo.PageSize"
               layout="total, sizes, prev, pager, next"
               :total="total"
               style="margin-top: 10px; justify-content: flex-end"
-            >
-            </el-pagination>
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            ></el-pagination>
           </div>
         </el-col>
       </el-row>
@@ -83,9 +82,9 @@
 </template>
 
 <script>
-import axios from '@/api/http';
-import { Search, OfficeBuilding } from '@element-plus/icons-vue';
-import { markRaw } from 'vue';
+import axios from '@/api/http'
+import { Search, OfficeBuilding } from '@element-plus/icons-vue'
+import { markRaw } from 'vue'
 
 export default {
   name: 'UserSelector',
@@ -116,7 +115,7 @@ export default {
       // 图标 (使用 markRaw 避免响应式警告)
       Search: markRaw(Search),
       OfficeBuilding: markRaw(OfficeBuilding),
-      
+
       dialogVisible: false,
       loading: false,
       deptTree: [],
@@ -132,121 +131,121 @@ export default {
       userList: [],
       total: 0,
       selectedRows: []
-    };
+    }
   },
   watch: {
     visible(val) {
-      this.dialogVisible = val;
+      this.dialogVisible = val
       if (val) {
-        this.initData();
+        this.initData()
       }
     },
     dialogVisible(val) {
-      this.$emit('update:visible', val);
+      this.$emit('update:visible', val)
     }
   },
   methods: {
     async initData() {
-      await this.loadDeptTree();
-      await this.loadUsers();
+      await this.loadDeptTree()
+      await this.loadUsers()
     },
 
     // 加载部门树
     async loadDeptTree() {
       try {
-        const { data: res } = await axios.get('/api/Department/GetAllDepartments');
+        const { data: res } = await axios.get('/api/Department/GetAllDepartments')
         if (res.success) {
-          this.deptTree = res.data || [];
+          this.deptTree = res.data || []
           // 默认展开第一层
-          this.expandedDeptKeys = this.deptTree.map(item => item.ItemId);
+          this.expandedDeptKeys = this.deptTree.map((item) => item.ItemId)
         } else {
-          this.$message.error('部门树加载失败：' + (res.Msg || res.message));
+          this.$message.error('部门树加载失败：' + (res.Msg || res.message))
         }
       } catch (error) {
-        console.error('部门树加载失败:', error);
-        this.$message.error('部门树加载失败，请稍后重试');
+        console.error('部门树加载失败:', error)
+        this.$message.error('部门树加载失败，请稍后重试')
       }
     },
 
     // 加载用户列表
     async loadUsers() {
-      this.loading = true;
+      this.loading = true
       try {
-        const params = new URLSearchParams();
-        params.append('Keyword', this.queryInfo.Keyword || '');
-        params.append('PageNum', this.queryInfo.PageNum);
-        params.append('PageSize', this.queryInfo.PageSize);
+        const params = new URLSearchParams()
+        params.append('Keyword', this.queryInfo.Keyword || '')
+        params.append('PageNum', this.queryInfo.PageNum)
+        params.append('PageSize', this.queryInfo.PageSize)
         if (this.currentDeptId) {
-          params.append('DepartmentId', this.currentDeptId);
+          params.append('DepartmentId', this.currentDeptId)
         }
 
-        const { data: res } = await axios.post('/api/User/GetUserList', params);
+        const { data: res } = await axios.post('/api/User/GetUserList', params)
         if (res.success) {
-          this.userList = res.data || [];
-          this.total = res.Total || 0;
+          this.userList = res.data || []
+          this.total = res.Total || 0
         } else {
-          this.$message.error('用户列表加载失败：' + (res.Msg || res.message));
+          this.$message.error('用户列表加载失败：' + (res.Msg || res.message))
         }
       } catch (error) {
-        console.error('用户列表加载失败:', error);
-        this.$message.error('用户列表加载失败，请稍后重试');
+        console.error('用户列表加载失败:', error)
+        this.$message.error('用户列表加载失败，请稍后重试')
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
     // 部门点击事件
     handleDeptClick(data) {
-      this.currentDeptId = data.ItemId;
-      this.currentDeptName = data.DepartmentName;
-      this.queryInfo.DeptId = data.ItemId;
-      this.queryInfo.PageNum = 1;
-      this.loadUsers();
+      this.currentDeptId = data.ItemId
+      this.currentDeptName = data.DepartmentName
+      this.queryInfo.DeptId = data.ItemId
+      this.queryInfo.PageNum = 1
+      this.loadUsers()
     },
 
     // 表格选择变化
     handleSelectionChange(selection) {
-      this.selectedRows = selection;
+      this.selectedRows = selection
     },
 
     // 分页 - 每页数量变化
     handleSizeChange(newSize) {
-      this.queryInfo.PageSize = newSize;
-      this.queryInfo.PageNum = 1;
-      this.loadUsers();
+      this.queryInfo.PageSize = newSize
+      this.queryInfo.PageNum = 1
+      this.loadUsers()
     },
 
     // 分页 - 页码变化
     handleCurrentChange(newPage) {
-      this.queryInfo.PageNum = newPage;
-      this.loadUsers();
+      this.queryInfo.PageNum = newPage
+      this.loadUsers()
     },
 
     // 确认选择
     handleConfirm() {
       if (this.selectedRows.length === 0) {
-        this.$message.warning('请至少选择一个用户');
-        return;
+        this.$message.warning('请至少选择一个用户')
+        return
       }
-      this.$emit('confirm', this.selectedRows);
-      this.dialogVisible = false;
+      this.$emit('confirm', this.selectedRows)
+      this.dialogVisible = false
     },
 
     // 关闭对话框
     handleClose() {
       // 重置数据
-      this.currentDeptId = '';
-      this.currentDeptName = '';
+      this.currentDeptId = ''
+      this.currentDeptName = ''
       this.queryInfo = {
         Keyword: '',
         PageNum: 1,
         PageSize: 10,
         DeptId: ''
-      };
-      this.selectedRows = [];
+      }
+      this.selectedRows = []
     }
   }
-};
+}
 </script>
 
 <style scoped>

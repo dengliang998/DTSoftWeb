@@ -12,10 +12,7 @@ const normalizeBase64Image = (value) => {
   if (trimmed.startsWith('data:')) return trimmed
 
   // 简单识别 png/jpg，否则回退到 png
-  const mime =
-    trimmed.startsWith('iVBOR') ? 'image/png' :
-    trimmed.startsWith('/9j/') ? 'image/jpeg' :
-    'image/png'
+  const mime = trimmed.startsWith('iVBOR') ? 'image/png' : trimmed.startsWith('/9j/') ? 'image/jpeg' : 'image/png'
 
   return `data:${mime};base64,${trimmed}`
 }
@@ -39,4 +36,3 @@ export const fetchAndCacheSystemInfo = async () => {
   }
   return res
 }
-
