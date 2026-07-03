@@ -1,9 +1,5 @@
 import { getSystemInfo } from '@/api/sysconfig'
-
-const STORAGE_KEYS = {
-  systemName: 'sysconfig.systemName',
-  loginImg: 'sysconfig.loginImg'
-}
+import { STORAGE_KEYS } from '@/constants/storage'
 
 const normalizeBase64Image = (value) => {
   if (!value) return ''

@@ -2,16 +2,39 @@ import axios from 'axios'
 import router from '@/router'
 import NProgress from 'nprogress'
 import { ElMessage } from 'element-plus'
+import { clearAuthSession, getToken } from '@/core/session'
+import { getMessage, isUnauthorizedPayload } from '@/core/response'
 
 const http = axios.create({
   timeout: 20000
 })
 
+const publicEndpoints = ['/api/Auth/login']
+
+const isPublicEndpoint = (url = '') => publicEndpoints.some((endpoint) => url.includes(endpoint))
+
+const redirectToLogin = () => {
+  const currentRoute = router.currentRoute.value
+  if (currentRoute.path !== '/login') {
+    router.push({
+      path: '/login',
+      query:
+        currentRoute.fullPath && currentRoute.fullPath !== '/login' ? { redirect: currentRoute.fullPath } : undefined
+    })
+  }
+}
+
+const handleUnauthorized = (message) => {
+  ElMessage.warning(message || '登录已过期，请重新登录')
+  clearAuthSession()
+  redirectToLogin()
+}
+
 http.interceptors.request.use(
   (config) => {
     NProgress.start()
-    if (config.url !== '/api/Auth/login') {
-      const token = localStorage.getItem('token')
+    if (!isPublicEndpoint(config.url)) {
+      const token = getToken()
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
@@ -27,25 +50,15 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => {
     NProgress.done()
-    // 检查响应数据中的 statusCode 或 StateCode 是否为 401
-    const statusCode = response.data?.statusCode || response.data?.StateCode
-    if (statusCode === 401) {
-      const message = response.data?.message || response.data?.Message || '登录已过期，请重新登录'
-      ElMessage.warning(message)
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
-      router.push('/login')
+    if (isUnauthorizedPayload(response)) {
+      handleUnauthorized(getMessage(response, '登录已过期，请重新登录'))
     }
     return response
   },
   (error) => {
     NProgress.done()
-    if (error.response && error.response.status === 401) {
-      const message = error.response.data?.message || error.response.data?.Message || '登录已过期，请重新登录'
-      ElMessage.warning(message)
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
-      router.push('/login')
+    if (error.response?.status === 401) {
+      handleUnauthorized(getMessage(error.response, '登录已过期，请重新登录'))
     }
     return Promise.reject(error)
   }

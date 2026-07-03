@@ -173,9 +173,11 @@
 </template>
 
 <script>
-import axios from '@/api/http'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
+import { getMenu } from '@/api/menu'
+import { getUserAvatarUrl, getUserDetailByAccount, modifyPassword } from '@/api/user'
+import { clearAuthSession, getUserAccount } from '@/core/session'
 import { fetchAndCacheSystemInfo, getCachedSystemName } from '@/utils/sysConfig'
 export default {
   name: 'Home',
@@ -185,7 +187,7 @@ export default {
   data() {
     return {
       systemTitle: 'DT Program',
-      LoginAcc: localStorage.getItem('UserAcc'),
+      LoginAcc: getUserAccount(),
       UserDisplayName: '',
       circleUrl: '',
       //完整的菜单数据存放的位置
@@ -235,15 +237,12 @@ export default {
     // 在创建生命周期函数的时候获取保存的路径并赋值到数据中
     //this.activePath = window.sessionStorage.getItem('activePath')
     const me = this
-    const params = new URLSearchParams()
-    params.append('account', localStorage.getItem('UserAcc'))
-    axios
-      .post('/api/User/GetUserDetailByAccount', params)
+    getUserDetailByAccount(getUserAccount())
       .then(function (response) {
         if (response.data.success) {
           me.UserDisplayName = response.data.DisplayName
           //加载头像
-          me.circleUrl = '/api/User/GetUserAvatar?Account=' + localStorage.getItem('UserAcc')
+          me.circleUrl = getUserAvatarUrl(getUserAccount())
         } else {
           me.$message.error('用户信息初始化失败：' + response.data.Msg)
         }
@@ -313,9 +312,7 @@ export default {
     },
     // 退出登录
     logout() {
-      localStorage.removeItem('token')
-      localStorage.removeItem('UserAcc')
-      document.cookie = 'UserAcc=; Max-Age=0; path=/'
+      clearAuthSession()
       //回到登录页面
       this.$router.push('/login')
     },
@@ -340,7 +337,7 @@ export default {
     },
     ModifyPwdDialog() {
       this.ModifyPwdForm.OldPwd = ''
-      this.ModifyPwdForm.Account = localStorage.getItem('UserAcc')
+      this.ModifyPwdForm.Account = getUserAccount()
       //打开修改密码对话框
       this.ModifyPwdDialogVisible = true
     },
@@ -348,12 +345,11 @@ export default {
       const me = this
       if (me.ModifyPwdForm.OldPwd !== '' && me.ModifyPwdForm.NewPwd !== '' && me.ModifyPwdForm.ConfirmPwd !== '') {
         if (me.ModifyPwdForm.NewPwd === me.ModifyPwdForm.ConfirmPwd) {
-          const params = new URLSearchParams()
-          params.append('Account', me.ModifyPwdForm.Account)
-          params.append('OldPassWord', me.ModifyPwdForm.OldPwd)
-          params.append('NewPassWord', me.ModifyPwdForm.ConfirmPwd)
-          axios
-            .post('/api/User/ModifyPassword', params)
+          modifyPassword({
+            account: me.ModifyPwdForm.Account,
+            oldPassword: me.ModifyPwdForm.OldPwd,
+            newPassword: me.ModifyPwdForm.ConfirmPwd
+          })
             .then(function (response) {
               if (response.data.success) {
                 me.$message.success(response.data.Msg)
@@ -382,8 +378,7 @@ export default {
     // 获取所有菜单数据
     async getAllMenuList() {
       const me = this
-      axios
-        .get('/api/Menu/GetMenu')
+      getMenu()
         .then(function (response) {
           const menuData = response.data.data || response.data
           const filterHiddenMenus = (menus) => {

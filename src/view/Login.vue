@@ -33,15 +33,19 @@
 
 <script>
 import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import axios from '@/api/http'
+import { getLoginToken, login as loginApi } from '@/api/auth'
+import { getUserAvatarUrl } from '@/api/user'
+import { getMessage, isSuccessPayload } from '@/core/response'
+import { setAuthSession } from '@/core/session'
 import { fetchAndCacheSystemInfo, getCachedLoginImgDataUrl, getCachedSystemName } from '@/utils/sysConfig'
 
 export default defineComponent({
   name: 'Login',
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
 
@@ -72,8 +76,7 @@ export default defineComponent({
     // 加载用户头像
     const loadUserAvatar = () => {
       if (loginForm.username) {
-        // 构造头像URL
-        const avatarApiUrl = `/api/User/GetUserAvatar?account=${encodeURIComponent(loginForm.username)}`
+        const avatarApiUrl = getUserAvatarUrl(loginForm.username, 'account')
 
         // 创建一个新的Image对象来检测图像是否可加载
         const img = new Image()
@@ -108,53 +111,28 @@ export default defineComponent({
           return
         }
 
-        // 新的登录接口参数格式
-        const loginParams = {
+        //请求认证中心获取 token 完成登录
+        loginApi({
           username: loginForm.username,
           password: loginForm.password
-        }
-
-        //请求认证中心获取 token 完成登录
-        axios
-          .post('/api/Auth/login', loginParams)
+        })
           .then(function (response) {
-            // 检查是否登录成功（支持多种响应格式）
-            const isSuccess =
-              response.data.Code === 200 ||
-              response.data.code === 200 ||
-              response.data.success === true ||
-              response.data.StateCode === 200
-
-            if (isSuccess) {
-              ElMessage.success(response.data.Message || response.data.message || '登录成功')
-              // 获取 token（支持不同的字段命名）
-              const token =
-                response.data.Data?.Token ||
-                response.data.data?.token ||
-                response.data.Data?.token ||
-                response.data.data?.Token ||
-                response.data.token
+            if (isSuccessPayload(response)) {
+              ElMessage.success(getMessage(response, '登录成功'))
+              const token = getLoginToken(response)
               if (!token) {
                 ElMessage.error('登录失败：服务端未返回有效令牌')
                 return
               }
-              localStorage.setItem('token', token)
-              localStorage.setItem('UserAcc', loginForm.username)
-              document.cookie = 'UserAcc=' + loginForm.username
-              router.push('/home')
+              setAuthSession({ token, account: loginForm.username })
+              const redirect = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect
+              router.push(redirect || '/home')
             } else {
-              ElMessage.error(
-                '登录失败：' + (response.data.Message || response.data.message || response.data.Msg || '未知错误')
-              )
+              ElMessage.error('登录失败：' + getMessage(response, '未知错误'))
             }
           })
           .catch(function (error) {
-            const errorMsg =
-              error.response?.data?.Message ||
-              error.response?.data?.message ||
-              error.response?.data?.Msg ||
-              '登录失败，请稍后重试！'
-            ElMessage.error(errorMsg)
+            ElMessage.error(getMessage(error.response, '登录失败，请稍后重试！'))
           })
       })
     }
