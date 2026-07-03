@@ -5,6 +5,11 @@ module.exports = {
   publicPath: './',
   outputDir: 'dist',
   assetsDir: 'static',
+  configureWebpack: {
+    performance: {
+      hints: false
+    }
+  },
   devServer: {
     proxy: {
       '/api': {
