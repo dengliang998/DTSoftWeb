@@ -18,7 +18,7 @@
         <el-tree
           ref="deptTreeRef"
           :data="deptTree"
-          :props="{ label: 'DepartmentName', children: 'Children' }"
+          :props="{ label: 'OuName', children: 'Children' }"
           node-key="ItemId"
           highlight-current
           default-expand-all
@@ -127,7 +127,7 @@ export default {
     },
     async getDeptTree() {
       try {
-        const { data: res } = await axios.get('/api/Department/GetAllDepartments')
+        const { data: res } = await axios.get('/api/Ou/GetAllOus')
         if (res && res.success) {
           this.deptTree = res.data || []
         } else {
@@ -139,7 +139,7 @@ export default {
     },
     handleDeptClick(data) {
       this.currentDeptId = data.ItemId
-      this.currentDeptName = data.DepartmentName
+      this.currentDeptName = data.OuName
       this.queryInfo.pagenum = 1
       this.getUserList()
     },
@@ -152,7 +152,7 @@ export default {
       try {
         this.loading = true
         const params = new URLSearchParams()
-        params.append('DepartmentId', this.currentDeptId)
+        params.append('OuId', this.currentDeptId)
         params.append('Keyword', this.queryInfo.query || '')
         params.append('PageNum', this.queryInfo.pagenum)
         params.append('PageSize', this.queryInfo.pagesize)

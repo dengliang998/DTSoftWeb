@@ -9,7 +9,7 @@
             <el-tree
               ref="deptTreeRef"
               :data="deptTree"
-              :props="{ label: 'DepartmentName', children: 'Children' }"
+              :props="{ label: 'OuName', children: 'Children' }"
               node-key="ItemId"
               highlight-current
               :default-expanded-keys="expandedDeptKeys"
@@ -153,7 +153,7 @@ export default {
     // 加载部门树
     async loadDeptTree() {
       try {
-        const { data: res } = await axios.get('/api/Department/GetAllDepartments')
+        const { data: res } = await axios.get('/api/Ou/GetAllOus')
         if (res.success) {
           this.deptTree = res.data || []
           // 默认展开第一层
@@ -176,7 +176,7 @@ export default {
         params.append('PageNum', this.queryInfo.PageNum)
         params.append('PageSize', this.queryInfo.PageSize)
         if (this.currentDeptId) {
-          params.append('DepartmentId', this.currentDeptId)
+          params.append('OuId', this.currentDeptId)
         }
 
         const { data: res } = await axios.post('/api/User/GetUserList', params)
@@ -197,7 +197,7 @@ export default {
     // 部门点击事件
     handleDeptClick(data) {
       this.currentDeptId = data.ItemId
-      this.currentDeptName = data.DepartmentName
+      this.currentDeptName = data.OuName
       this.queryInfo.DeptId = data.ItemId
       this.queryInfo.PageNum = 1
       this.loadUsers()

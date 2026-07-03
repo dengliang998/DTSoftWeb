@@ -12,7 +12,7 @@
       <el-tree
         ref="deptTreeRef"
         :data="deptTree"
-        :props="{ label: 'DepartmentName', children: 'Children' }"
+        :props="{ label: 'OuName', children: 'Children' }"
         node-key="ItemId"
         highlight-current
         @node-click="handleDeptClick"
@@ -142,7 +142,7 @@
             v-model="deptForm.ParentId"
             :data="deptTreeOptions"
             node-key="ItemId"
-            :props="{ label: 'DepartmentName', children: 'Children' }"
+            :props="{ label: 'OuName', children: 'Children' }"
             value-key="ItemId"
             placeholder="请选择上级部门(不选则为顶级部门)"
             check-strictly
@@ -150,11 +150,11 @@
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="部门名称" prop="DepartmentName">
-          <el-input v-model="deptForm.DepartmentName" placeholder="请输入部门名称"></el-input>
+        <el-form-item label="部门名称" prop="OuName">
+          <el-input v-model="deptForm.OuName" placeholder="请输入部门名称"></el-input>
         </el-form-item>
-        <el-form-item label="部门编码" prop="DepartmentCode">
-          <el-input v-model="deptForm.DepartmentCode" placeholder="请输入部门编码"></el-input>
+        <el-form-item label="部门编码" prop="OuCode">
+          <el-input v-model="deptForm.OuCode" placeholder="请输入部门编码"></el-input>
         </el-form-item>
         <el-form-item label="排序号" prop="SortOrder">
           <el-input-number v-model="deptForm.SortOrder" :min="0" style="width: 100%" />
@@ -262,8 +262,8 @@ export default {
       deptAction: '',
       deptForm: {
         ItemId: null,
-        DepartmentName: '',
-        DepartmentCode: '',
+        OuName: '',
+        OuCode: '',
         ParentId: null,
         SortOrder: 0,
         Disable: false,
@@ -302,7 +302,7 @@ export default {
     // 获取所有部门树
     async getDeptTree(expandAll = false) {
       try {
-        const { data: res } = await axios.get('/api/Department/GetAllDepartments')
+        const { data: res } = await axios.get('/api/Ou/GetAllOus')
         if (res.success) {
           this.deptTree = res.data || []
           this.deptTreeOptions = [...this.deptTree]
@@ -339,7 +339,7 @@ export default {
     // 点击部门节点
     handleDeptClick(data) {
       this.currentDeptId = data.ItemId
-      this.currentDeptName = data.DepartmentName
+      this.currentDeptName = data.OuName
       this.queryInfo.pagenum = 1
       this.getUserList()
     },
@@ -387,8 +387,8 @@ export default {
       this.deptDialogTitle = '新增部门'
       this.deptForm = {
         ItemId: null,
-        DepartmentName: '',
-        DepartmentCode: '',
+        OuName: '',
+        OuCode: '',
         ParentId: null,
         SortOrder: 0,
         Disable: false,
@@ -403,8 +403,8 @@ export default {
       this.deptDialogTitle = '新增子部门'
       this.deptForm = {
         ItemId: null,
-        DepartmentName: '',
-        DepartmentCode: '',
+        OuName: '',
+        OuCode: '',
         ParentId: data.ItemId,
         SortOrder: 0,
         Disable: false,
@@ -423,14 +423,14 @@ export default {
 
     // 保存部门
     async saveDept() {
-      if (!this.deptForm.DepartmentName) {
+      if (!this.deptForm.OuName) {
         return this.$message.error('部门名称不能为空')
       }
 
       try {
         const formData = new FormData()
-        formData.append('DepartmentName', this.deptForm.DepartmentName)
-        formData.append('DepartmentCode', this.deptForm.DepartmentCode || '')
+        formData.append('OuName', this.deptForm.OuName)
+        formData.append('OuCode', this.deptForm.OuCode || '')
         formData.append('ParentId', this.deptForm.ParentId || 0)
         formData.append('SortOrder', this.deptForm.SortOrder || 0)
         formData.append('Disable', this.deptForm.Disable || false)
@@ -438,10 +438,10 @@ export default {
 
         let res
         if (this.deptAction === 'add') {
-          res = await axios.post('/api/Department/CreateDepartment', formData)
+          res = await axios.post('/api/Ou/CreateOu', formData)
         } else {
           formData.append('ItemId', this.deptForm.ItemId)
-          res = await axios.post('/api/Department/ModifyDepartmentInfo', formData)
+          res = await axios.post('/api/Ou/ModifyOuInfo', formData)
         }
 
         if (res.data.success) {
@@ -492,9 +492,9 @@ export default {
 
       try {
         const params = new URLSearchParams()
-        params.append('departmentId', deptId)
+        params.append('OuId', deptId)
 
-        const { data: res } = await axios.post('/api/Department/DelDepartment', params)
+        const { data: res } = await axios.post('/api/Ou/DelOu', params)
         if (res.success) {
           this.$message.success('删除部门成功')
 
@@ -538,8 +538,8 @@ export default {
     deptDialogClosed() {
       this.deptForm = {
         ItemId: null,
-        DepartmentName: '',
-        DepartmentCode: '',
+        OuName: '',
+        OuCode: '',
         ParentId: null,
         SortOrder: 0,
         Disable: false,
@@ -557,7 +557,7 @@ export default {
         params.append('PageNum', this.queryInfo.pagenum)
         params.append('PageSize', this.queryInfo.pagesize)
         if (this.currentDeptId) {
-          params.append('DepartmentId', this.currentDeptId)
+          params.append('OuId', this.currentDeptId)
         }
 
         const { data: res } = await axios.post('/api/User/GetUserList', params)

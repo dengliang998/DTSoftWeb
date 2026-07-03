@@ -66,7 +66,7 @@ export default {
   props: {
     Account: String, //账号
     OpenType: String, //New,Edit
-    DepartmentId: {
+    OuId: {
       // 部门ID
       type: Number,
       default: null
@@ -237,7 +237,7 @@ export default {
           }
           // 传递部门ID
           if (deptId) {
-            params.append('DepartmentId', deptId)
+            params.append('OuId', deptId)
           }
           axios
             .post('/api/User/CreateUser', params)
