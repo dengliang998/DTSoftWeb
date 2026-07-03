@@ -23,7 +23,8 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getMenuUrl } from '@/api/menu'
+import { getToken } from '@/core/session'
 
 export default {
   name: 'JumpPage',
@@ -62,11 +63,10 @@ export default {
     LoadPage() {
       let me = this
       let query = me.$route.query
-      axios
-        .post('/api/Menu/GetMenuUrl?PageCode=' + query.PageCode)
+      getMenuUrl(query.PageCode)
         .then(function (response) {
           if (response.data.success) {
-            const token = localStorage.getItem('token')
+            const token = getToken()
             const pageUrl = response.data.PageUrl
             const targetUrl = new URL(pageUrl, window.location.origin)
             if (targetUrl.origin === window.location.origin && token) {
@@ -84,7 +84,7 @@ export default {
         })
     },
     onIframeLoad() {
-      const token = localStorage.getItem('token')
+      const token = getToken()
       const iframe = this.$refs.bdIframe
       if (!iframe || !iframe.contentWindow || !token) return
       iframe.contentWindow.postMessage({ type: 'DT_AUTH_TOKEN', token }, '*')

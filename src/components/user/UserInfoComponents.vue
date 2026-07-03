@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { createUser, getUserAvatarUrl, getUserDetailByAccount, modifyUserInfo } from '@/api/user'
 import UserPickerDialog from './UserPickerDialog.vue'
 
 export default {
@@ -146,10 +146,7 @@ export default {
     LoadData(Account) {
       //初始化数据
       let me = this
-      const params = new URLSearchParams()
-      params.append('account', Account)
-      axios
-        .post('/api/User/GetUserDetailByAccount', params)
+      getUserDetailByAccount(Account)
         .then(function (response) {
           if (response.data.success) {
             const payload =
@@ -163,7 +160,7 @@ export default {
             me.UserForm = { ...me.UserForm, ...cleaned }
             me.supervisorTouched = false
             //加载头像
-            me.imageUrl = 'api/User/GetUserAvatar?Account=' + Account
+            me.imageUrl = getUserAvatarUrl(Account).replace(/^\//, '')
           } else {
             me.$message.error('用户获取失败：' + response.data.Msg)
           }
@@ -193,8 +190,7 @@ export default {
           if (me.supervisorTouched) {
             params.append('SupervisorAcc', me.UserForm.SupervisorAcc || '')
           }
-          axios
-            .post('/api/User/ModifyUserInfo', params)
+          modifyUserInfo(params)
             .then(function (response) {
               if (response.data.success) {
                 me.$message.success('更新用户信息成功')
@@ -239,8 +235,7 @@ export default {
           if (deptId) {
             params.append('OuId', deptId)
           }
-          axios
-            .post('/api/User/CreateUser', params)
+          createUser(params)
             .then(function (response) {
               if (response.data.success) {
                 me.$message.success('用户添加成功')

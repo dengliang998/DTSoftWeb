@@ -18,3 +18,31 @@ export const modifyPassword = ({ account, oldPassword, newPassword }) => {
   params.append('NewPassWord', newPassword || '')
   return http.post('/api/User/ModifyPassword', params)
 }
+
+export const getUserList = ({ keyword = '', pageNum = 1, pageSize = 10, ouId } = {}) => {
+  const params = new URLSearchParams()
+  params.append('Keyword', keyword || '')
+  params.append('PageNum', pageNum)
+  params.append('PageSize', pageSize)
+  if (ouId) {
+    params.append('OuId', ouId)
+  }
+  return http.post('/api/User/GetUserList', params)
+}
+
+export const createUser = (params) => http.post('/api/User/CreateUser', params)
+
+export const modifyUserInfo = (params) => http.post('/api/User/ModifyUserInfo', params)
+
+export const resetPassword = ({ account, password }) => {
+  const params = new URLSearchParams()
+  params.append('Account', account || '')
+  params.append('PassWord', password || '')
+  return http.post('/api/User/ResetPassword', params)
+}
+
+export const deleteUser = (account) => {
+  const params = new URLSearchParams()
+  params.append('Account', account || '')
+  return http.post('/api/User/DelUser', params)
+}

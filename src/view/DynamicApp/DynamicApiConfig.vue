@@ -312,7 +312,12 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import {
+  addDynamicAppConfig,
+  deleteDynamicAppConfig,
+  getDynamicAppConfigs,
+  updateDynamicAppConfig
+} from '@/api/dynamicApp'
 
 export default {
   name: 'DynamicApp',
@@ -392,7 +397,7 @@ export default {
         if (this.queryInfo.query) {
           params.Keyword = this.queryInfo.query
         }
-        const { data: res } = await axios.get('/api/DynamicApp/GetDynamicAppConfigs', { params })
+        const { data: res } = await getDynamicAppConfigs(params)
         if (res.success) {
           // 确保返回的数据中ApiPrefix和configDesc字段不会是null，而是空字符串
           this.DynamicAppList = res.data.map((item) => ({
@@ -457,7 +462,7 @@ export default {
       })
         .then(async () => {
           try {
-            const { data: res } = await axios.post('/api/DynamicApp/DeleteDynamicAppConfig', { ItemId })
+            const { data: res } = await deleteDynamicAppConfig(ItemId)
             if (res.success) {
               this.$message.success(res.msg || '删除成功')
               this.getDynamicApps()
@@ -479,9 +484,9 @@ export default {
         try {
           let res
           if (this.DynamicAppForm.ItemId) {
-            res = await axios.post('/api/DynamicApp/UpdateDynamicAppConfig', this.DynamicAppForm)
+            res = await updateDynamicAppConfig(this.DynamicAppForm)
           } else {
-            res = await axios.post('/api/DynamicApp/AddDynamicAppConfig', this.DynamicAppForm)
+            res = await addDynamicAppConfig(this.DynamicAppForm)
           }
           if (res.data.success) {
             this.$message.success(res.data.msg || (this.DynamicAppForm.id ? '更新成功' : '添加成功'))
@@ -647,7 +652,7 @@ export default {
 
         console.log('提交的数据:', submitData)
 
-        const res = await axios.post('/api/DynamicApp/UpdateDynamicAppConfig', submitData)
+        const res = await updateDynamicAppConfig(submitData)
         if (res.data.success) {
           this.$message.success(res.data.msg || '保存成功')
           this.visualConfigVisible = false

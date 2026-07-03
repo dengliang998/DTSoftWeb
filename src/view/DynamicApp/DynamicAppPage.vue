@@ -300,7 +300,15 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import {
+  createDynamicRuntimeData,
+  deleteDynamicRuntimeData,
+  exportDynamicRuntimeData,
+  getDynamicAppConfigs,
+  getDynamicRuntimeList,
+  importDynamicRuntimeData,
+  updateDynamicRuntimeData
+} from '@/api/dynamicApp'
 export default {
   name: 'DynamicAppPage',
   data() {
@@ -366,12 +374,10 @@ export default {
         const appPath = this.$route.params.appPath
 
         // 加载应用配置 - 使用现有的GetDynamicAppConfigs接口，并传入modelName参数
-        const { data: res } = await axios.get('/api/DynamicApp/GetDynamicAppConfigs', {
-          params: {
-            PageNum: 1,
-            PageSize: 1, // 只获取一个应用的配置
-            modelName: appPath // 传入appPath作为modelName参数
-          }
+        const { data: res } = await getDynamicAppConfigs({
+          PageNum: 1,
+          PageSize: 1, // 只获取一个应用的配置
+          modelName: appPath // 传入appPath作为modelName参数
         })
         if (res.success) {
           // 直接使用返回的数据，因为已经通过modelName过滤
@@ -505,9 +511,6 @@ export default {
     // 获取应用数据
     async getAppData() {
       try {
-        // 使用默认路径/api/{ModelName}
-        const apiPath = `/api/${this.appConfig.modelName}`
-
         const params = {
           PageNum: this.pagination.currentPage,
           PageSize: this.pagination.pageSize,
@@ -515,7 +518,10 @@ export default {
         }
 
         // 调用应用对应的API获取数据
-        const { data: res } = await axios.get(apiPath, { params })
+        const { data: res } = await getDynamicRuntimeList({
+          modelName: this.appConfig.modelName,
+          params
+        })
         if (res.success) {
           this.appData = res.data || { list: [], total: 0 }
         } else {
@@ -578,10 +584,10 @@ export default {
               return
             }
 
-            // 使用默认路径/api/{ModelName}
-            const apiPath = `/api/${this.appConfig.modelName}`
-
-            const { data: res } = await axios.delete(`${apiPath}/${id}`)
+            const { data: res } = await deleteDynamicRuntimeData({
+              modelName: this.appConfig.modelName,
+              id
+            })
             if (res.success) {
               this.$message.success(res.msg || '删除成功')
               this.getAppData()
@@ -603,9 +609,6 @@ export default {
         if (!valid) return
 
         try {
-          // 使用默认路径/api/{ModelName}
-          const apiPath = `/api/${this.appConfig.modelName}`
-
           // 移除不需要的字段
           const submitData = { ...this.formData }
           delete submitData.CreateTime
@@ -628,7 +631,10 @@ export default {
           let res
           if (this.dialogType === 'create') {
             // 新增数据
-            res = await axios.post(apiPath, submitData)
+            res = await createDynamicRuntimeData({
+              modelName: this.appConfig.modelName,
+              data: submitData
+            })
           } else {
             // 更新数据
             // 从行数据中获取id，支持不同的id字段名
@@ -637,7 +643,11 @@ export default {
               this.$message.error('更新失败：无法获取数据ID')
               return
             }
-            res = await axios.put(`${apiPath}/${id}`, submitData)
+            res = await updateDynamicRuntimeData({
+              modelName: this.appConfig.modelName,
+              id,
+              data: submitData
+            })
           }
 
           const result = res.data
@@ -679,18 +689,15 @@ export default {
       }
 
       try {
-        // 使用默认路径/api/{ModelName}/export
-        const apiPath = `/api/${this.appConfig.modelName}/export`
-
         // 构建查询参数
         const params = {
           Keyword: this.searchKeyword
         }
 
         // 发起导出请求
-        const { data: res } = await axios.get(apiPath, {
-          params,
-          responseType: 'blob' // 重要：设置响应类型为blob
+        const { data: res } = await exportDynamicRuntimeData({
+          modelName: this.appConfig.modelName,
+          params
         })
 
         // 处理响应，生成下载链接
@@ -735,18 +742,14 @@ export default {
       this.importLoading = true
 
       try {
-        // 使用默认路径/api/{ModelName}/import
-        const apiPath = `/api/${this.appConfig.modelName}/import`
-
         // 创建FormData对象，添加文件
         const formData = new FormData()
         formData.append('file', this.importFileList[0].raw)
 
         // 发起导入请求
-        const { data: res } = await axios.post(apiPath, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+        const { data: res } = await importDynamicRuntimeData({
+          modelName: this.appConfig.modelName,
+          data: formData
         })
 
         if (res.success) {

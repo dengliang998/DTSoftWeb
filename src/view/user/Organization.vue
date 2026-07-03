@@ -232,7 +232,8 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { createOu, deleteOu, getAllOus, updateOu } from '@/api/organization'
+import { deleteUser, getUserList, modifyUserInfo, resetPassword } from '@/api/user'
 import UserInfoComponents from '../../components/user/UserInfoComponents.vue'
 import { Search, Plus, Edit, Delete, Unlock, OfficeBuilding } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
@@ -302,7 +303,7 @@ export default {
     // 获取所有部门树
     async getDeptTree(expandAll = false) {
       try {
-        const { data: res } = await axios.get('/api/Ou/GetAllOus')
+        const { data: res } = await getAllOus()
         if (res.success) {
           this.deptTree = res.data || []
           this.deptTreeOptions = [...this.deptTree]
@@ -438,10 +439,10 @@ export default {
 
         let res
         if (this.deptAction === 'add') {
-          res = await axios.post('/api/Ou/CreateOu', formData)
+          res = await createOu(formData)
         } else {
           formData.append('ItemId', this.deptForm.ItemId)
-          res = await axios.post('/api/Ou/ModifyOuInfo', formData)
+          res = await updateOu(formData)
         }
 
         if (res.data.success) {
@@ -491,10 +492,7 @@ export default {
       }
 
       try {
-        const params = new URLSearchParams()
-        params.append('OuId', deptId)
-
-        const { data: res } = await axios.post('/api/Ou/DelOu', params)
+        const { data: res } = await deleteOu(deptId)
         if (res.success) {
           this.$message.success('删除部门成功')
 
@@ -552,15 +550,12 @@ export default {
     // 获取用户列表
     async getUserList() {
       try {
-        const params = new URLSearchParams()
-        params.append('Keyword', this.queryInfo.query)
-        params.append('PageNum', this.queryInfo.pagenum)
-        params.append('PageSize', this.queryInfo.pagesize)
-        if (this.currentDeptId) {
-          params.append('OuId', this.currentDeptId)
-        }
-
-        const { data: res } = await axios.post('/api/User/GetUserList', params)
+        const { data: res } = await getUserList({
+          keyword: this.queryInfo.query,
+          pageNum: this.queryInfo.pagenum,
+          pageSize: this.queryInfo.pagesize,
+          ouId: this.currentDeptId
+        })
         if (res.success) {
           this.userList = res.data
           this.total = res.Total
@@ -595,7 +590,7 @@ export default {
         params.append('Account', Account)
         params.append('Disable', Disable)
 
-        const { data: res } = await axios.post('/api/User/ModifyUserInfo', params)
+        const { data: res } = await modifyUserInfo(params)
         if (res.success) {
           this.$message.success('更新用户信息成功')
         } else {
@@ -621,11 +616,10 @@ export default {
         return this.$message.error('密码不一致')
       }
 
-      const params = new URLSearchParams()
-      params.append('Account', this.ResetPwdForm.Account)
-      params.append('PassWord', this.ResetPwdForm.ConfirmPwd)
-
-      const { data: res } = await axios.post('/api/User/ResetPassword', params)
+      const { data: res } = await resetPassword({
+        account: this.ResetPwdForm.Account,
+        password: this.ResetPwdForm.ConfirmPwd
+      })
       if (res.success) {
         this.$message.success(res.Msg)
         this.ResetPwdDialogVisible = false
@@ -690,10 +684,7 @@ export default {
       }
 
       try {
-        const params = new URLSearchParams()
-        params.append('Account', Account)
-
-        const { data: res } = await axios.post('/api/User/DelUser', params)
+        const { data: res } = await deleteUser(Account)
         if (res.success) {
           this.$message.success('删除用户成功')
           this.getUserList()

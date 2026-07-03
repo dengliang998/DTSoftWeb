@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getLogActionList } from '@/api/log'
 import { Search } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
@@ -84,12 +84,11 @@ export default {
   methods: {
     async GetLogActionList() {
       const me = this
-      const params = new URLSearchParams()
-      params.append('PageNum', me.queryInfo.pagenum)
-      params.append('PageSize', me.queryInfo.pagesize)
-      params.append('ActionName', me.queryInfo.query)
-      axios
-        .post('/api/Log/GetLogActionList', params)
+      getLogActionList({
+        pageNum: me.queryInfo.pagenum,
+        pageSize: me.queryInfo.pagesize,
+        actionName: me.queryInfo.query
+      })
         .then(function (response) {
           if (response.data.success) {
             me.LogActionList = response.data.data

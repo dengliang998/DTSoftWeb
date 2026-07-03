@@ -111,7 +111,7 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getFileDownloadUrl, getFileList, getUploadHeaders, previewOfficeFile, removeFile } from '@/api/file'
 import { ElImageViewer } from 'element-plus'
 import { Download, Picture, VideoCamera, Delete } from '@element-plus/icons-vue'
 
@@ -147,9 +147,7 @@ export default {
       filehtml: '',
       Video: '',
       VideoPreviewDialogVisible: false,
-      uploadHeaders: {
-        Authorization: 'Bearer ' + localStorage.getItem('token')
-      },
+      uploadHeaders: getUploadHeaders(),
       // 上传进度相关变量
       uploadProgress: 0,
       showUploadProgress: false
@@ -211,12 +209,11 @@ export default {
     },
     async GetFileList() {
       const me = this
-      const params = new URLSearchParams()
-      params.append('PageNum', me.queryInfo.pagenum)
-      params.append('PageSize', me.queryInfo.pagesize)
-      params.append('Keyword', me.queryInfo.query)
-      axios
-        .post('/api/File/GetFileList', params)
+      getFileList({
+        pageNum: me.queryInfo.pagenum,
+        pageSize: me.queryInfo.pagesize,
+        keyword: me.queryInfo.query
+      })
         .then(function (response) {
           if (response.data.success) {
             me.userList = response.data.data
@@ -253,10 +250,7 @@ export default {
       }
 
       const me = this
-      const params = new URLSearchParams()
-      params.append('FileID', FileID)
-      axios
-        .post('/api/File/RemoveFile', params)
+      removeFile(FileID)
         .then(function (response) {
           if (response.data.success) {
             me.GetFileList()
@@ -271,14 +265,14 @@ export default {
     },
 
     FileDownload(FileID) {
-      window.location.href = '/api/File/Download?FileID=' + FileID
+      window.location.href = getFileDownloadUrl(FileID)
     },
     FilePreview(FileID) {
-      this.guidePic = '/api/File/Download?FileID=' + FileID
+      this.guidePic = getFileDownloadUrl(FileID)
       this.ShowViewer = true
     },
     VideoPreview(FileID) {
-      this.Video = '/api/File/Download?FileID=' + FileID
+      this.Video = getFileDownloadUrl(FileID)
       this.VideoPreviewDialogVisible = true
     },
     VideoPreviewDialogClosed() {
@@ -290,10 +284,7 @@ export default {
     FilePreview_Office(FileID) {
       //预览有问题
       let me = this
-      const params = new URLSearchParams()
-      params.append('FileID', FileID)
-      axios
-        .post('/api/File/FilePreview', params)
+      previewOfficeFile(FileID)
         .then(function (response) {
           if (response.data.success) {
             me.FilePreviewDialogVisible = true

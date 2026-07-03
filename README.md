@@ -38,6 +38,7 @@ DTSoft Admin 是一个基于 Vue 3 的后台管理前端项目，主要用于用
 │   ├── components/         # 通用业务组件
 │   ├── constants/          # 跨模块常量
 │   ├── core/               # 会话、响应解析等核心能力
+│   ├── modules/            # 页面级复杂逻辑拆分
 │   ├── plugins/            # Vue 插件与浏览器补丁安装
 │   ├── router/             # 路由配置与登录守卫
 │   ├── utils/              # 工具方法
@@ -125,6 +126,7 @@ pathRewrite: { '^/api': '' }
 - 业务 API 封装放在 `src/api/`，新代码优先调用领域 service，不在页面里直接拼核心接口。
 - 登录态读写统一使用 `src/core/session.js`。
 - 接口响应解析统一使用 `src/core/response.js`。
+- 页面级复杂逻辑优先拆到 `src/modules/<page>/`，页面组件保留状态和视图编排。
 - 全局样式放在 `src/assets/css/`。
 - 新增页面后需要在 `src/router/index.js` 注册路由。
 - 需要进入菜单的页面，需要同时在后端菜单数据中维护对应路径。

@@ -189,7 +189,8 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { addRoleMember, createRole, deleteRole, getRole, getRoleList, getRoleMemberList, updateRole } from '@/api/role'
+import { getChildrenMenu, getFatherMenu, getRoleMenuMap, updateMenuAuthority } from '@/api/menu'
 import UserSelector from '@/components/user/UserSelector.vue'
 export default {
   name: 'Role',
@@ -257,12 +258,11 @@ export default {
     },
     async getRoleList() {
       const me = this
-      const params = new URLSearchParams()
-      params.append('PageNum', me.queryInfo.pagenum)
-      params.append('PageSize', me.queryInfo.pagesize)
-      params.append('RoleName', me.queryInfo.query)
-      axios
-        .post('/api/Role/GetRoleList', params)
+      getRoleList({
+        pageNum: me.queryInfo.pagenum,
+        pageSize: me.queryInfo.pagesize,
+        roleName: me.queryInfo.query
+      })
         .then(function (response) {
           if (response.data.success) {
             me.RoleList = response.data.data
@@ -297,10 +297,7 @@ export default {
       me.AddMemberForm.RoleName = RoleName //页面显示
       me.CurrentSelRoleID = id //修改成员是需要
       me.CurrentSelRoleName = RoleName
-      const params = new URLSearchParams()
-      params.append('RoleID', id)
-      axios
-        .post('/api/Role/GetRoleMemberList', params)
+      getRoleMemberList(id)
         .then(function (response) {
           me.RoleMemberList = response.data.data
           me.AddMemberDialogVisible = true
@@ -319,11 +316,10 @@ export default {
         }
         ParameJson.push(row)
       }
-      axios
-        .post('/api/Role/AddRoleMember', {
-          ItemId: me.CurrentSelRoleID,
-          RoleMember: ParameJson
-        })
+      addRoleMember({
+        roleId: me.CurrentSelRoleID,
+        roleMembers: ParameJson
+      })
         .then(function (response) {
           if (response.data.success) {
             me.$message.success('操作成功')
@@ -341,10 +337,7 @@ export default {
       this.$refs.addFormRef.validate(async (valid) => {
         if (!valid) return
         let me = this
-        const params = new URLSearchParams()
-        params.append('RoleName', me.addForm.RoleName)
-        axios
-          .post('/api/Role/CreateRole', params)
+        createRole(me.addForm.RoleName)
           .then(function (response) {
             if (response.data.success) {
               me.$message.success('角色添加成功')
@@ -365,10 +358,7 @@ export default {
     async showEditDialog(RoleId) {
       let me = this
       // 直接使用GetRole接口获取角色详情，GET请求
-      axios
-        .get('/api/Role/GetRole', {
-          params: { RoleId: RoleId }
-        })
+      getRole(RoleId)
         .then(function (response) {
           if (response.data.success) {
             me.editForm = response.data
@@ -393,11 +383,10 @@ export default {
         if (!valid) return
         // 发起修改用户信息的数据请求
         let me = this
-        const params = new URLSearchParams()
-        params.append('ItemId', me.editForm.id)
-        params.append('RoleName', me.editForm.RoleName)
-        axios
-          .post('/api/Role/ModifyRoleInfo', params)
+        updateRole({
+          itemId: me.editForm.id,
+          roleName: me.editForm.RoleName
+        })
           .then(function (response) {
             if (response.data.success) {
               me.editDialogVisible = false
@@ -432,10 +421,7 @@ export default {
 
       //发起删除请求，判读状态码，删除成功提示消息并且刷新用户列表
       let me = this
-      const params = new URLSearchParams()
-      params.append('RoleID', id)
-      axios
-        .post('/api/Role/DelRole', params)
+      deleteRole(id)
         .then(function (response) {
           if (response.data.success) {
             me.$message.success('删除角色成功')
@@ -495,8 +481,7 @@ export default {
     },
     loadRoleMenuCheckedKeys() {
       const me = this
-      axios
-        .post('/api/Menu/GetRoleMenuMap?RoleId=' + me.CurrentSelRoleID)
+      getRoleMenuMap(me.CurrentSelRoleID)
         .then(function (response) {
           me.TreeChecked = []
           response.data.data.forEach((item) => {
@@ -517,8 +502,7 @@ export default {
       const me = this
       //加载菜单树
       if (node.level === 0) {
-        axios
-          .post('/api/Menu/GetFatherMenu', { RoleID: this.CurrentSelRoleID })
+        getFatherMenu(this.CurrentSelRoleID)
           .then(function (response) {
             return resolve(response.data.data)
           })
@@ -527,11 +511,10 @@ export default {
           })
       } else {
         //加载子项
-        axios
-          .post('/api/Menu/GetChildrenMenu', {
-            RoleID: this.CurrentSelRoleID,
-            MenuID: [node.data.id]
-          })
+        getChildrenMenu({
+          roleId: this.CurrentSelRoleID,
+          menuId: node.data.id
+        })
           .then(function (response) {
             return resolve(response.data.data)
           })
@@ -547,11 +530,10 @@ export default {
 
       //可以获取所有的选中节点包含未完全选中的父节点
       let MenuID = me.$refs.tree.getCheckedKeys().concat(me.$refs.tree.getHalfCheckedKeys())
-      axios
-        .post('/api/Menu/UpdateMenuAuthority', {
-          RoleID: me.CurrentSelRoleID,
-          MenuID: MenuID
-        })
+      updateMenuAuthority({
+        roleId: me.CurrentSelRoleID,
+        menuIds: MenuID
+      })
         .then(function (response) {
           if (response.data.success) {
             me.$message.success(response.data.Msg)

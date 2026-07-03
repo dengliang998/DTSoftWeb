@@ -77,7 +77,8 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getAllOus } from '@/api/organization'
+import { getUserList } from '@/api/user'
 import { Search } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
@@ -127,7 +128,7 @@ export default {
     },
     async getDeptTree() {
       try {
-        const { data: res } = await axios.get('/api/Ou/GetAllOus')
+        const { data: res } = await getAllOus()
         if (res && res.success) {
           this.deptTree = res.data || []
         } else {
@@ -151,12 +152,12 @@ export default {
       }
       try {
         this.loading = true
-        const params = new URLSearchParams()
-        params.append('OuId', this.currentDeptId)
-        params.append('Keyword', this.queryInfo.query || '')
-        params.append('PageNum', this.queryInfo.pagenum)
-        params.append('PageSize', this.queryInfo.pagesize)
-        const { data: res } = await axios.post('/api/User/GetUserList', params)
+        const { data: res } = await getUserList({
+          keyword: this.queryInfo.query,
+          pageNum: this.queryInfo.pagenum,
+          pageSize: this.queryInfo.pagesize,
+          ouId: this.currentDeptId
+        })
         if (res && res.success) {
           const rows = res.data || []
           this.userList = rows

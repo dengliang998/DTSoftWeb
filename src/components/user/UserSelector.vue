@@ -82,7 +82,8 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getAllOus } from '@/api/organization'
+import { getUserList } from '@/api/user'
 import { Search, OfficeBuilding } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
@@ -153,7 +154,7 @@ export default {
     // 加载部门树
     async loadDeptTree() {
       try {
-        const { data: res } = await axios.get('/api/Ou/GetAllOus')
+        const { data: res } = await getAllOus()
         if (res.success) {
           this.deptTree = res.data || []
           // 默认展开第一层
@@ -171,15 +172,12 @@ export default {
     async loadUsers() {
       this.loading = true
       try {
-        const params = new URLSearchParams()
-        params.append('Keyword', this.queryInfo.Keyword || '')
-        params.append('PageNum', this.queryInfo.PageNum)
-        params.append('PageSize', this.queryInfo.PageSize)
-        if (this.currentDeptId) {
-          params.append('OuId', this.currentDeptId)
-        }
-
-        const { data: res } = await axios.post('/api/User/GetUserList', params)
+        const { data: res } = await getUserList({
+          keyword: this.queryInfo.Keyword,
+          pageNum: this.queryInfo.PageNum,
+          pageSize: this.queryInfo.PageSize,
+          ouId: this.currentDeptId
+        })
         if (res.success) {
           this.userList = res.data || []
           this.total = res.Total || 0

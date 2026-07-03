@@ -50,7 +50,10 @@
 </template>
 
 <script>
-import axios from '@/api/http'
+import { getDynamicAppConfigs } from '@/api/dynamicApp'
+import { getLogActionList } from '@/api/log'
+import { getRoleList } from '@/api/role'
+import { getUserList } from '@/api/user'
 import {
   ChatDotRound,
   Sunny,
@@ -173,35 +176,33 @@ export default {
     async loadStatsData() {
       try {
         // 获取用户统计
-        const userRes = await axios.post('/api/User/GetUserList', {
-          PageNum: 1,
-          PageSize: 1
+        const userRes = await getUserList({
+          pageNum: 1,
+          pageSize: 1
         })
         if (userRes.data.success) {
           this.statsData[0].value = userRes.data.Total || 0
         }
 
         // 获取角色统计
-        const roleRes = await axios.post('/api/Role/GetRoleList', {
-          PageNum: 1,
-          PageSize: 1
+        const roleRes = await getRoleList({
+          pageNum: 1,
+          pageSize: 1
         })
         if (roleRes.data.success) {
           this.statsData[1].value = roleRes.data.Total || 0
         }
 
         // 获取应用配置统计
-        const appRes = await axios.get('/api/DynamicApp/GetDynamicAppConfigs', {
-          params: { PageNum: 1, PageSize: 1 }
-        })
+        const appRes = await getDynamicAppConfigs({ PageNum: 1, PageSize: 1 })
         if (appRes.data.success) {
           this.statsData[2].value = appRes.data.total || 0
         }
 
         // 获取操作日志统计
-        const logRes = await axios.post('/api/Log/GetLogActionList', {
-          PageNum: 1,
-          PageSize: 1
+        const logRes = await getLogActionList({
+          pageNum: 1,
+          pageSize: 1
         })
         if (logRes.data.success) {
           this.statsData[3].value = logRes.data.Total || 0

@@ -150,7 +150,7 @@
 import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import axios from '@/api/http'
+import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
 
 export default {
   name: 'Menus',
@@ -207,7 +207,7 @@ export default {
 
       try {
         // 使用正确的Menu/GetMenu接口获取菜单列表
-        const { data: res } = await axios.get('/api/Menu/GetMenu')
+        const { data: res } = await getMenu()
         if (res.success) {
           // 转换数据结构以适配前端组件
           const transformedData = transformMenuData(res.data)
@@ -413,7 +413,7 @@ export default {
             }
             formData.append('IsHidden', !addForm.visible) // 注意：visible与IsHidden是相反的含义
 
-            res = await axios.post('/api/Menu/AddMenu', formData)
+            res = await addMenuApi(formData)
           } else {
             // 修改菜单 - 使用新的 UpdateMenu 接口
             const formData = new FormData()
@@ -439,7 +439,7 @@ export default {
             const mTypeValue = addForm.menuType !== undefined ? addForm.menuType : '0'
             formData.append('MType', mTypeValue)
 
-            res = await axios.post('/api/Menu/UpdateMenu', formData)
+            res = await updateMenu(formData)
           }
 
           // 检查响应数据结构并正确处理成功/失败情况
@@ -475,7 +475,7 @@ export default {
         const formData = new FormData()
         formData.append('menuid', id)
 
-        const res = await axios.post('/api/Menu/DelMenu', formData)
+        const res = await deleteMenu(formData)
 
         // 根据新的响应格式检查删除成功与否
         if (res.data.StateCode === 0 && res.data.success) {

@@ -173,11 +173,34 @@
 </template>
 
 <script>
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
 import { getMenu } from '@/api/menu'
-import { getUserAvatarUrl, getUserDetailByAccount, modifyPassword } from '@/api/user'
-import { clearAuthSession, getUserAccount } from '@/core/session'
+import { getUserAccount } from '@/core/session'
+import {
+  filterHiddenMenus,
+  findChildrenByMenuId,
+  getIconComponent,
+  getMenuTitleByPath,
+  getRootMenus,
+  resolveInitialMenuState
+} from '@/modules/home/menuState'
+import {
+  buildCachedViews,
+  createDefaultTabs,
+  getCacheNameByPath,
+  getNextTabAfterRemove,
+  refreshTabTitles,
+  saveActivePath,
+  shouldSkipTab,
+  upsertTab
+} from '@/modules/home/tabs'
+import {
+  createModifyPwdForm,
+  loadCurrentUserProfile,
+  logoutAndClearSession,
+  prepareModifyPwdForm,
+  submitModifyPassword
+} from '@/modules/home/userPanel'
 import { fetchAndCacheSystemInfo, getCachedSystemName } from '@/utils/sysConfig'
 export default {
   name: 'Home',
@@ -203,7 +226,7 @@ export default {
       //被激活的顶部菜单
       activeTopMenu: '',
       ModifyPwdDialogVisible: false,
-      ModifyPwdForm: { Account: '', OldPwd: '', NewPwd: '', ConfirmPwd: '' },
+      ModifyPwdForm: createModifyPwdForm(),
       editDialogVisible: false,
       UserDialogVisible: false,
       // 缓存的视图组件
@@ -236,20 +259,7 @@ export default {
     this.getAllMenuList()
     // 在创建生命周期函数的时候获取保存的路径并赋值到数据中
     //this.activePath = window.sessionStorage.getItem('activePath')
-    const me = this
-    getUserDetailByAccount(getUserAccount())
-      .then(function (response) {
-        if (response.data.success) {
-          me.UserDisplayName = response.data.DisplayName
-          //加载头像
-          me.circleUrl = getUserAvatarUrl(getUserAccount())
-        } else {
-          me.$message.error('用户信息初始化失败：' + response.data.Msg)
-        }
-      })
-      .catch(function () {
-        me.$message.error('用户信息初始化失败，请稍后重试！')
-      })
+    this.loadUserProfile()
 
     // 初始化默认标签页
     this.initDefaultTab()
@@ -260,45 +270,19 @@ export default {
   },
   methods: {
     getCacheNameByPath(path) {
-      try {
-        const resolved = this.$router.resolve(path)
-        const lastMatched = resolved?.matched?.[resolved.matched.length - 1]
-        return lastMatched?.meta?.cacheName || resolved?.meta?.cacheName || resolved?.name || lastMatched?.name || ''
-      } catch (e) {
-        return ''
-      }
+      return getCacheNameByPath(this.$router, path)
     },
     refreshOpenedTabsTitles() {
       if (!Array.isArray(this.openedTabs) || this.openedTabs.length === 0) return
-      this.openedTabs = this.openedTabs.map((tab) => {
-        if (!tab || !tab.path) return tab
-        if (tab.path === '/welcome')
-          return { ...tab, title: tab.title || '首页', cacheName: tab.cacheName || 'Welcome' }
-        const title = this.getMenuTitleByPath(tab.path)
-        return {
-          ...tab,
-          title: title && title !== '页面' ? title : tab.title,
-          cacheName: tab.cacheName || this.getCacheNameByPath(tab.path)
-        }
+      this.openedTabs = refreshTabTitles({
+        tabs: this.openedTabs,
+        getTitle: this.getMenuTitleByPath,
+        getCacheName: this.getCacheNameByPath
       })
       this.rebuildCachedViews()
     },
     rebuildCachedViews() {
-      const unique = new Set()
-      for (const tab of this.openedTabs) {
-        if (tab && tab.cacheName) unique.add(tab.cacheName)
-      }
-      this.cachedViews = Array.from(unique)
-    },
-    toPascalCase(name) {
-      return String(name)
-        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-        .replace(/[_\-\s]+/g, ' ')
-        .trim()
-        .split(' ')
-        .filter(Boolean)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-        .join('')
+      this.cachedViews = buildCachedViews(this.openedTabs)
     },
     // 判断头像下拉菜单指令
     handleCommand(command) {
@@ -312,32 +296,22 @@ export default {
     },
     // 退出登录
     logout() {
-      clearAuthSession()
+      logoutAndClearSession()
       //回到登录页面
       this.$router.push('/login')
     },
-    getIconComponent(iconName) {
-      if (!iconName) return null
-      const raw = String(iconName).trim()
-      const pascal = this.toPascalCase(raw)
-      const aliasMap = {
-        's-operation': 'Operation',
-        operation: 'Operation',
-        setting: 'Setting',
-        menu: 'Menu',
-        user: 'User',
-        tools: 'Tools',
-        platform: 'Platform'
+    getIconComponent,
+    async loadUserProfile() {
+      try {
+        const profile = await loadCurrentUserProfile()
+        this.UserDisplayName = profile.displayName
+        this.circleUrl = profile.avatarUrl
+      } catch (e) {
+        this.$message.error('用户信息初始化失败，请稍后重试！')
       }
-      const alias = aliasMap[raw.toLowerCase()]
-
-      return (
-        ElementPlusIconsVue[raw] || ElementPlusIconsVue[pascal] || (alias ? ElementPlusIconsVue[alias] : null) || 'Menu'
-      )
     },
     ModifyPwdDialog() {
-      this.ModifyPwdForm.OldPwd = ''
-      this.ModifyPwdForm.Account = getUserAccount()
+      prepareModifyPwdForm(this.ModifyPwdForm)
       //打开修改密码对话框
       this.ModifyPwdDialogVisible = true
     },
@@ -345,11 +319,7 @@ export default {
       const me = this
       if (me.ModifyPwdForm.OldPwd !== '' && me.ModifyPwdForm.NewPwd !== '' && me.ModifyPwdForm.ConfirmPwd !== '') {
         if (me.ModifyPwdForm.NewPwd === me.ModifyPwdForm.ConfirmPwd) {
-          modifyPassword({
-            account: me.ModifyPwdForm.Account,
-            oldPassword: me.ModifyPwdForm.OldPwd,
-            newPassword: me.ModifyPwdForm.ConfirmPwd
-          })
+          submitModifyPassword(me.ModifyPwdForm)
             .then(function (response) {
               if (response.data.success) {
                 me.$message.success(response.data.Msg)
@@ -381,65 +351,17 @@ export default {
       getMenu()
         .then(function (response) {
           const menuData = response.data.data || response.data
-          const filterHiddenMenus = (menus) => {
-            return menus.filter((menu) => {
-              if (menu.IsHidden === true || menu.IsHidden === 1) {
-                return false
-              }
-              if (menu.children && menu.children.length > 0) {
-                menu.children = filterHiddenMenus(menu.children)
-              }
-              return true
-            })
-          }
-
           me.menuList = Array.isArray(menuData) ? filterHiddenMenus(menuData) : []
 
           // 提取一级菜单（pid为0的菜单项）
-          me.fatherMenuList = me.menuList.filter((item) => item.pid === 0)
+          me.fatherMenuList = getRootMenus(me.menuList)
 
           // 首页初次打开时不默认选中第一个一级菜单：
           // - 如果当前路由属于某个一级菜单下，则选中对应的一级菜单并加载其子菜单
           // - 否则仅加载第一个一级菜单的子菜单（不高亮任何一级菜单）
-          const currentPath = me.$route?.path || ''
-          const normalizedPath = currentPath.startsWith('/') ? currentPath.slice(1) : currentPath
-
-          const flatMenus = []
-          const walk = (nodes) => {
-            ;(nodes || []).forEach((n) => {
-              flatMenus.push(n)
-              if (n.children && n.children.length) walk(n.children)
-            })
-          }
-          walk(me.menuList)
-
-          const byId = {}
-          flatMenus.forEach((m) => {
-            if (m && m.id !== undefined) byId[m.id] = m
-          })
-
-          const matched = flatMenus.find((m) => m && m.path === normalizedPath)
-          const climbToRoot = (m) => {
-            let cur = m
-            while (cur && cur.pid !== 0 && cur.pid !== '0' && byId[cur.pid]) {
-              cur = byId[cur.pid]
-            }
-            return cur
-          }
-
-          if (matched) {
-            const root = climbToRoot(matched)
-            if (root && root.id !== undefined) {
-              me.activeTopMenu = root.id + ''
-              me.getChildrenMenuList(root.id)
-            }
-          } else if (me.fatherMenuList.length > 0) {
-            me.activeTopMenu = ''
-            me.getChildrenMenuList(me.fatherMenuList[0].id)
-          } else {
-            me.activeTopMenu = ''
-            me.childrenMenuList = []
-          }
+          const menuState = resolveInitialMenuState(me.menuList, me.$route?.path || '')
+          me.activeTopMenu = menuState.activeTopMenu
+          me.childrenMenuList = menuState.childrenMenuList
 
           // 菜单加载完成后，修正已打开标签页的标题（刷新时避免显示“页面”）
           me.$nextTick(() => {
@@ -450,29 +372,13 @@ export default {
             }
           })
         })
-        .catch(function (error) {
+        .catch(function () {
           me.$message.error('获取菜单数据失败，请稍后重试！')
         })
     },
 
     getChildrenMenuList(menuId) {
-      const me = this
-      const findChildren = (menus, parentId) => {
-        for (const menu of menus) {
-          if (menu.id === parentId) {
-            return menu.children || []
-          }
-          if (menu.children && menu.children.length > 0) {
-            const result = findChildren(menu.children, parentId)
-            if (result && result.length > 0) {
-              return result
-            }
-          }
-        }
-        return []
-      }
-
-      me.childrenMenuList = findChildren(me.menuList, parseInt(menuId))
+      this.childrenMenuList = findChildrenByMenuId(this.menuList, menuId)
       this.$nextTick(() => {})
     },
 
@@ -489,7 +395,7 @@ export default {
     },
     // 保存链接的激活状态
     saveNavState(activePath) {
-      window.sessionStorage.setItem('activePath', activePath)
+      saveActivePath(activePath)
       this.activePath = activePath
       // 添加标签页
       this.addTab(activePath)
@@ -498,7 +404,7 @@ export default {
     // 添加标签页
     addTab(path) {
       // 如果是欢迎页面或登录页面，不添加标签
-      if (path === '/welcome' || path === '/login') {
+      if (shouldSkipTab(path)) {
         this.activeTab = path
         return
       }
@@ -507,19 +413,12 @@ export default {
       const title = this.getMenuTitleByPath(path)
       const cacheName = this.getCacheNameByPath(path)
 
-      // 检查标签页是否已存在
-      const existTab = this.openedTabs.find((tab) => tab.path === path)
-      if (!existTab) {
-        // 添加新标签页
-        this.openedTabs.push({
-          path: path,
-          title: title,
-          cacheName: cacheName
-        })
-      } else {
-        if (!existTab.cacheName && cacheName) existTab.cacheName = cacheName
-        if ((existTab.title === '页面' || !existTab.title) && title && title !== '页面') existTab.title = title
-      }
+      upsertTab({
+        tabs: this.openedTabs,
+        path,
+        title,
+        cacheName
+      })
 
       // 激活当前标签页
       this.activeTab = path
@@ -530,24 +429,7 @@ export default {
 
     // 根据路径获取菜单标题
     getMenuTitleByPath(path) {
-      // 移除开头的斜杠
-      const cleanPath = path.startsWith('/') ? path.substring(1) : path
-
-      // 递归查找菜单项
-      const findMenuByPath = (menus) => {
-        for (const menu of menus) {
-          if (menu.path === cleanPath) {
-            return menu.MenuName || menu.menuName || '未命名'
-          }
-          if (menu.children && menu.children.length > 0) {
-            const found = findMenuByPath(menu.children)
-            if (found) return found
-          }
-        }
-        return null
-      }
-
-      return findMenuByPath(this.menuList) || '页面'
+      return getMenuTitleByPath(this.menuList, path)
     },
 
     // 处理标签页点击
@@ -567,7 +449,7 @@ export default {
       // 如果关闭的是当前激活的标签页
       if (this.activeTab === targetPath) {
         // 获取下一个或上一个标签页
-        const nextTab = this.openedTabs[targetIndex + 1] || this.openedTabs[targetIndex - 1]
+        const nextTab = getNextTabAfterRemove(this.openedTabs, targetPath)
         if (nextTab) {
           this.activeTab = nextTab.path
           this.$router.push(nextTab.path)
@@ -584,11 +466,7 @@ export default {
     // 初始化默认标签页
     initDefaultTab() {
       // 添加欢迎页标签
-      this.openedTabs.push({
-        path: '/welcome',
-        title: '首页',
-        cacheName: 'Welcome'
-      })
+      this.openedTabs = createDefaultTabs()
       this.activeTab = '/welcome'
       this.rebuildCachedViews()
     },
