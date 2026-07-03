@@ -1,4 +1,6 @@
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
   padding: 0 !important;
   margin: 0;
@@ -97,7 +99,7 @@ body {
 }
 
 .el-aside {
-  background: linear-gradient(180deg, #2C3E50 0%, #1a252f 100%);
+  background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   transition: width 0.3s ease;
   overflow: hidden;
@@ -181,7 +183,9 @@ body {
   border: none;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
   background: #ffffff;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
 .el-card:hover {
@@ -272,7 +276,7 @@ body {
 }
 
 .el-input__wrapper.is-focus {
-  box-shadow: 0 0 0 1px #0B9EE8 inset;
+  box-shadow: 0 0 0 1px #0b9ee8 inset;
 }
 
 .el-input-group {
@@ -452,8 +456,6 @@ body {
   padding: 24px 28px;
   background: #ffffff;
 }
-
-
 
 .el-dialog__footer {
   padding: 16px 24px;
@@ -646,8 +648,6 @@ body {
   outline: none;
 }
 
-
-
 .el-row {
   margin-bottom: 16px;
 }
@@ -698,7 +698,7 @@ body {
 }
 
 .el-upload-dragger:hover {
-  border-color: #0B9EE8;
+  border-color: #0b9ee8;
 }
 
 .el-progress-bar__outer {
@@ -739,4 +739,390 @@ body {
 
 .el-drawer__body {
   padding: 20px;
+}
+
+/* Modern workspace refresh */
+:root {
+  --dt-bg: #f4f7fb;
+  --dt-surface: #ffffff;
+  --dt-surface-soft: #f8fafc;
+  --dt-border: #dde5ef;
+  --dt-border-strong: #c9d5e4;
+  --dt-text: #182230;
+  --dt-text-muted: #667085;
+  --dt-primary: #235bff;
+  --dt-primary-hover: #1b47d6;
+  --dt-primary-soft: #e8efff;
+  --dt-accent: #00a889;
+  --dt-accent-soft: #dff8f1;
+  --dt-danger: #e5484d;
+  --dt-warning: #f59e0b;
+  --dt-shadow: 0 14px 36px rgba(18, 38, 63, 0.1);
+  --dt-shadow-soft: 0 8px 22px rgba(18, 38, 63, 0.06);
+}
+
+html,
+body,
+#app {
+  color: var(--dt-text);
+  background:
+    radial-gradient(circle at 8% 10%, rgba(35, 91, 255, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, var(--dt-bg) 100%);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'PingFang SC',
+    'Microsoft YaHei',
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+}
+
+body {
+  color: var(--dt-text);
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--dt-primary);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c8d3df;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9fb0c3;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+.el-card {
+  border: 1px solid rgba(221, 229, 239, 0.9) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--dt-shadow-soft) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.el-card:hover {
+  box-shadow: var(--dt-shadow) !important;
+  transform: none !important;
+}
+
+.el-card__header {
+  padding: 14px 18px !important;
+  border-bottom: 1px solid var(--dt-border) !important;
+  color: var(--dt-text) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
+}
+
+.el-card__body {
+  padding: 18px !important;
+}
+
+.el-button {
+  border-radius: 8px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.el-button--primary {
+  background: linear-gradient(135deg, var(--dt-primary) 0%, #3b7cff 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background: linear-gradient(135deg, var(--dt-primary-hover) 0%, var(--dt-primary) 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px rgba(35, 91, 255, 0.22) !important;
+}
+
+.el-button--default {
+  background: #ffffff !important;
+  border-color: var(--dt-border-strong) !important;
+  color: var(--dt-text) !important;
+}
+
+.el-button--default:hover,
+.el-button--default:focus {
+  background: var(--dt-primary-soft) !important;
+  border-color: #9bb8ff !important;
+  color: var(--dt-primary) !important;
+}
+
+.el-button--success {
+  background: linear-gradient(135deg, var(--dt-accent) 0%, #12c9a4 100%) !important;
+  border-color: transparent !important;
+}
+
+.el-button--danger {
+  background: linear-gradient(135deg, var(--dt-danger) 0%, #ff6b6f 100%) !important;
+  border-color: transparent !important;
+}
+
+.el-button--text {
+  color: var(--dt-primary) !important;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select .el-input__wrapper,
+.el-input-number .el-input__wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 1px var(--dt-border) inset !important;
+  background: #ffffff !important;
+}
+
+.el-input__wrapper:hover,
+.el-textarea__inner:hover {
+  box-shadow: 0 0 0 1px #aebbd0 inset !important;
+}
+
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus {
+  box-shadow:
+    0 0 0 1px var(--dt-primary) inset,
+    0 0 0 4px rgba(35, 91, 255, 0.12) !important;
+}
+
+.el-input-group__append {
+  background: var(--dt-primary) !important;
+  border-color: var(--dt-primary) !important;
+  border-radius: 0 8px 8px 0 !important;
+  color: #ffffff !important;
+}
+
+.el-input-group .el-input__wrapper {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.el-table {
+  border: 1px solid var(--dt-border) !important;
+  border-radius: 8px !important;
+  color: var(--dt-text) !important;
+  background: #ffffff !important;
+}
+
+.el-table th {
+  background: #f3f7fb !important;
+  color: #344054 !important;
+  font-size: 13px;
+  font-weight: 700 !important;
+}
+
+.el-table td,
+.el-table th.is-leaf {
+  border-bottom: 1px solid #e9eef5 !important;
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background: #fbfdff !important;
+}
+
+.el-table tr:hover > td {
+  background: #eef5ff !important;
+}
+
+.el-table .cell {
+  line-height: 1.45;
+}
+
+.el-pagination {
+  margin-top: 14px !important;
+  padding: 12px 0 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.el-pagination .el-pager li {
+  border-radius: 8px !important;
+}
+
+.el-pagination .el-pager li.is-active {
+  background: var(--dt-primary) !important;
+  color: #ffffff !important;
+}
+
+.el-dialog,
+.el-message-box {
+  border: 1px solid rgba(221, 229, 239, 0.9) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 24px 80px rgba(16, 24, 40, 0.22) !important;
+}
+
+.el-dialog__header,
+.el-message-box__header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--dt-border) !important;
+}
+
+.el-dialog__title,
+.el-message-box__title {
+  color: var(--dt-text) !important;
+  font-size: 17px !important;
+  font-weight: 750 !important;
+}
+
+.el-dialog__title::before,
+.el-message-box__title::before {
+  background: linear-gradient(180deg, var(--dt-primary) 0%, var(--dt-accent) 100%) !important;
+}
+
+.el-dialog__body,
+.el-message-box__content {
+  background: #ffffff !important;
+  color: var(--dt-text-muted) !important;
+}
+
+.el-dialog__footer,
+.el-message-box__footer {
+  background: #f8fafc !important;
+  border-top: 1px solid var(--dt-border) !important;
+}
+
+.el-dialog__headerbtn,
+.el-message-box__headerbtn {
+  background: #f3f6fb !important;
+}
+
+.el-dialog__headerbtn:hover,
+.el-message-box__headerbtn:hover {
+  background: #feecec !important;
+}
+
+.el-dialog__headerbtn:hover .el-dialog__close,
+.el-message-box__headerbtn:hover .el-message-box__close {
+  color: var(--dt-danger) !important;
+}
+
+.el-tag {
+  border-radius: 999px !important;
+}
+
+.el-tag--success {
+  color: #08795f !important;
+  background: var(--dt-accent-soft) !important;
+}
+
+.el-tag--danger {
+  color: #b42318 !important;
+  background: #fee4e2 !important;
+}
+
+.el-switch.is-checked .el-switch__core {
+  background-color: var(--dt-accent) !important;
+  border-color: var(--dt-accent) !important;
+}
+
+.el-tree {
+  color: var(--dt-text);
+  background: transparent !important;
+}
+
+.el-tree-node__content {
+  height: 36px !important;
+  border-radius: 8px;
+}
+
+.el-tree-node__content:hover,
+.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  color: var(--dt-primary);
+  background: var(--dt-primary-soft) !important;
+}
+
+.el-dropdown-menu {
+  border-radius: 10px !important;
+  border: 1px solid var(--dt-border) !important;
+  box-shadow: var(--dt-shadow) !important;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover {
+  color: var(--dt-primary) !important;
+  background: var(--dt-primary-soft) !important;
+}
+
+.operation-buttons {
+  gap: 6px !important;
+}
+
+.operation-buttons .el-button {
+  min-width: 30px;
+}
+
+/* Consistent inner-page height system */
+.content-wrapper > [class$='-container'],
+.content-wrapper > .welcome-container {
+  min-height: 100%;
+}
+
+.content-wrapper > :not(.welcome-container) {
+  box-sizing: border-box;
+}
+
+.system-settings-container,
+.menus-container,
+.role-container,
+.attachment-container,
+.apikey-container,
+.crud-config-container,
+.dynamic-app-container,
+.log-container {
+  min-height: 100% !important;
+  padding: 0 !important;
+}
+
+.organization-container {
+  min-height: 100% !important;
+}
+
+.content-wrapper .el-card.table-card,
+.content-wrapper .el-card.card-wrapper,
+.content-wrapper .el-card.settings-card,
+.content-wrapper .dept-tree-card,
+.content-wrapper .user-list-card {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+}
+
+.content-wrapper .el-card.table-card,
+.content-wrapper .el-card.card-wrapper,
+.content-wrapper .el-card.settings-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper .el-card.table-card > .el-card__body,
+.content-wrapper .el-card.card-wrapper > .el-card__body,
+.content-wrapper .el-card.settings-card > .el-card__body {
+  flex: 1;
+  min-height: 0;
+}
+
+.content-wrapper .el-card.table-card > .el-card__body,
+.content-wrapper .el-card.settings-card > .el-card__body {
+  display: flex;
+  flex-direction: column;
 }

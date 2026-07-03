@@ -233,4 +233,47 @@ export default defineComponent({
   color: #9ca3af;
   font-size: 12px;
 }
+
+/* Modern workspace height refinement */
+.system-settings-container {
+  height: 100%;
+  min-height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-card :deep(.el-card__body) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 22px 26px 26px !important;
+}
+
+.settings-card :deep(.el-form) {
+  min-height: 100%;
+}
+
+.settings-card :deep(.el-form-item:last-child) {
+  margin-bottom: 0;
+}
+
+.preview {
+  margin-top: 16px;
+}
+
+.preview-box {
+  max-width: none;
+  height: clamp(320px, calc(100vh - 470px), 520px);
+  border-color: #d8e1ec;
+  background-color: #fbfdff;
+}
 </style>

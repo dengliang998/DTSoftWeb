@@ -135,12 +135,11 @@ export default {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  position: relative;
-  padding-bottom: 55px;
 }
 
 .search-section {
-  margin-bottom: 15px;
+  flex: 0 0 auto;
+  margin-bottom: 14px;
 }
 
 .table-container {
@@ -150,12 +149,20 @@ export default {
 }
 
 .pagination-container {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px 20px;
+  flex: 0 0 auto;
+  padding: 12px 0 0;
   background-color: #fff;
   border-top: 1px solid #ebeef5;
+}
+
+.card-wrapper :deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.table-container :deep(.el-table) {
+  height: 100%;
 }
 </style>

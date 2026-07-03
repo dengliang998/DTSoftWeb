@@ -104,39 +104,39 @@ export default {
           label: '用户总数',
           value: 0,
           icon: 'User',
-          color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'linear-gradient(135deg, #235bff 0%, #6b8cff 100%)',
           path: '/user/organization'
         },
         {
           label: '角色数量',
           value: 0,
           icon: 'Avatar',
-          color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          color: 'linear-gradient(135deg, #00a889 0%, #35d2b4 100%)',
           path: '/role/rolesmenu'
         },
         {
           label: '应用配置',
           value: 0,
           icon: 'Setting',
-          color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          color: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
           path: '/DynamicApp/DynamicApiConfig'
         },
         {
           label: '操作日志',
           value: 0,
           icon: 'Document',
-          color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+          color: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
           path: '/log/logaction'
         }
       ],
       // 快捷导航
       quickNavList: [
-        { name: '用户管理', icon: 'User', color: '#667eea', path: '/user/organization' },
-        { name: '角色管理', icon: 'Avatar', color: '#f5576c', path: '/role/rolesmenu' },
-        { name: '菜单管理', icon: 'Operation', color: '#4facfe', path: '/common/menus' },
-        { name: '应用配置', icon: 'Setting', color: '#43e97b', path: '/DynamicApp/DynamicApiConfig' },
-        { name: '操作日志', icon: 'Document', color: '#fee140', path: '/log/logaction' },
-        { name: '附件管理', icon: 'DocumentCopy', color: '#a8edea', path: '/attachment/attachmentlist' }
+        { name: '用户管理', icon: 'User', color: '#235bff', path: '/user/organization' },
+        { name: '角色管理', icon: 'Avatar', color: '#00a889', path: '/role/rolesmenu' },
+        { name: '菜单管理', icon: 'Operation', color: '#7c3aed', path: '/common/menus' },
+        { name: '应用配置', icon: 'Setting', color: '#0f766e', path: '/DynamicApp/DynamicApiConfig' },
+        { name: '操作日志', icon: 'Document', color: '#f59e0b', path: '/log/logaction' },
+        { name: '附件管理', icon: 'DocumentCopy', color: '#475467', path: '/attachment/attachmentlist' }
       ]
     }
   },
@@ -756,6 +756,245 @@ export default {
     width: 40px;
     height: 40px;
     font-size: 20px;
+  }
+}
+
+/* Modern dashboard refresh */
+.welcome-container {
+  min-height: 100%;
+  padding: 0;
+  background: transparent;
+}
+
+.greeting-banner {
+  position: relative;
+  min-height: 176px;
+  padding: 30px 34px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    linear-gradient(120deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 36, 64, 0.94) 52%, rgba(0, 95, 87, 0.88) 100%),
+    linear-gradient(135deg, #101828 0%, #235bff 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.18);
+}
+
+.greeting-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.32) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(90deg, #000 0%, transparent 78%);
+}
+
+.greeting-banner::after {
+  content: '';
+  position: absolute;
+  right: 30px;
+  bottom: 24px;
+  width: 170px;
+  height: 170px;
+  border: 1px solid rgba(125, 211, 199, 0.36);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 22px rgba(125, 211, 199, 0.07),
+    inset 0 0 0 52px rgba(35, 91, 255, 0.08);
+}
+
+.greeting-banner:hover {
+  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.18);
+  transform: none;
+}
+
+.greeting-banner.morning,
+.greeting-banner.noon,
+.greeting-banner.afternoon,
+.greeting-banner.evening,
+.greeting-banner.night,
+.greeting-banner.late-night {
+  background:
+    linear-gradient(120deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 36, 64, 0.94) 52%, rgba(0, 95, 87, 0.88) 100%),
+    linear-gradient(135deg, #101828 0%, #235bff 100%);
+}
+
+.greeting-content {
+  position: relative;
+  z-index: 1;
+}
+
+.greeting-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 74px;
+  font-size: 38px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  animation: none;
+  backdrop-filter: blur(14px);
+}
+
+.greeting-title {
+  margin-bottom: 8px;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+
+.greeting-subtitle {
+  max-width: 560px;
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 15px;
+}
+
+.current-time {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  margin-top: 14px;
+  color: #dff8f1;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 13px;
+  background: rgba(0, 168, 137, 0.16);
+  border: 1px solid rgba(125, 211, 199, 0.28);
+  border-radius: 999px;
+}
+
+.stats-row {
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  border-radius: 8px;
+}
+
+.stat-card:hover {
+  box-shadow: 0 14px 34px rgba(18, 38, 63, 0.1);
+  transform: none;
+}
+
+.stat-content {
+  gap: 14px;
+  min-height: 76px;
+  padding: 0;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  box-shadow: 0 12px 20px rgba(18, 38, 63, 0.12);
+}
+
+.stat-value {
+  color: #182230;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.stat-label {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.quick-nav-card {
+  border-radius: 8px;
+}
+
+.quick-nav-grid {
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 12px;
+  padding: 0;
+}
+
+.nav-item {
+  min-height: 118px;
+  padding: 18px 12px;
+  background: #f8fafc;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+}
+
+.nav-item:hover {
+  background: #ffffff;
+  border-color: #9bb8ff;
+  box-shadow: 0 10px 24px rgba(35, 91, 255, 0.12);
+  transform: none;
+}
+
+.nav-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  box-shadow: 0 10px 18px rgba(18, 38, 63, 0.12);
+}
+
+.nav-item:hover .nav-icon {
+  transform: none;
+}
+
+.nav-text {
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.card-header {
+  color: #182230;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.card-header .el-icon {
+  color: #235bff;
+}
+
+.tip-item,
+.log-item {
+  background: #f8fafc;
+  border-left-color: #235bff;
+}
+
+@media (max-width: 1100px) {
+  .stats-row :deep(.el-col) {
+    max-width: 50%;
+    flex: 0 0 50%;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .greeting-banner {
+    padding: 22px;
+  }
+
+  .greeting-content {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .greeting-icon {
+    width: 58px;
+    height: 58px;
+    font-size: 30px;
+  }
+
+  .stats-row :deep(.el-col) {
+    max-width: 100%;
+    flex: 0 0 100%;
   }
 }
 </style>

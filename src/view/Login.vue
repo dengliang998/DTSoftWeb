@@ -1,5 +1,9 @@
 <template>
   <div class="login_container" :style="loginContainerStyle">
+    <div class="login_brand">
+      <div class="login_brand-title">{{ systemName }}</div>
+      <div class="login_brand-subtitle">安全、清晰、高效的管理工作台</div>
+    </div>
     <div class="login_box">
       <!-- 头像区域 -->
       <div class="avatar_box">
@@ -48,6 +52,7 @@ export default defineComponent({
     const route = useRoute()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
+    const systemName = ref(getCachedSystemName() || 'DT Program')
 
     // 这是登录表单的数据绑定对象
     const loginForm = reactive({
@@ -145,7 +150,10 @@ export default defineComponent({
         .then(() => {
           loginBgUrl.value = getCachedLoginImgDataUrl()
           const title = getCachedSystemName()
-          if (title) document.title = title
+          if (title) {
+            systemName.value = title
+            document.title = title
+          }
         })
         .catch(() => {})
     })
@@ -174,6 +182,7 @@ export default defineComponent({
       loginForm,
       loginFormRules,
       avatarUrl,
+      systemName,
       onAvatarError,
       login,
       loginContainerStyle: computed(() => {
@@ -241,5 +250,240 @@ export default defineComponent({
 
 .login-btn {
   width: 100%;
+}
+
+/* Modern login refresh */
+.login_container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 100%;
+  padding: 56px 9vw;
+  overflow: hidden;
+  background-color: #101828;
+}
+
+.login_container::before {
+  content: none;
+  position: absolute;
+  left: 8vw;
+  top: 50%;
+  width: min(520px, 44vw);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 800;
+  line-height: 0.96;
+  letter-spacing: 0;
+  transform: translateY(-58%);
+  z-index: 1;
+}
+
+.login_container::after {
+  content: none;
+  position: absolute;
+  left: 8vw;
+  top: calc(50% + 52px);
+  z-index: 1;
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.login_brand {
+  position: absolute;
+  left: 8vw;
+  top: 50%;
+  z-index: 1;
+  width: min(560px, 45vw);
+  transform: translateY(-56%);
+}
+
+.login_brand-title {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 800;
+  line-height: 0.96;
+  letter-spacing: 0;
+  word-break: break-word;
+}
+
+.login_brand-subtitle {
+  margin-top: 22px;
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.login_box {
+  position: relative;
+  left: auto;
+  top: auto;
+  z-index: 2;
+  width: 410px;
+  height: auto;
+  min-height: 380px;
+  padding: 78px 34px 34px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.36);
+  transform: none;
+  backdrop-filter: blur(22px);
+}
+
+.login_box::before {
+  content: '账号登录';
+  position: absolute;
+  left: 34px;
+  top: 28px;
+  color: #182230;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.login_box::after {
+  content: '';
+  position: absolute;
+  left: 34px;
+  top: 63px;
+  width: 44px;
+  height: 4px;
+  background: linear-gradient(90deg, #235bff 0%, #00a889 100%);
+  border-radius: 999px;
+}
+
+.avatar_box {
+  left: auto;
+  right: 30px;
+  top: 28px;
+  width: 58px;
+  height: 58px;
+  padding: 3px;
+  border: 1px solid rgba(35, 91, 255, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+  box-shadow: 0 10px 24px rgba(35, 91, 255, 0.16);
+  transform: none;
+}
+
+.avatar_box img {
+  border-radius: 13px;
+  background: #eef2f7;
+}
+
+.login_form {
+  position: static;
+  width: 100%;
+  padding: 0;
+}
+
+.login_form :deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+.login_form :deep(.el-input__wrapper) {
+  min-height: 44px;
+  border-radius: 10px !important;
+  box-shadow: 0 0 0 1px #d7e0ec inset !important;
+}
+
+.login_form :deep(.el-input__wrapper.is-focus) {
+  box-shadow:
+    0 0 0 1px #235bff inset,
+    0 0 0 4px rgba(35, 91, 255, 0.12) !important;
+}
+
+.btns {
+  margin-bottom: 0 !important;
+}
+
+.login-btn {
+  height: 44px;
+  border-radius: 10px !important;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+/* Login compact refinement */
+.login_box {
+  width: 400px;
+  min-height: 0;
+  padding: 30px 32px 32px;
+}
+
+.login_box::before {
+  top: 28px;
+  left: 32px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.login_box::after {
+  top: 66px;
+  left: 32px;
+}
+
+.avatar_box {
+  top: 26px;
+  right: 32px;
+  width: 46px;
+  height: 46px;
+  padding: 2px;
+  border-color: rgba(201, 213, 228, 0.9);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.12);
+}
+
+.avatar_box img {
+  border-radius: 50%;
+}
+
+.login_form {
+  margin-top: 72px;
+}
+
+.login_form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
+.login_form :deep(.el-input__wrapper) {
+  min-height: 42px;
+}
+
+.login-btn {
+  height: 42px;
+}
+
+@media (max-width: 980px) {
+  .login_container {
+    justify-content: center;
+    padding: 42px 24px;
+  }
+
+  .login_container::before,
+  .login_container::after,
+  .login_brand {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .login_box {
+    width: min(400px, calc(100vw - 40px));
+    padding: 28px 24px 28px;
+  }
+
+  .login_box::before,
+  .login_box::after {
+    left: 24px;
+  }
+
+  .avatar_box {
+    right: 24px;
+  }
 }
 </style>
