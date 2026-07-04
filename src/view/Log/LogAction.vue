@@ -27,11 +27,32 @@
         >
           <!-- <el-table-column label="#" type="index"></el-table-column> -->
           <el-table-column label="#" type="index" :index="indexMethod"></el-table-column>
-          <el-table-column label="日志时间" prop="LogDate" width="160"></el-table-column>
+          <el-table-column label="日志时间" prop="LogDate" width="180" class-name="log-date-column">
+            <template #default="{ row }">
+              <span class="log-date-cell">{{ row.LogDate }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="操作用户" prop="UserAcc" width="110"></el-table-column>
           <el-table-column label="接口名称" prop="ActionName"></el-table-column>
           <el-table-column label="IP 地址" prop="ClientIP" width="150"></el-table-column>
           <el-table-column label="请求参数" prop="Param" show-overflow-tooltip></el-table-column>
+          <el-table-column label="返回结果" min-width="220">
+            <template #default="{ row }">
+              <el-popover
+                v-if="hasResult(row.Result)"
+                placement="top-start"
+                trigger="hover"
+                :width="520"
+                popper-class="log-result-popper"
+              >
+                <template #reference>
+                  <span class="result-preview">{{ formatResultPreview(row.Result) }}</span>
+                </template>
+                <pre class="result-content">{{ formatResultFull(row.Result) }}</pre>
+              </el-popover>
+              <span v-else class="empty-result">-</span>
+            </template>
+          </el-table-column>
           <el-table-column label="请求类型" prop="RequestType" width="100"></el-table-column>
         </el-table>
       </div>
@@ -59,9 +80,6 @@ import { markRaw } from 'vue'
 
 export default {
   name: 'LogAction',
-  components: {
-    Search
-  },
   data() {
     return {
       Search: markRaw(Search),
@@ -115,6 +133,31 @@ export default {
     indexMethod(index) {
       index = index + 1 + (this.queryInfo.pagenum - 1) * this.queryInfo.pagesize
       return index
+    },
+    hasResult(result) {
+      return result !== null && result !== undefined && result !== ''
+    },
+    normalizeResult(result) {
+      if (typeof result !== 'string') {
+        return JSON.stringify(result, null, 2)
+      }
+
+      const trimmedResult = result.trim()
+      if (!trimmedResult) {
+        return ''
+      }
+
+      try {
+        return JSON.stringify(JSON.parse(trimmedResult), null, 2)
+      } catch {
+        return result
+      }
+    },
+    formatResultFull(result) {
+      return this.normalizeResult(result)
+    },
+    formatResultPreview(result) {
+      return this.normalizeResult(result).replace(/\s+/g, ' ')
     }
   }
 }
@@ -164,5 +207,42 @@ export default {
 
 .table-container :deep(.el-table) {
   height: 100%;
+}
+
+.log-date-cell {
+  white-space: nowrap;
+}
+
+.table-container :deep(.log-date-column .cell) {
+  white-space: nowrap;
+}
+
+.result-preview {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.empty-result {
+  color: #909399;
+}
+</style>
+
+<style>
+.log-result-popper {
+  max-width: min(520px, calc(100vw - 32px));
+}
+
+.log-result-popper .result-content {
+  max-height: 360px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>
