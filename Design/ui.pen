@@ -1,0 +1,2785 @@
+{
+  "version": "2.14",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Login Page - Desktop",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": {
+        "type": "image",
+        "enabled": true,
+        "url": "../src/assets/imgs/bg-optimized.jpg",
+        "mode": "fill"
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Ew3mW",
+          "x": 64,
+          "y": 181,
+          "name": "Brand Narrative",
+          "width": 330,
+          "height": 206,
+          "fill": "#00000000",
+          "layout": "vertical",
+          "gap": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "iQMNd",
+              "name": "Brand Mark",
+              "width": 58,
+              "height": 58,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#FFFFFF",
+                    "position": 0
+                  },
+                  {
+                    "color": "#DCEEFF",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 14,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0B1B3333",
+                "offset": {
+                  "x": 0,
+                  "y": 14
+                },
+                "blur": 30
+              },
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kIrdZ",
+                  "name": "Brand Initials",
+                  "fill": "$brand-blue",
+                  "content": "DT",
+                  "fontFamily": "$font-data",
+                  "fontSize": 20,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Yy2xH",
+              "name": "Title Stack",
+              "width": "fill_container",
+              "fill": "#00000000",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qdqpV",
+                  "name": "System Name",
+                  "fill": "#17324D",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "DT Program",
+                  "lineHeight": 1.15,
+                  "fontFamily": "$font-body",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "r5xOt",
+                  "name": "System Subtitle",
+                  "fill": "#4B6478",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "安全、清晰、高效的管理工作台",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FPAz6",
+          "x": 464,
+          "y": 78,
+          "name": "Login Panel",
+          "width": 272,
+          "height": 444,
+          "fill": "#FFFFFFF2",
+          "cornerRadius": 16,
+          "stroke": "#FFFFFF",
+          "strokeWidth": 1,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#0B1B335C",
+            "offset": {
+              "x": 0,
+              "y": 28
+            },
+            "blur": 70
+          },
+          "layout": "vertical",
+          "gap": 17,
+          "padding": [
+            28,
+            26,
+            26,
+            26
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "UiddN",
+              "name": "Panel Header",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JSQJp",
+                  "name": "Header Copy",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 7,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XEFEL",
+                      "name": "Login Title",
+                      "fill": "$ink-900",
+                      "content": "账号登录",
+                      "fontFamily": "$font-body",
+                      "fontSize": 24,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Jw8z8",
+                      "name": "Login Hint",
+                      "fill": "$ink-600",
+                      "content": "使用工作台账号继续",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "u2LuIb",
+                  "name": "Avatar Preview",
+                  "width": 48,
+                  "height": 48,
+                  "fill": "#EEF5FF",
+                  "cornerRadius": 24,
+                  "stroke": "#D7E0EC",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "MNwwA",
+                      "name": "User Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "person",
+                      "library": "Material Symbols Outlined",
+                      "fill": "$brand-primary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Gr2Ol",
+              "name": "请输入用户名",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#F8FAFC",
+              "cornerRadius": 10,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "gap": 10,
+              "padding": [
+                0,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "y1KXw",
+                  "name": "请输入用户名 Icon",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "person",
+                  "library": "Material Symbols Outlined",
+                  "fill": "$ink-400"
+                },
+                {
+                  "type": "text",
+                  "id": "g1Ugg",
+                  "name": "请输入用户名 Text",
+                  "fill": "$ink-400",
+                  "content": "请输入用户名",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XiOOd",
+              "name": "请输入密码",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#F8FAFC",
+              "cornerRadius": 10,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "gap": 10,
+              "padding": [
+                0,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "BF4N7",
+                  "name": "请输入密码 Icon",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "lock",
+                  "library": "Material Symbols Outlined",
+                  "fill": "$ink-400"
+                },
+                {
+                  "type": "text",
+                  "id": "lWWET",
+                  "name": "请输入密码 Text",
+                  "fill": "$ink-400",
+                  "content": "请输入密码",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jbDxs",
+              "name": "Captcha Row",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "o5udxB",
+                  "name": "Captcha Input",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "#F8FAFC",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "gap": 10,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "PjAeI",
+                      "name": "Captcha Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "key",
+                      "library": "Material Symbols Outlined",
+                      "fill": "$ink-400"
+                    },
+                    {
+                      "type": "text",
+                      "id": "aUSqq",
+                      "name": "Captcha Placeholder",
+                      "fill": "$ink-400",
+                      "content": "验证码",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jQmHX",
+                  "name": "Captcha Image",
+                  "width": 82,
+                  "height": 44,
+                  "fill": "#EEF5FF",
+                  "cornerRadius": 10,
+                  "stroke": "#C9D5E4",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GNJto",
+                      "name": "Captcha Code",
+                      "fill": "$brand-blue",
+                      "content": "A7K9",
+                      "fontFamily": "$font-data",
+                      "fontSize": 16,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "c1D56",
+              "name": "Primary Login Button",
+              "width": "fill_container",
+              "height": 44,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#1890FF",
+                    "position": 0
+                  },
+                  {
+                    "color": "#40A9FF",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 10,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "B4rY0a",
+                  "name": "Button Label",
+                  "fill": "#FFFFFF",
+                  "content": "登录",
+                  "fontFamily": "$font-body",
+                  "fontSize": 15,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "CrAgl",
+              "name": "Security Note",
+              "fill": "$ink-600",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "加密传输 · 验证码保护",
+              "textAlign": "center",
+              "fontFamily": "$font-body",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Z934ms",
+      "x": 880,
+      "y": 0,
+      "name": "Home Dashboard - Desktop",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#F4F7FB",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "w3eYe1",
+          "x": 0,
+          "y": 0,
+          "name": "Global Header",
+          "width": 1440,
+          "height": 64,
+          "fill": "#0F172A",
+          "gap": 18,
+          "padding": [
+            0,
+            24
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "nL82Z",
+              "name": "Brand Area",
+              "width": 230,
+              "height": 40,
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "q0PvPp",
+                  "name": "Logo Mark",
+                  "width": 34,
+                  "height": 34,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 9,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F1S8l",
+                      "name": "Logo Text",
+                      "fill": "#1E3C72",
+                      "content": "DT",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "F4cx6",
+                  "name": "Product Title",
+                  "fill": "#F8FAFC",
+                  "content": "DT Program",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "750"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tHEKl",
+              "name": "Collapse Button",
+              "width": 34,
+              "height": 34,
+              "fill": "#FFFFFF10",
+              "cornerRadius": 10,
+              "stroke": "#FFFFFF1A",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "o5wPx",
+                  "name": "Collapse Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "panel-left-close",
+                  "library": "lucide",
+                  "fill": "#CBD5E1"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Pkq0m",
+              "name": "Top Menu",
+              "width": 864,
+              "height": 40,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fw5PC",
+                  "name": "Top Menu Item - 工作台",
+                  "height": 36,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#235BFF",
+                        "position": 0
+                      },
+                      {
+                        "color": "#00A889",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 10,
+                  "gap": 7,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "yX5LF",
+                      "name": "工作台 Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "layout-dashboard",
+                      "library": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GniRd",
+                      "name": "工作台 Label",
+                      "fill": "#FFFFFF",
+                      "content": "工作台",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "650"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "oY9bp",
+                  "name": "Top Menu Item - 系统管理",
+                  "height": 36,
+                  "fill": "#FFFFFF00",
+                  "cornerRadius": 10,
+                  "gap": 7,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "F8gPNM",
+                      "name": "系统管理 Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "settings",
+                      "library": "lucide",
+                      "fill": "#CBD5E1"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RDitI",
+                      "name": "系统管理 Label",
+                      "fill": "#CBD5E1",
+                      "content": "系统管理",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "650"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "s5qbbx",
+                  "name": "Top Menu Item - 日志审计",
+                  "height": 36,
+                  "fill": "#FFFFFF00",
+                  "cornerRadius": 10,
+                  "gap": 7,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "HkbLz",
+                      "name": "日志审计 Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "file-clock",
+                      "library": "lucide",
+                      "fill": "#CBD5E1"
+                    },
+                    {
+                      "type": "text",
+                      "id": "mggxW",
+                      "name": "日志审计 Label",
+                      "fill": "#CBD5E1",
+                      "content": "日志审计",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "650"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hCwJ1",
+                  "name": "Top Menu Item - 应用配置",
+                  "height": 36,
+                  "fill": "#FFFFFF00",
+                  "cornerRadius": 10,
+                  "gap": 7,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "SG5v1",
+                      "name": "应用配置 Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "sliders-horizontal",
+                      "library": "lucide",
+                      "fill": "#CBD5E1"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QFXDN",
+                      "name": "应用配置 Label",
+                      "fill": "#CBD5E1",
+                      "content": "应用配置",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "650"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yov0O",
+              "name": "User Capsule",
+              "width": 210,
+              "height": 38,
+              "fill": "#FFFFFF12",
+              "cornerRadius": 999,
+              "stroke": "#FFFFFF1A",
+              "strokeWidth": 1,
+              "gap": 10,
+              "padding": [
+                0,
+                4,
+                0,
+                14
+              ],
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gVCtc",
+                  "name": "User Name",
+                  "fill": "#E2E8F0",
+                  "content": "管理员",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                },
+                {
+                  "type": "frame",
+                  "id": "N5EpQl",
+                  "name": "User Avatar",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "#DFF8F1",
+                  "cornerRadius": 999,
+                  "stroke": "#FFFFFFC7",
+                  "strokeWidth": 2,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RJSwl",
+                      "name": "Avatar Initial",
+                      "fill": "#0F766E",
+                      "content": "A",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "y7UmOV",
+          "x": 6,
+          "y": 70,
+          "name": "Sidebar",
+          "width": 200,
+          "height": 824,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#101828",
+                "position": 0
+              },
+              {
+                "color": "#111927",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 12,
+          "stroke": "#94A3B82A",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 3,
+          "padding": [
+            12,
+            8
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "osKnY",
+              "name": "Sidebar Item - 首页",
+              "width": "fill_container",
+              "height": 38,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#235BFF",
+                    "position": 0
+                  },
+                  {
+                    "color": "#00A889",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Dd96y",
+                  "name": "首页 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "house",
+                  "library": "lucide",
+                  "fill": "#FFFFFF"
+                },
+                {
+                  "type": "text",
+                  "id": "wOsgu",
+                  "name": "首页 Side Label",
+                  "fill": "#FFFFFF",
+                  "content": "首页",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gTRx0",
+              "name": "Sidebar Item - 用户管理",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "hAbrl",
+                  "name": "用户管理 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "users",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "yNGdu",
+                  "name": "用户管理 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "用户管理",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TBvaE",
+              "name": "Sidebar Item - 角色管理",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "itb0D",
+                  "name": "角色管理 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "shield-check",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "njOmk",
+                  "name": "角色管理 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "角色管理",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "h6LYn",
+              "name": "Sidebar Item - 菜单管理",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "kaWXw",
+                  "name": "菜单管理 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "list-tree",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "JVsZf",
+                  "name": "菜单管理 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "菜单管理",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "v8ZOul",
+              "name": "Sidebar Item - 应用配置",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "feTMi",
+                  "name": "应用配置 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "settings",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "R8QxJ",
+                  "name": "应用配置 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "应用配置",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "osuN8",
+              "name": "Sidebar Item - 操作日志",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "EikvK",
+                  "name": "操作日志 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "file-text",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "qMnt3",
+                  "name": "操作日志 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "操作日志",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "a36CYP",
+              "name": "Sidebar Item - 附件管理",
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#FFFFFF00",
+              "cornerRadius": 9,
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "FTIRe",
+                  "name": "附件管理 Side Icon",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "paperclip",
+                  "library": "lucide",
+                  "fill": "#AEBACC"
+                },
+                {
+                  "type": "text",
+                  "id": "npxuS",
+                  "name": "附件管理 Side Label",
+                  "fill": "#AEBACC",
+                  "content": "附件管理",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "650"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "EPG6F",
+          "x": 214,
+          "y": 70,
+          "name": "Main Container",
+          "clip": true,
+          "width": 1220,
+          "height": 824,
+          "fill": "#FFFFFFC2",
+          "cornerRadius": 14,
+          "stroke": "#DDE5EF",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "j9RKOp",
+              "name": "Tabs Bar",
+              "width": "fill_container",
+              "height": 50,
+              "fill": "#F8FAFCEB",
+              "stroke": "#DDE5EF",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "gap": 8,
+              "padding": [
+                8,
+                14,
+                0,
+                14
+              ],
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nn7d8",
+                  "name": "Tab - 首页",
+                  "height": 34,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    9,
+                    9,
+                    0,
+                    0
+                  ],
+                  "stroke": "#DDE5EF",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "URkWR",
+                      "name": "首页 Tab Label",
+                      "fill": "#182230",
+                      "content": "首页",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "650"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rsFQP",
+                  "name": "Tab - 用户管理",
+                  "height": 34,
+                  "fill": "#FFFFFF00",
+                  "cornerRadius": [
+                    9,
+                    9,
+                    0,
+                    0
+                  ],
+                  "stroke": "#FFFFFF00",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z0v5h",
+                      "name": "用户管理 Tab Label",
+                      "fill": "#667085",
+                      "content": "用户管理",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "650"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "y5BoDy",
+                  "name": "Tab - 应用配置",
+                  "height": 34,
+                  "fill": "#FFFFFF00",
+                  "cornerRadius": [
+                    9,
+                    9,
+                    0,
+                    0
+                  ],
+                  "stroke": "#FFFFFF00",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "liaQ6",
+                      "name": "应用配置 Tab Label",
+                      "fill": "#667085",
+                      "content": "应用配置",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "650"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YCOBH",
+              "name": "Welcome Workspace",
+              "width": "fill_container",
+              "height": 766,
+              "fill": "#F4F7FB",
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 20,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "EZttq",
+                  "name": "Command Overview",
+                  "width": "fill_container",
+                  "height": 178,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 120,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#0F172AF0",
+                        "position": 0
+                      },
+                      {
+                        "color": "#182440F0",
+                        "position": 0.52
+                      },
+                      {
+                        "color": "#005F57E0",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 14,
+                  "stroke": "#FFFFFF24",
+                  "strokeWidth": 1,
+                  "gap": 24,
+                  "padding": [
+                    24,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RsXVM",
+                      "name": "Greeting Block",
+                      "width": 660,
+                      "height": "fill_container",
+                      "gap": 20,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lu9x3",
+                          "name": "Greeting Icon Box",
+                          "width": 74,
+                          "height": 74,
+                          "fill": "#FFFFFF1F",
+                          "cornerRadius": 18,
+                          "stroke": "#FFFFFF2E",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Rt0qD",
+                              "name": "Greeting Emoji",
+                              "fill": "#FFFFFF",
+                              "content": "☕",
+                              "fontFamily": "Inter",
+                              "fontSize": 34,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ITL4X",
+                          "name": "Greeting Text",
+                          "width": 540,
+                          "layout": "vertical",
+                          "gap": 9,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "s047hE",
+                              "name": "Greeting Title",
+                              "fill": "#FFFFFF",
+                              "content": "下午好，继续加油！",
+                              "fontFamily": "Inter",
+                              "fontSize": 26,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pZmr2",
+                              "name": "Greeting Subtitle",
+                              "fill": "#E2E8F0",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "把常用入口、关键状态和最新操作放在一个清晰工作台里。",
+                              "lineHeight": 1.45,
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fy6jH",
+                              "name": "Time Pill",
+                              "height": 30,
+                              "fill": "#00A88929",
+                              "cornerRadius": 999,
+                              "stroke": "#7DD3C747",
+                              "strokeWidth": 1,
+                              "gap": 8,
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "qSTjS",
+                                  "name": "Clock Icon",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "clock-3",
+                                  "library": "lucide",
+                                  "fill": "#DFF8F1"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "xIwuh",
+                                  "name": "Current Time",
+                                  "fill": "#DFF8F1",
+                                  "content": "2026-07-04 19:32:00 星期六",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ILhyS",
+                      "name": "System Pulse",
+                      "width": 420,
+                      "height": 118,
+                      "fill": "#FFFFFF12",
+                      "cornerRadius": 12,
+                      "stroke": "#FFFFFF24",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "XpxNc",
+                          "name": "Pulse Header",
+                          "width": "fill_container",
+                          "height": 22,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "h5NG3f",
+                              "name": "Pulse Title",
+                              "fill": "#FFFFFF",
+                              "content": "系统脉冲",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "750"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qVXFI",
+                              "name": "Pulse State",
+                              "fill": "#7DD3C7",
+                              "content": "运行正常",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "650"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "q9Odm",
+                          "name": "Pulse Bars",
+                          "width": "fill_container",
+                          "height": 52,
+                          "gap": 6,
+                          "alignItems": "end",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "hKZKI",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 24,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ftgrd",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 34,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hyHkm",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 28,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Bu8ff",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 44,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "nH6zK",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 38,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Q98nRt",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 50,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CDADA",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 32,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "XZUnC",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 42,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "guj48",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 36,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KiPTh",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RpMq0",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 30,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ok853",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 40,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "o75rj",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 46,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ywsNl",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 34,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ZJqVf",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 52,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "MyGf3",
+                              "name": "Pulse Bar",
+                              "width": "fill_container",
+                              "height": 37,
+                              "fill": "#7DD3C7B8",
+                              "cornerRadius": [
+                                4,
+                                4,
+                                0,
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "NhxbS",
+                          "name": "Pulse Caption",
+                          "fill": "#CBD5E1",
+                          "content": "近 5 分钟请求与任务流转稳定",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d9hJu",
+                  "name": "Metric Cards",
+                  "width": "fill_container",
+                  "height": 106,
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nHIxQ",
+                      "name": "Metric - 用户总数",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#DDE5EF",
+                      "strokeWidth": 1,
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "q51CcA",
+                          "name": "用户总数 Icon Box",
+                          "width": 52,
+                          "height": 52,
+                          "fill": "#235BFF",
+                          "cornerRadius": 14,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "ZeKeN",
+                              "name": "用户总数 Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "users",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qISgm",
+                          "name": "用户总数 Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GRzmR",
+                              "name": "用户总数 Value",
+                              "fill": "#182230",
+                              "content": "128",
+                              "fontFamily": "Inter",
+                              "fontSize": 30,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "N23Gi",
+                              "name": "用户总数 Label",
+                              "fill": "#667085",
+                              "content": "用户总数",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "650"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UwXwv",
+                      "name": "Metric - 角色数量",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#DDE5EF",
+                      "strokeWidth": 1,
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "L2ZBrf",
+                          "name": "角色数量 Icon Box",
+                          "width": 52,
+                          "height": 52,
+                          "fill": "#00A889",
+                          "cornerRadius": 14,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "YsoUu",
+                              "name": "角色数量 Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "shield-check",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o5Sxlu",
+                          "name": "角色数量 Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zGcGj",
+                              "name": "角色数量 Value",
+                              "fill": "#182230",
+                              "content": "12",
+                              "fontFamily": "Inter",
+                              "fontSize": 30,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "e1KdQ",
+                              "name": "角色数量 Label",
+                              "fill": "#667085",
+                              "content": "角色数量",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "650"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LbYqL",
+                      "name": "Metric - 应用配置",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#DDE5EF",
+                      "strokeWidth": 1,
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DMt1o",
+                          "name": "应用配置 Icon Box",
+                          "width": 52,
+                          "height": 52,
+                          "fill": "#7C3AED",
+                          "cornerRadius": 14,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "bBnJC",
+                              "name": "应用配置 Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "settings",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HHNA8",
+                          "name": "应用配置 Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "rZlK3",
+                              "name": "应用配置 Value",
+                              "fill": "#182230",
+                              "content": "36",
+                              "fontFamily": "Inter",
+                              "fontSize": 30,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vcBb2",
+                              "name": "应用配置 Label",
+                              "fill": "#667085",
+                              "content": "应用配置",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "650"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BNi7i",
+                      "name": "Metric - 操作日志",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#DDE5EF",
+                      "strokeWidth": 1,
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "w1wBN",
+                          "name": "操作日志 Icon Box",
+                          "width": 52,
+                          "height": 52,
+                          "fill": "#F59E0B",
+                          "cornerRadius": 14,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "YJWGW",
+                              "name": "操作日志 Icon",
+                              "width": 26,
+                              "height": 26,
+                              "icon": "file-text",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JdE8c",
+                          "name": "操作日志 Text",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "BEr9u",
+                              "name": "操作日志 Value",
+                              "fill": "#182230",
+                              "content": "2,846",
+                              "fontFamily": "Inter",
+                              "fontSize": 30,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "F313v",
+                              "name": "操作日志 Label",
+                              "fill": "#667085",
+                              "content": "操作日志",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "650"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "AKBQM",
+                  "name": "Workspace Body",
+                  "width": "fill_container",
+                  "height": 424,
+                  "gap": 18,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Zi0BH",
+                      "name": "Quick Navigation Panel",
+                      "width": 760,
+                      "height": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "stroke": "#DDE5EF",
+                      "strokeWidth": 1,
+                      "layout": "vertical",
+                      "gap": 16,
+                      "padding": 18,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "VeijF",
+                          "name": "Quick Nav Header",
+                          "width": "fill_container",
+                          "height": 28,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Z1Aaim",
+                              "name": "Quick Nav Title",
+                              "fill": "#182230",
+                              "content": "快捷导航",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "aWCqI",
+                              "name": "Quick Nav Hint",
+                              "fill": "#667085",
+                              "content": "常用功能直达",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CiFHw",
+                          "name": "Quick Nav Row",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ZW5v8",
+                              "name": "Quick Nav - 用户管理",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WG1pH",
+                                  "name": "用户管理 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#235BFF",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "row9e",
+                                      "name": "用户管理 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "users",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "mTO2W",
+                                  "name": "用户管理 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "用户管理",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ZBB5J",
+                              "name": "Quick Nav - 角色管理",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "zRIv2",
+                                  "name": "角色管理 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#00A889",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "EBetH",
+                                      "name": "角色管理 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "shield-check",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "yen9I",
+                                  "name": "角色管理 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "角色管理",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "epY8N",
+                              "name": "Quick Nav - 菜单管理",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "nb7vT",
+                                  "name": "菜单管理 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#7C3AED",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "CkBfO",
+                                      "name": "菜单管理 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "list-tree",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "e88qK",
+                                  "name": "菜单管理 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "菜单管理",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jj5M1",
+                          "name": "Quick Nav Row",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ojBWW",
+                              "name": "Quick Nav - 应用配置",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "GZNN0",
+                                  "name": "应用配置 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#0F766E",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "YIe0w",
+                                      "name": "应用配置 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "settings",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "huBgi",
+                                  "name": "应用配置 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "应用配置",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Bqfza",
+                              "name": "Quick Nav - 操作日志",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "KarHf",
+                                  "name": "操作日志 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#F59E0B",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "PP2Yk",
+                                      "name": "操作日志 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "file-text",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uSzs4",
+                                  "name": "操作日志 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "操作日志",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UwHhv",
+                              "name": "Quick Nav - 附件管理",
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "stroke": "#DDE5EF",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 12,
+                              "padding": 12,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "G3NaEt",
+                                  "name": "附件管理 Quick Icon Box",
+                                  "width": 48,
+                                  "height": 48,
+                                  "fill": "#475467",
+                                  "cornerRadius": 12,
+                                  "layout": "vertical",
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "hThrv",
+                                      "name": "附件管理 Quick Icon",
+                                      "width": 23,
+                                      "height": 23,
+                                      "icon": "paperclip",
+                                      "library": "lucide",
+                                      "fill": "#FFFFFF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "fzO2l",
+                                  "name": "附件管理 Quick Label",
+                                  "fill": "#344054",
+                                  "content": "附件管理",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YPeRB",
+                      "name": "Activity Panel",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "layout": "vertical",
+                      "gap": 14,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cpr5Z",
+                          "name": "Focus Tips",
+                          "width": "fill_container",
+                          "height": 170,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "#DDE5EF",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "M6ErLj",
+                              "name": "Focus Tips Title",
+                              "fill": "#182230",
+                              "content": "今日提示",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "g81Sc",
+                              "name": "Tip Row",
+                              "width": "fill_container",
+                              "height": 32,
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "f4QL87",
+                                  "name": "Tip Dot",
+                                  "width": 7,
+                                  "height": 7,
+                                  "fill": "#235BFF",
+                                  "cornerRadius": 999
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "d15CzC",
+                                  "name": "Tip Text",
+                                  "fill": "#475467",
+                                  "content": "处理重要工作，把握黄金时间段",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ahVB4",
+                              "name": "Tip Row",
+                              "width": "fill_container",
+                              "height": 32,
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "j7mLjP",
+                                  "name": "Tip Dot",
+                                  "width": 7,
+                                  "height": 7,
+                                  "fill": "#235BFF",
+                                  "cornerRadius": 999
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vHx8s",
+                                  "name": "Tip Text",
+                                  "fill": "#475467",
+                                  "content": "记得站起来走动，保持专注",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "t7S3o",
+                              "name": "Tip Row",
+                              "width": "fill_container",
+                              "height": 32,
+                              "gap": 10,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "Xvh0T",
+                                  "name": "Tip Dot",
+                                  "width": 7,
+                                  "height": 7,
+                                  "fill": "#235BFF",
+                                  "cornerRadius": 999
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "hhDWV",
+                                  "name": "Tip Text",
+                                  "fill": "#475467",
+                                  "content": "常用配置已放在快捷导航",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R5P1C",
+                          "name": "Recent Activity",
+                          "width": "fill_container",
+                          "height": "fill_container",
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 8,
+                          "stroke": "#DDE5EF",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "MS43V",
+                              "name": "Recent Activity Header",
+                              "width": "fill_container",
+                              "height": 24,
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "yBG3r",
+                                  "name": "Recent Activity Title",
+                                  "fill": "#182230",
+                                  "content": "最近操作",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                  "fontWeight": "800"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "D8F5nc",
+                                  "name": "View All Link",
+                                  "fill": "#235BFF",
+                                  "content": "查看全部",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "S913b",
+                              "name": "Activity Row",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "gap": 12,
+                              "padding": [
+                                0,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ev3Hu",
+                                  "name": "Activity Time",
+                                  "fill": "#667085",
+                                  "content": "19:20",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "JeRSH",
+                                  "name": "Activity Text",
+                                  "fill": "#344054",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "管理员更新了应用配置",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "gbehj",
+                                  "name": "Activity Badge",
+                                  "height": 24,
+                                  "fill": "#ECFDF3",
+                                  "cornerRadius": 999,
+                                  "layout": "vertical",
+                                  "padding": [
+                                    0,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "mqgRP",
+                                      "name": "Activity Badge Text",
+                                      "fill": "#027A48",
+                                      "content": "成功",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "mHcPo",
+                              "name": "Activity Row",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "gap": 12,
+                              "padding": [
+                                0,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "KNySm",
+                                  "name": "Activity Time",
+                                  "fill": "#667085",
+                                  "content": "18:47",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "tU1R2",
+                                  "name": "Activity Text",
+                                  "fill": "#344054",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "新增角色：审计员",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "NFsuY",
+                                  "name": "Activity Badge",
+                                  "height": 24,
+                                  "fill": "#ECFDF3",
+                                  "cornerRadius": 999,
+                                  "layout": "vertical",
+                                  "padding": [
+                                    0,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "pEjfX",
+                                      "name": "Activity Badge Text",
+                                      "fill": "#027A48",
+                                      "content": "成功",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Udq8M",
+                              "name": "Activity Row",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#F8FAFC",
+                              "cornerRadius": 8,
+                              "gap": 12,
+                              "padding": [
+                                0,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Uedp7",
+                                  "name": "Activity Time",
+                                  "fill": "#667085",
+                                  "content": "17:58",
+                                  "fontFamily": "Geist Mono",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "i9o6L0",
+                                  "name": "Activity Text",
+                                  "fill": "#344054",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "附件上传任务完成",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "hgjNW",
+                                  "name": "Activity Badge",
+                                  "height": 24,
+                                  "fill": "#ECFDF3",
+                                  "cornerRadius": 999,
+                                  "layout": "vertical",
+                                  "padding": [
+                                    0,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "Y2uxD",
+                                      "name": "Activity Badge Text",
+                                      "fill": "#027A48",
+                                      "content": "完成",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "brand-blue": {
+      "type": "color",
+      "value": "#1E3C72"
+    },
+    "brand-cyan": {
+      "type": "color",
+      "value": "#40A9FF"
+    },
+    "brand-primary": {
+      "type": "color",
+      "value": "#1890FF"
+    },
+    "ink-900": {
+      "type": "color",
+      "value": "#182230"
+    },
+    "ink-600": {
+      "type": "color",
+      "value": "#475467"
+    },
+    "ink-400": {
+      "type": "color",
+      "value": "#98A2B3"
+    },
+    "line": {
+      "type": "color",
+      "value": "#D7E0EC"
+    },
+    "panel": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "soft": {
+      "type": "color",
+      "value": "#F5F7FA"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "font-data": {
+      "type": "string",
+      "value": "Geist Mono"
+    }
+  },
+  "fileToken": "f59c8885-20ac-4b33-b586-efd1fc82418f"
+}

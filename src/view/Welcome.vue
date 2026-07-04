@@ -1,51 +1,87 @@
 <template>
   <div class="welcome-container">
-    <!-- 问候横幅 -->
-    <div class="greeting-banner" :class="greetingClass">
-      <div class="greeting-content">
+    <section class="overview-panel" :class="greetingClass">
+      <div class="overview-copy">
         <div class="greeting-icon">{{ greetingIcon }}</div>
-        <div class="greeting-text">
+        <div>
+          <div class="overview-eyebrow">系统工作台</div>
           <h2 class="greeting-title">{{ greetingTitle }}</h2>
           <p class="greeting-subtitle">{{ greetingSubtitle }}</p>
           <div class="current-time">{{ currentTime }}</div>
         </div>
       </div>
-    </div>
-
-    <!-- 数据统计概览 -->
-    <el-row :gutter="20" class="stats-row">
-      <el-col v-for="(stat, index) in statsData" :key="index" :span="6">
-        <el-card class="stat-card" shadow="hover" @click="handleStatClick(stat)">
-          <div class="stat-content">
-            <div class="stat-icon" :style="{ background: stat.color }">
-              <el-icon><component :is="stat.icon" /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ stat.value }}</div>
-              <div class="stat-label">{{ stat.label }}</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 快捷导航区 -->
-    <el-card class="quick-nav-card" shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <el-icon><Grid /></el-icon>
-          <span>快捷导航</span>
+      <div class="overview-chart">
+        <div class="chart-head">
+          <span>本周运行</span>
+          <strong>稳定</strong>
         </div>
-      </template>
-      <div class="quick-nav-grid">
-        <div v-for="(nav, index) in quickNavList" :key="index" class="nav-item" @click="navigateTo(nav)">
-          <div class="nav-icon" :style="{ background: nav.color }">
-            <el-icon><component :is="nav.icon" /></el-icon>
+        <div class="chart-bars">
+          <div v-for="bar in dashboardBars" :key="bar.label" class="chart-bar">
+            <span :style="{ height: bar.height + '%' }"></span>
           </div>
-          <div class="nav-text">{{ nav.name }}</div>
+        </div>
+        <div class="chart-foot">
+          <span>实时监测</span>
+          <span>接口 / 用户 / 日志</span>
         </div>
       </div>
-    </el-card>
+    </section>
+
+    <section class="metric-grid">
+      <button
+        v-for="stat in statsData"
+        :key="stat.label"
+        class="stat-card"
+        type="button"
+        @click="handleStatClick(stat)"
+      >
+        <span class="stat-icon" :style="{ background: stat.color }">
+          <el-icon><component :is="stat.icon" /></el-icon>
+        </span>
+        <span class="stat-info">
+          <strong class="stat-value">{{ stat.value }}</strong>
+          <span class="stat-label">{{ stat.label }}</span>
+        </span>
+      </button>
+    </section>
+
+    <section class="workspace-grid">
+      <div class="dashboard-panel quick-panel">
+        <div class="panel-header">
+          <div>
+            <h3>快捷入口</h3>
+            <p>高频管理功能</p>
+          </div>
+          <el-icon><Grid /></el-icon>
+        </div>
+        <div class="quick-nav-grid">
+          <button v-for="nav in quickNavList" :key="nav.name" class="nav-item" type="button" @click="navigateTo(nav)">
+            <span class="nav-icon" :style="{ background: nav.color }">
+              <el-icon><component :is="nav.icon" /></el-icon>
+            </span>
+            <span class="nav-text">{{ nav.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-panel notice-panel">
+        <div class="panel-header">
+          <div>
+            <h3>系统提示</h3>
+            <p>当前会话状态</p>
+          </div>
+          <span class="sync-badge">已同步</span>
+        </div>
+        <div class="notice-list">
+          <div v-for="tip in tips.slice(0, 4)" :key="tip.text" class="notice-item">
+            <span class="notice-icon">
+              <el-icon><component :is="tip.icon" /></el-icon>
+            </span>
+            <span>{{ tip.text }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -98,6 +134,16 @@ export default {
       greetingClass: '',
       tips: [],
       currentTime: '',
+      dashboardBars: [
+        { label: 'Mon', height: 42 },
+        { label: 'Tue', height: 58 },
+        { label: 'Wed', height: 36 },
+        { label: 'Thu', height: 72 },
+        { label: 'Fri', height: 64 },
+        { label: 'Sat', height: 48 },
+        { label: 'Sun', height: 78 },
+        { label: 'Now', height: 68 }
+      ],
       // 统计数据
       statsData: [
         {
@@ -995,6 +1041,403 @@ export default {
   .stats-row :deep(.el-col) {
     max-width: 100%;
     flex: 0 0 100%;
+  }
+}
+
+/* Dashboard implementation from ui.pen */
+.welcome-container {
+  min-height: 100%;
+  padding: 0;
+  background: transparent;
+}
+
+.overview-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 28px;
+  min-height: 176px;
+  padding: 28px 30px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(24, 36, 64, 0.95) 56%, rgba(0, 95, 87, 0.9) 100%),
+    linear-gradient(135deg, #101828 0%, #235bff 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(16, 24, 40, 0.18);
+}
+
+.overview-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.28) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 1px, transparent 1px);
+  background-size: 34px 34px;
+  pointer-events: none;
+}
+
+.overview-copy,
+.overview-chart {
+  position: relative;
+  z-index: 1;
+}
+
+.overview-copy {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.overview-eyebrow {
+  margin-bottom: 6px;
+  color: #7dd3c7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.greeting-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  font-size: 30px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  animation: none;
+  backdrop-filter: blur(14px);
+}
+
+.greeting-title {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-shadow: none;
+}
+
+.greeting-subtitle {
+  max-width: 560px;
+  margin: 0;
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.current-time {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  margin-top: 12px;
+  color: #dff8f1;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  background: rgba(0, 168, 137, 0.16);
+  border: 1px solid rgba(125, 211, 199, 0.28);
+  border-radius: 999px;
+}
+
+.overview-chart {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.chart-head,
+.chart-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(226, 232, 240, 0.8);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chart-head strong {
+  color: #7dd3c7;
+  font-size: 12px;
+}
+
+.chart-bars {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  align-items: end;
+  gap: 8px;
+  height: 74px;
+  margin: 14px 0 12px;
+}
+
+.chart-bar {
+  display: flex;
+  align-items: end;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.chart-bar span {
+  display: block;
+  width: 100%;
+  min-height: 18%;
+  background: linear-gradient(180deg, #7dd3c7 0%, #4f8bff 100%);
+  border-radius: 999px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stat-card,
+.nav-item {
+  appearance: none;
+  border: 0;
+  font-family: inherit;
+  line-height: 1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 74px;
+  padding: 13px 15px;
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(18, 38, 63, 0.06);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.stat-card:hover,
+.nav-item:hover {
+  border-color: #9bb8ff;
+  box-shadow: 0 12px 26px rgba(35, 91, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  color: #ffffff;
+  font-size: 22px;
+  border-radius: 12px;
+  box-shadow: 0 10px 18px rgba(18, 38, 63, 0.12);
+  flex: 0 0 auto;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stat-value {
+  color: #182230;
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.stat-label {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dashboard-panel {
+  min-height: 238px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(18, 38, 63, 0.06);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  color: #182230;
+  font-size: 15px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.panel-header p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.panel-header > .el-icon {
+  color: #235bff;
+  font-size: 20px;
+}
+
+.quick-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 78px;
+  padding: 12px 8px;
+  background: #f8fafc;
+  border: 1px solid #dde5ef;
+  border-radius: 8px;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 14px rgba(18, 38, 63, 0.12);
+}
+
+.nav-item:hover .nav-icon {
+  transform: none;
+}
+
+.nav-text {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  color: #00a889;
+  font-size: 12px;
+  font-weight: 800;
+  background: #e8f8f4;
+  border-radius: 999px;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 9px 10px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+}
+
+.notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: #235bff;
+  background: #edf4ff;
+  border-radius: 8px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1180px) {
+  .overview-panel,
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-chart {
+    min-height: 140px;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .overview-panel {
+    padding: 20px;
+  }
+
+  .overview-copy {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .greeting-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .metric-grid,
+  .quick-nav-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -1466,12 +1466,12 @@ export default {
 
 /* Sidebar refinement */
 .main-content {
-  padding: 10px;
-  gap: 12px;
+  padding: 6px;
+  gap: 8px;
 }
 
 .sidebar-container {
-  width: 196px;
+  width: 200px;
   padding: 10px 8px;
   background: linear-gradient(180deg, rgba(16, 24, 40, 0.98) 0%, rgba(17, 25, 39, 0.98) 100%), #101828;
   border-color: rgba(148, 163, 184, 0.16);
