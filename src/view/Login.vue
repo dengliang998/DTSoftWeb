@@ -64,7 +64,7 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getCaptcha, getLoginToken, login as loginApi } from '@/api/auth'
+import { getCaptcha, getLoginToken, loadLoginEncryptionKey, login as loginApi } from '@/api/auth'
 import { getUserAvatarUrl } from '@/api/user'
 import { getData, getMessage, isSuccessPayload } from '@/core/response'
 import { setAuthSession } from '@/core/session'
@@ -204,7 +204,7 @@ export default defineComponent({
             }
           })
           .catch(function (error) {
-            ElMessage.error(getMessage(error.response, '登录失败，请稍后重试！'))
+            ElMessage.error(getMessage(error.response || error, '登录失败，请稍后重试！'))
             loadCaptcha()
           })
           .finally(function () {
@@ -216,6 +216,7 @@ export default defineComponent({
     // 组件挂载时加载头像
     onMounted(() => {
       loadUserAvatar()
+      loadLoginEncryptionKey().catch(() => {})
       loadCaptcha()
       // 加载系统配置（系统名称、登录背景图）
       fetchAndCacheSystemInfo()

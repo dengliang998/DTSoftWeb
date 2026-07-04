@@ -9,7 +9,7 @@ const http = axios.create({
   timeout: 20000
 })
 
-const publicEndpoints = ['/api/Auth/login', '/api/Auth/captcha']
+const publicEndpoints = ['/api/Auth/login', '/api/Auth/login-encryption-key', '/api/Auth/captcha']
 
 const isPublicEndpoint = (url = '') => publicEndpoints.some((endpoint) => url.includes(endpoint))
 
