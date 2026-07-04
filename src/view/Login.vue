@@ -26,9 +26,34 @@
             @keyup.enter="login"
           ></el-input>
         </el-form-item>
+        <!-- 验证码 -->
+        <el-form-item prop="captchaCode">
+          <div class="captcha-row">
+            <el-input
+              v-model="loginForm.captchaCode"
+              maxlength="4"
+              placeholder="请输入验证码"
+              prefix-icon="Key"
+              autocomplete="off"
+              @input="formatCaptchaCode"
+              @keyup.enter="login"
+            ></el-input>
+            <button
+              type="button"
+              class="captcha-image"
+              :class="{ 'is-loading': captchaLoading }"
+              :disabled="captchaLoading"
+              title="点击刷新验证码"
+              @click="loadCaptcha"
+            >
+              <img v-if="captchaImage" :src="captchaImage" alt="验证码" />
+              <span v-else>刷新</span>
+            </button>
+          </div>
+        </el-form-item>
         <!-- 按钮 -->
         <el-form-item class="btns">
-          <el-button type="primary" class="login-btn" @click="login">登录</el-button>
+          <el-button type="primary" class="login-btn" :loading="loggingIn" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -39,9 +64,9 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getLoginToken, login as loginApi } from '@/api/auth'
+import { getCaptcha, getLoginToken, login as loginApi } from '@/api/auth'
 import { getUserAvatarUrl } from '@/api/user'
-import { getMessage, isSuccessPayload } from '@/core/response'
+import { getData, getMessage, isSuccessPayload } from '@/core/response'
 import { setAuthSession } from '@/core/session'
 import { fetchAndCacheSystemInfo, getCachedLoginImgDataUrl, getCachedSystemName } from '@/utils/sysConfig'
 
@@ -53,11 +78,16 @@ export default defineComponent({
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
     const systemName = ref(getCachedSystemName() || 'DT Program')
+    const captchaImage = ref('')
+    const captchaLoading = ref(false)
+    const loggingIn = ref(false)
 
     // 这是登录表单的数据绑定对象
     const loginForm = reactive({
       username: '',
-      password: ''
+      password: '',
+      captchaId: '',
+      captchaCode: ''
     })
 
     // 默认头像URL
@@ -70,7 +100,8 @@ export default defineComponent({
     // 这是表单的验证规则
     const loginFormRules = {
       username: [{ required: true, message: '请输入登录名称', trigger: 'blur' }],
-      password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }]
+      password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }],
+      captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
     }
 
     // 当头像加载失败时，使用默认头像
@@ -100,10 +131,35 @@ export default defineComponent({
       }
     }
 
+    const loadCaptcha = () => {
+      if (captchaLoading.value) return Promise.resolve()
+
+      captchaLoading.value = true
+      return getCaptcha()
+        .then((response) => {
+          const captcha = getData(response)
+          loginForm.captchaId = captcha.CaptchaId || captcha.captchaId || ''
+          loginForm.captchaCode = ''
+          captchaImage.value = captcha.ImageDataUrl || captcha.imageDataUrl || ''
+        })
+        .catch(() => {
+          loginForm.captchaId = ''
+          captchaImage.value = ''
+          ElMessage.error('验证码加载失败，请刷新后重试')
+        })
+        .finally(() => {
+          captchaLoading.value = false
+        })
+    }
+
+    const formatCaptchaCode = (value) => {
+      loginForm.captchaCode = String(value || '').toUpperCase()
+    }
+
     // 登录处理
     const login = () => {
       // 防止重复提交
-      if (!loginFormRef.value) return
+      if (!loginFormRef.value || loggingIn.value) return
 
       loginFormRef.value.validate((valid) => {
         if (!valid) return
@@ -116,10 +172,19 @@ export default defineComponent({
           return
         }
 
+        if (!loginForm.captchaId) {
+          ElMessage.error('请先获取验证码')
+          loadCaptcha()
+          return
+        }
+
         //请求认证中心获取 token 完成登录
+        loggingIn.value = true
         loginApi({
           username: loginForm.username,
-          password: loginForm.password
+          password: loginForm.password,
+          captchaId: loginForm.captchaId,
+          captchaCode: loginForm.captchaCode
         })
           .then(function (response) {
             if (isSuccessPayload(response)) {
@@ -127,6 +192,7 @@ export default defineComponent({
               const token = getLoginToken(response)
               if (!token) {
                 ElMessage.error('登录失败：服务端未返回有效令牌')
+                loadCaptcha()
                 return
               }
               setAuthSession({ token, account: loginForm.username })
@@ -134,10 +200,15 @@ export default defineComponent({
               router.push(redirect || '/home')
             } else {
               ElMessage.error('登录失败：' + getMessage(response, '未知错误'))
+              loadCaptcha()
             }
           })
           .catch(function (error) {
             ElMessage.error(getMessage(error.response, '登录失败，请稍后重试！'))
+            loadCaptcha()
+          })
+          .finally(function () {
+            loggingIn.value = false
           })
       })
     }
@@ -145,6 +216,7 @@ export default defineComponent({
     // 组件挂载时加载头像
     onMounted(() => {
       loadUserAvatar()
+      loadCaptcha()
       // 加载系统配置（系统名称、登录背景图）
       fetchAndCacheSystemInfo()
         .then(() => {
@@ -182,8 +254,13 @@ export default defineComponent({
       loginForm,
       loginFormRules,
       avatarUrl,
+      captchaImage,
+      captchaLoading,
+      loggingIn,
       systemName,
       onAvatarError,
+      loadCaptcha,
+      formatCaptchaCode,
       login,
       loginContainerStyle: computed(() => {
         if (!loginBgUrl.value) return {}
@@ -458,6 +535,53 @@ export default defineComponent({
   height: 42px;
 }
 
+.captcha-row {
+  display: grid;
+  grid-template-columns: 1fr 118px;
+  gap: 12px;
+  width: 100%;
+}
+
+.captcha-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0;
+  overflow: hidden;
+  color: #475467;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1;
+  background: #f8fafc;
+  border: 1px solid #d7e0ec;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.captcha-image:hover,
+.captcha-image:focus-visible {
+  border-color: #235bff;
+  box-shadow: 0 0 0 4px rgba(35, 91, 255, 0.12);
+  outline: none;
+}
+
+.captcha-image:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.captcha-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 @media (max-width: 980px) {
   .login_container {
     justify-content: center;
@@ -484,6 +608,11 @@ export default defineComponent({
 
   .avatar_box {
     right: 24px;
+  }
+
+  .captcha-row {
+    grid-template-columns: 1fr 106px;
+    gap: 10px;
   }
 }
 </style>
