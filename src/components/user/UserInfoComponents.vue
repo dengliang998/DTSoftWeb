@@ -1,8 +1,8 @@
 <template>
-  <div id="app">
+  <div class="user-info-panel">
     <!-- 内容主体区域 -->
-    <el-form ref="UserFormRef" :model="UserForm" label-width="70px">
-      <el-form-item label="头像">
+    <el-form ref="UserFormRef" :model="UserForm" label-position="top" class="user-info-form">
+      <el-form-item label="头像" class="avatar-form-item">
         <el-upload
           class="avatar-uploader"
           :action="UploadActionUrl"
@@ -37,9 +37,9 @@
       <el-form-item label="邮箱">
         <el-input v-model="UserForm.Email" placeholder="请输入邮箱"></el-input>
       </el-form-item>
-      <el-form-item label="直属主管">
+      <el-form-item label="直属主管" class="supervisor-form-item">
         <div class="supervisor-row">
-          <el-input v-model="supervisorDisplay" readonly placeholder="请选择直属主管" style="width: 70%" />
+          <el-input v-model="supervisorDisplay" readonly placeholder="请选择直属主管" />
           <el-button type="primary" @click="openSupervisorPicker">选择</el-button>
           <el-button @click="clearSupervisor">清空</el-button>
         </div>
@@ -262,23 +262,52 @@ export default {
 }
 </script>
 <style scoped>
-#app {
+.user-info-panel {
   background: #ffffff;
-  padding: 0 10px;
+  padding: 0;
   margin: 0;
 }
 
-.el-form-item {
-  margin-bottom: 18px;
+.user-info-form {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 16px;
+  align-items: start;
 }
 
-.el-input {
-  width: 70%;
+.user-info-form .el-form-item {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.user-info-form :deep(.el-form-item__label) {
+  padding-bottom: 4px;
+  line-height: 20px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.user-info-form :deep(.el-form-item__content) {
+  line-height: 1;
+}
+
+.user-info-form :deep(.el-input),
+.user-info-form :deep(.el-select),
+.user-info-form :deep(.el-input-number) {
+  width: 100%;
+}
+
+.avatar-form-item {
+  grid-row: 1 / span 3;
+}
+
+.supervisor-form-item {
+  grid-column: 1 / -1;
 }
 
 .avatar-uploader .el-upload {
   border: 2px dashed #3498db;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -294,11 +323,11 @@ export default {
 }
 
 .avatar-uploader-icon {
-  font-size: 32px;
+  font-size: 28px;
   color: #3498db;
-  width: 100px;
-  height: 100px;
-  line-height: 100px;
+  width: 86px;
+  height: 86px;
+  line-height: 86px;
   text-align: center;
 }
 
@@ -307,8 +336,8 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  height: 100px;
+  width: 86px;
+  height: 86px;
 }
 
 .upload-text {
@@ -318,14 +347,42 @@ export default {
 }
 
 .avatar {
-  width: 100px;
-  height: 100px;
+  width: 86px;
+  height: 86px;
   display: block;
+  object-fit: cover;
 }
 
 .supervisor-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+}
+
+.supervisor-row :deep(.el-input) {
+  flex: 1;
+  min-width: 0;
+}
+
+.supervisor-row :deep(.el-button) {
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .user-info-form {
+    grid-template-columns: 1fr;
+  }
+
+  .avatar-form-item,
+  .supervisor-form-item {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .supervisor-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 </style>

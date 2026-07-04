@@ -175,7 +175,14 @@
     </el-dialog>
 
     <!-- 添加用户的对话框 -->
-    <el-dialog v-model="UserAddDialogVisible" title="添加用户" width="50%" @close="UserAddDialogClosed">
+    <el-dialog
+      v-model="UserAddDialogVisible"
+      title="添加用户"
+      width="760px"
+      align-center
+      class="user-form-dialog"
+      @close="UserAddDialogClosed"
+    >
       <UserInfo-components
         v-if="UserAddDialogVisible"
         ref="UserInfo"
@@ -192,7 +199,14 @@
     </el-dialog>
 
     <!-- 修改用户的对话框 -->
-    <el-dialog v-model="UserDialogVisible" title="修改用户" width="50%" @close="UserDialogClosed">
+    <el-dialog
+      v-model="UserDialogVisible"
+      title="修改用户"
+      width="760px"
+      align-center
+      class="user-form-dialog"
+      @close="UserDialogClosed"
+    >
       <UserInfo-components
         v-if="UserDialogVisible"
         ref="UserInfo"
@@ -850,6 +864,24 @@ export default {
 
 .dept-tree-card :deep(.el-tree-node.is-current > .el-tree-node__content) .tree-node-icon {
   color: #409eff;
+}
+
+.user-form-dialog {
+  --el-dialog-margin-top: 0;
+  max-width: calc(100vw - 32px);
+}
+
+.user-form-dialog :deep(.el-dialog__header) {
+  padding: 14px 20px 12px;
+}
+
+.user-form-dialog :deep(.el-dialog__body) {
+  padding: 16px 20px 14px;
+  overflow: visible;
+}
+
+.user-form-dialog :deep(.el-dialog__footer) {
+  padding: 12px 20px;
 }
 
 /* 右键菜单样式 */
