@@ -160,29 +160,77 @@
       :selected-users="RoleMemberList"
       @confirm="handleUserSelected"
     />
-    <!-- c菜单配置 -->
-    <el-dialog v-model="MenuDialogVisible" title="菜单权限配置" width="20%" @close="MenuDialogVisible = false">
+    <!-- 菜单配置 -->
+    <el-dialog
+      v-model="MenuDialogVisible"
+      class="menu-auth-dialog"
+      width="720px"
+      align-center
+      :close-on-click-modal="false"
+      @close="closeMenuDialog"
+    >
+      <template #header>
+        <div class="menu-auth-header">
+          <div>
+            <div class="menu-auth-title">菜单权限配置</div>
+            <div class="menu-auth-subtitle">角色编码：{{ CurrentSelRoleID || '-' }}</div>
+          </div>
+          <el-tag type="info" effect="plain">已选 {{ selectedPermissionCount }} 项</el-tag>
+        </div>
+      </template>
       <!-- 内容主体区域 -->
-      <el-form label-width="80px">
-        <el-tree
-          v-if="MenuDialogVisible"
-          ref="tree"
-          :props="treeprops"
-          :load="loadNode"
-          node-key="id"
-          :default-expanded-keys="TreeExpanded"
-          :default-checked-keys="TreeChecked"
-          lazy
-          show-checkbox
-          default-expand-all
-        ></el-tree>
-      </el-form>
+      <div class="menu-auth-panel">
+        <div class="menu-auth-toolbar">
+          <el-input
+            v-model="menuFilterKeyword"
+            clearable
+            placeholder="搜索已加载菜单"
+            prefix-icon="Search"
+            class="menu-auth-search"
+          ></el-input>
+          <div class="menu-auth-actions">
+            <el-button size="small" icon="Expand" @click="expandLoadedMenus">展开</el-button>
+            <el-button size="small" icon="Fold" @click="collapseLoadedMenus">收起</el-button>
+            <el-button class="menu-auth-clear-button" size="small" plain icon="Delete" @click="clearCheckedMenus">
+              清空
+            </el-button>
+          </div>
+        </div>
+
+        <div class="menu-auth-meta">
+          <span>菜单权限树</span>
+          <span v-if="halfCheckedMenuCount">半选 {{ halfCheckedMenuCount }} 项</span>
+        </div>
+
+        <el-scrollbar class="menu-tree-scrollbar">
+          <div class="menu-tree-surface">
+            <el-tree
+              v-if="MenuDialogVisible"
+              ref="tree"
+              class="menu-auth-tree"
+              :data="MenuTreeData"
+              :props="treeprops"
+              :filter-node-method="filterMenuNode"
+              node-key="id"
+              :default-expanded-keys="TreeExpanded"
+              :default-checked-keys="TreeChecked"
+              show-checkbox
+              default-expand-all
+              empty-text="暂无菜单"
+              @check="syncMenuCheckStats"
+            ></el-tree>
+          </div>
+        </el-scrollbar>
+      </div>
       <!-- 底部区域 -->
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="MenuDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="EditRoleMenuAuthority">确 定</el-button>
-        </span>
+        <div class="menu-auth-footer">
+          <span>将保存 {{ selectedPermissionCount }} 个菜单权限节点</span>
+          <div>
+            <el-button @click="MenuDialogVisible = false">取 消</el-button>
+            <el-button type="primary" icon="Setting" @click="EditRoleMenuAuthority">保存权限</el-button>
+          </div>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -190,7 +238,7 @@
 
 <script>
 import { addRoleMember, createRole, deleteRole, getRole, getRoleList, getRoleMemberList, updateRole } from '@/api/role'
-import { getChildrenMenu, getFatherMenu, getRoleMenuMap, updateMenuAuthority } from '@/api/menu'
+import { getMenu, getRoleMenuMap, updateMenuAuthority } from '@/api/menu'
 import UserSelector from '@/components/user/UserSelector.vue'
 export default {
   name: 'Role',
@@ -239,13 +287,32 @@ export default {
       MenuDialogVisible: false,
       treeprops: {
         label: 'MenuName',
-        children: 'MenuName'
+        children: 'children'
       },
+      MenuTreeData: [],
       //菜单树默认选中
       TreeChecked: [],
+      HalfChecked: [],
       //菜单树默认展开
       TreeExpanded: [],
-      SelRole: ''
+      SelRole: '',
+      menuFilterKeyword: '',
+      selectedMenuCount: 0,
+      halfCheckedMenuCount: 0
+    }
+  },
+  computed: {
+    selectedPermissionCount() {
+      return new Set(this.TreeChecked.concat(this.HalfChecked)).size
+    }
+  },
+  watch: {
+    menuFilterKeyword(value) {
+      this.$nextTick(() => {
+        if (this.$refs.tree) {
+          this.$refs.tree.filter(value)
+        }
+      })
     }
   },
   created() {
@@ -470,58 +537,145 @@ export default {
         rows.splice(index, 1)
       }
     },
-    showEditMenuDialog(RoleID) {
+    async showEditMenuDialog(RoleID) {
       //重置菜单树状态
       this.TreeChecked = []
+      this.HalfChecked = []
+      this.MenuTreeData = []
       this.TreeExpanded = []
+      this.menuFilterKeyword = ''
+      this.selectedMenuCount = 0
+      this.halfCheckedMenuCount = 0
       this.CurrentSelRoleID = RoleID
-      this.loadRoleMenuCheckedKeys()
-      //显示页菜单配置页面
-      this.MenuDialogVisible = true
+      await this.loadMenuAuthorityData()
     },
-    loadRoleMenuCheckedKeys() {
-      const me = this
-      getRoleMenuMap(me.CurrentSelRoleID)
-        .then(function (response) {
-          me.TreeChecked = []
-          response.data.data.forEach((item) => {
-            //默认选项-不需要选择父节点，选中父节点会导致错误的选中所有子节点
-            if (item.pid != 0) me.TreeChecked.push(item.MenuID)
-          })
-          me.$nextTick(() => {
-            if (me.$refs.tree) {
-              me.$refs.tree.setCheckedKeys(me.TreeChecked)
-            }
-          })
-        })
-        .catch(function () {
-          me.$message.error('数据初始化失败，请稍后重试！')
-        })
+    closeMenuDialog() {
+      this.menuFilterKeyword = ''
+      this.MenuTreeData = []
+      this.selectedMenuCount = 0
+      this.halfCheckedMenuCount = 0
+      this.MenuDialogVisible = false
     },
-    loadNode(node, resolve) {
+    async loadMenuAuthorityData() {
       const me = this
-      //加载菜单树
-      if (node.level === 0) {
-        getFatherMenu(this.CurrentSelRoleID)
-          .then(function (response) {
-            return resolve(response.data.data)
-          })
-          .catch(function () {
-            me.$message.error('菜单树加载失败，请稍后重试！')
-          })
-      } else {
-        //加载子项
-        getChildrenMenu({
-          roleId: this.CurrentSelRoleID,
-          menuId: node.data.id
+      try {
+        const [menuResponse, roleMenuResponse] = await Promise.all([getMenu(), getRoleMenuMap(me.CurrentSelRoleID)])
+        const menuData = menuResponse.data.data || menuResponse.data
+        const roleMenuData = Array.isArray(roleMenuResponse.data.data) ? roleMenuResponse.data.data : []
+        me.MenuTreeData = me.buildMenuTree(me.normalizeMenuItems(menuData))
+        const checkedMenuIds = []
+        me.HalfChecked = []
+        roleMenuData.forEach((item) => {
+          if (item.pid != 0) checkedMenuIds.push(item.MenuID)
         })
-          .then(function (response) {
-            return resolve(response.data.data)
-          })
-          .catch(function () {
-            me.$message.error('子节点数据加载失败，请稍后重试！')
-          })
+        me.TreeChecked = me.getLeafCheckedKeys(checkedMenuIds, me.MenuTreeData)
+        me.selectedMenuCount = me.TreeChecked.length
+        me.halfCheckedMenuCount = 0
+        me.MenuDialogVisible = true
+        me.$nextTick(() => {
+          if (me.$refs.tree) {
+            me.$refs.tree.setCheckedKeys(me.TreeChecked)
+            me.syncMenuCheckStats()
+          }
+        })
+      } catch (error) {
+        me.$message.error('数据初始化失败，请稍后重试！')
       }
+    },
+    normalizeMenuItems(menuList, parentId = 0) {
+      if (!Array.isArray(menuList)) return []
+      return menuList.reduce((result, item) => {
+        const id = item.id ?? item.MenuID ?? item.menuId
+        const pid = item.pid ?? item.parentId ?? item.Pid ?? item.ParentId ?? parentId
+        const children = item.children || item.Children || []
+        result.push({
+          id,
+          pid,
+          MenuName: item.MenuName || item.menuName || item.name || '',
+          order: item.order ?? item.Order ?? item.orderNum ?? 0
+        })
+        return result.concat(this.normalizeMenuItems(children, id))
+      }, [])
+    },
+    buildMenuTree(menuList) {
+      const menuMap = {}
+      const tree = []
+      menuList.forEach((item) => {
+        if (item.id === undefined || item.id === null) return
+        menuMap[item.id] = { ...item, children: [] }
+      })
+      menuList.forEach((item) => {
+        const node = menuMap[item.id]
+        if (!node) return
+        const parent = menuMap[item.pid]
+        if (parent && item.id !== item.pid) {
+          parent.children.push(node)
+        } else {
+          tree.push(node)
+        }
+      })
+      const sortMenus = (menus) => {
+        menus.sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+        menus.forEach((item) => sortMenus(item.children))
+      }
+      sortMenus(tree)
+      return tree
+    },
+    getLeafCheckedKeys(checkedKeys, menuTree) {
+      const parentKeys = new Set()
+      const collectParentKeys = (menus) => {
+        menus.forEach((menu) => {
+          if (menu.children && menu.children.length > 0) {
+            parentKeys.add(String(menu.id))
+            collectParentKeys(menu.children)
+          }
+        })
+      }
+      collectParentKeys(menuTree)
+      return checkedKeys.filter((key) => !parentKeys.has(String(key)))
+    },
+    filterMenuNode(value, data) {
+      if (!value) return true
+      return String(data.MenuName || '')
+        .toLowerCase()
+        .includes(value.toLowerCase())
+    },
+    syncMenuCheckStats() {
+      this.$nextTick(() => {
+        if (!this.$refs.tree) {
+          this.selectedMenuCount = this.TreeChecked.length
+          this.HalfChecked = []
+          this.halfCheckedMenuCount = 0
+          return
+        }
+        const checkedKeys = this.$refs.tree.getCheckedKeys()
+        const halfCheckedKeys = this.$refs.tree.getHalfCheckedKeys()
+        this.TreeChecked = checkedKeys
+        this.HalfChecked = halfCheckedKeys
+        this.selectedMenuCount = checkedKeys.length
+        this.halfCheckedMenuCount = halfCheckedKeys.length
+      })
+    },
+    expandLoadedMenus() {
+      const tree = this.$refs.tree
+      if (!tree || !tree.store || !tree.store.nodesMap) return
+      Object.keys(tree.store.nodesMap).forEach((key) => {
+        tree.store.nodesMap[key].expanded = true
+      })
+    },
+    collapseLoadedMenus() {
+      const tree = this.$refs.tree
+      if (!tree || !tree.store || !tree.store.nodesMap) return
+      Object.keys(tree.store.nodesMap).forEach((key) => {
+        tree.store.nodesMap[key].expanded = false
+      })
+    },
+    clearCheckedMenus() {
+      if (!this.$refs.tree) return
+      this.TreeChecked = []
+      this.HalfChecked = []
+      this.$refs.tree.setCheckedKeys([])
+      this.syncMenuCheckStats()
     },
     EditRoleMenuAuthority() {
       let me = this
@@ -615,5 +769,188 @@ export default {
 .table-wrapper {
   flex: 1;
   margin-top: 15px;
+}
+
+:deep(.menu-auth-dialog) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 56px);
+  max-width: calc(100vw - 48px);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+:deep(.menu-auth-dialog .el-dialog__header) {
+  margin: 0;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid #e8edf3;
+}
+
+:deep(.menu-auth-dialog .el-dialog__body) {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  background: #f6f8fb;
+  overflow: hidden;
+}
+
+:deep(.menu-auth-dialog .el-dialog__footer) {
+  padding: 12px 20px;
+  border-top: 1px solid #e8edf3;
+  background: #ffffff;
+}
+
+.menu-auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-right: 28px;
+}
+
+.menu-auth-title {
+  color: #1f2d3d;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.menu-auth-subtitle {
+  margin-top: 4px;
+  color: #7a8797;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.menu-auth-panel {
+  padding: 12px 16px 14px;
+}
+
+.menu-auth-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.menu-auth-search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.menu-auth-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.menu-auth-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.menu-auth-clear-button {
+  color: #c03535;
+  border-color: #f0b4b4;
+  background: #fff5f5;
+}
+
+.menu-auth-clear-button:hover,
+.menu-auth-clear-button:focus {
+  color: #ffffff;
+  border-color: #d94a4a;
+  background: #d94a4a;
+}
+
+.menu-auth-clear-button :deep(.el-icon) {
+  color: inherit;
+}
+
+.menu-auth-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 22px;
+  margin-bottom: 10px;
+  color: #7a8797;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.menu-tree-scrollbar {
+  height: clamp(220px, 40vh, 360px);
+  border: 1px solid #dfe7f1;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.menu-tree-surface {
+  min-height: 100%;
+  padding: 10px 8px;
+}
+
+.menu-auth-tree {
+  min-width: 100%;
+  color: #263445;
+  background: transparent;
+}
+
+.menu-auth-tree :deep(.el-tree-node__content) {
+  height: 34px;
+  border-radius: 6px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.menu-auth-tree :deep(.el-tree-node__content:hover) {
+  background: #eef6ff;
+}
+
+.menu-auth-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background: #e7f1ff;
+  color: #1d6fd8;
+}
+
+.menu-auth-tree :deep(.el-checkbox) {
+  margin-right: 8px;
+}
+
+.menu-auth-tree :deep(.el-tree-node__label) {
+  overflow: hidden;
+  color: inherit;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #7a8797;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  :deep(.menu-auth-dialog) {
+    width: calc(100vw - 32px) !important;
+  }
+
+  .menu-auth-toolbar,
+  .menu-auth-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .menu-auth-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .menu-tree-scrollbar {
+    height: clamp(210px, 42vh, 320px);
+  }
 }
 </style>
