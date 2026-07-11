@@ -68,10 +68,30 @@
                 <span class="query-label">{{ field.label || field.fieldName }}</span>
                 <template v-if="field.queryMode === 'range'">
                   <div class="range-query">
+                    <template v-if="field.fieldType === 'datetime' && getDateFormatType(field) === 'year'">
+                      <el-date-picker
+                        v-model="queryFilters[field.fieldName][0]"
+                        type="year"
+                        value-format="YYYY"
+                        format="YYYY"
+                        placeholder="开始"
+                        style="width: 50%"
+                      ></el-date-picker>
+                      <el-date-picker
+                        v-model="queryFilters[field.fieldName][1]"
+                        type="year"
+                        value-format="YYYY"
+                        format="YYYY"
+                        placeholder="结束"
+                        style="width: 50%"
+                      ></el-date-picker>
+                    </template>
                     <el-date-picker
-                      v-if="field.fieldType === 'datetime'"
+                      v-else-if="field.fieldType === 'datetime'"
                       v-model="queryFilters[field.fieldName]"
-                      type="datetimerange"
+                      :type="getDateRangePickerType(field)"
+                      :value-format="getDateValueFormat(field)"
+                      :format="getDateDisplayFormat(field)"
                       range-separator="至"
                       start-placeholder="开始"
                       end-placeholder="结束"
@@ -97,6 +117,16 @@
                     :value="option.value"
                   ></el-option>
                 </el-select>
+                <el-date-picker
+                  v-else-if="field.fieldType === 'datetime'"
+                  v-model="queryFilters[field.fieldName]"
+                  :type="getDatePickerType(field)"
+                  :value-format="getDateValueFormat(field)"
+                  :format="getDateDisplayFormat(field)"
+                  clearable
+                  :placeholder="'请选择' + (field.label || field.fieldName)"
+                  style="width: 100%"
+                ></el-date-picker>
                 <el-input
                   v-else
                   v-model="queryFilters[field.fieldName]"
@@ -143,7 +173,11 @@
                   :width="field.columnWidth || undefined"
                   :fixed="normalizeFixedColumn(field.fixed)"
                   :sortable="field.sortable ? 'custom' : false"
-                ></el-table-column>
+                >
+                  <template #default="scope">
+                    {{ formatFieldValue(scope.row[field.fieldName], field) }}
+                  </template>
+                </el-table-column>
               </template>
               <el-table-column label="操作" width="200" fixed="right">
                 <template #default="scope">
@@ -226,7 +260,9 @@
             <el-date-picker
               v-else-if="field.fieldType === 'datetime'"
               v-model="formData[field.fieldName]"
-              type="datetime"
+              :type="getDatePickerType(field)"
+              :value-format="getDateValueFormat(field)"
+              :format="getDateDisplayFormat(field)"
               :placeholder="'选择' + (field.label || field.fieldName || `字段${index}`)"
               style="width: 100%"
               :disabled="dialogType === 'edit' && !field.editable"
@@ -580,6 +616,7 @@ export default {
                           : false,
                     fixed: field.Fixed || field.fixed || 'none',
                     queryMode: field.QueryMode || field.queryMode || 'none',
+                    dateFormat: field.DateFormat || field.dateFormat || 'datetime',
                     minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
                     maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
                     minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
@@ -727,8 +764,8 @@ export default {
               return {
                 FieldName: field.fieldName,
                 Mode: 'range',
-                StartValue: value[0] || '',
-                EndValue: value[1] || ''
+                StartValue: this.normalizeDateValueForSubmit(value[0], field, 'start'),
+                EndValue: this.normalizeDateValueForSubmit(value[1], field, 'end')
               }
             }
             return {
@@ -742,7 +779,7 @@ export default {
           return {
             FieldName: field.fieldName,
             Mode: field.queryMode,
-            Value: value
+            Value: field.fieldType === 'datetime' ? this.normalizeDateValueForSubmit(value, field) : value
           }
         })
         .filter((filter) => {
@@ -905,6 +942,8 @@ export default {
               if (Array.isArray(fieldValue)) {
                 submitData[field.fieldName] = fieldValue.join(',')
               }
+            } else if (field.fieldType === 'datetime') {
+              submitData[field.fieldName] = this.normalizeDateValueForSubmit(submitData[field.fieldName], field)
             }
           })
 
@@ -982,6 +1021,93 @@ export default {
     },
     normalizeFixedColumn(fixed) {
       return fixed === 'left' || fixed === 'right' ? fixed : false
+    },
+    getDateFormatType(field) {
+      return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
+    },
+    getDatePickerType(field) {
+      const formatType = this.getDateFormatType(field)
+      return formatType === 'datetime' ? 'datetime' : formatType
+    },
+    getDateRangePickerType(field) {
+      const formatType = this.getDateFormatType(field)
+      return formatType === 'datetime' ? 'datetimerange' : `${formatType}range`
+    },
+    getDateValueFormat(field) {
+      const formatType = this.getDateFormatType(field)
+      const formatMap = {
+        year: 'YYYY',
+        month: 'YYYY-MM',
+        date: 'YYYY-MM-DD',
+        datetime: 'YYYY-MM-DD HH:mm:ss'
+      }
+      return formatMap[formatType]
+    },
+    getDateDisplayFormat(field) {
+      const formatType = this.getDateFormatType(field)
+      const formatMap = {
+        year: 'YYYY',
+        month: 'YYYY-MM',
+        date: 'YYYY-MM-DD',
+        datetime: 'YYYY-MM-DD HH:mm:ss'
+      }
+      return formatMap[formatType]
+    },
+    normalizeDateValueForSubmit(value, field, boundary = '') {
+      if (!value) {
+        return ''
+      }
+
+      const text = String(value)
+      switch (this.getDateFormatType(field)) {
+        case 'year':
+          return boundary === 'end' ? `${text}-12-31 23:59:59` : `${text}-01-01 00:00:00`
+        case 'month':
+          if (boundary === 'end') {
+            const [year, month] = text.split('-').map(Number)
+            if (year && month) {
+              const lastDay = new Date(year, month, 0).getDate()
+              return `${text}-${String(lastDay).padStart(2, '0')} 23:59:59`
+            }
+          }
+          return `${text}-01 00:00:00`
+        case 'date':
+          return boundary === 'end' ? `${text} 23:59:59` : `${text} 00:00:00`
+        default:
+          return text
+      }
+    },
+    formatFieldValue(value, field) {
+      if (value === null || value === undefined || value === '') {
+        return ''
+      }
+      if (field?.fieldType !== 'datetime') {
+        return Array.isArray(value) ? value.join(',') : value
+      }
+
+      const date = value instanceof Date ? value : new Date(value)
+      if (Number.isNaN(date.getTime())) {
+        return value
+      }
+
+      const pad = (num) => String(num).padStart(2, '0')
+      const year = date.getFullYear()
+      const month = pad(date.getMonth() + 1)
+      const day = pad(date.getDate())
+      const hours = pad(date.getHours())
+      const minutes = pad(date.getMinutes())
+      const seconds = pad(date.getSeconds())
+
+      switch (this.getDateFormatType(field)) {
+        case 'year':
+          return `${year}`
+        case 'month':
+          return `${year}-${month}`
+        case 'date':
+          return `${year}-${month}-${day}`
+        default:
+          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      }
     },
     // 导出Excel数据
     async exportData() {

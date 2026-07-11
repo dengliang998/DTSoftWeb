@@ -170,6 +170,14 @@
                     <el-option label="多选" value="checkbox"></el-option>
                   </el-select>
                 </el-form-item>
+                <el-form-item v-if="selectedFieldData.fieldType === 'datetime'" label="日期格式">
+                  <el-select v-model="selectedFieldData.dateFormat" placeholder="请选择日期格式">
+                    <el-option label="年" value="year"></el-option>
+                    <el-option label="年月" value="month"></el-option>
+                    <el-option label="年月日" value="date"></el-option>
+                    <el-option label="时间" value="datetime"></el-option>
+                  </el-select>
+                </el-form-item>
                 <!-- 下拉选择/单选/多选值配置 -->
                 <el-form-item
                   v-show="
@@ -494,6 +502,7 @@ export default {
         sortable: field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
         fixed: field.Fixed || field.fixed || 'none',
         queryMode: field.QueryMode || field.queryMode || 'none',
+        dateFormat: field.DateFormat || field.dateFormat || 'datetime',
         minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
         maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
         minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
@@ -666,6 +675,7 @@ export default {
         sortable: false,
         fixed: 'none',
         queryMode: 'none',
+        dateFormat: 'datetime',
         minLength: null,
         maxLength: null,
         minValue: null,
@@ -718,6 +728,9 @@ export default {
             this.selectedFieldData.options = []
           }
         }
+        if (this.selectedFieldData && this.selectedFieldData.fieldType === 'datetime') {
+          this.selectedFieldData.dateFormat = this.selectedFieldData.dateFormat || 'datetime'
+        }
       }, 0)
     },
     // 删除字段
@@ -754,6 +767,7 @@ export default {
             Sortable: field.sortable,
             Fixed: field.fixed || 'none',
             QueryMode: field.queryMode || 'none',
+            DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
             MinLength: field.minLength,
             MaxLength: field.maxLength,
             MinValue: field.minValue,
