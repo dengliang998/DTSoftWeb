@@ -366,6 +366,9 @@ export default {
     this.initApp()
   },
   methods: {
+    getRowPrimaryKey(row) {
+      return row?.ItemId || row?.itemId || row?.id || row?.Id || row?.ID || row?.idField
+    },
     normalizeFieldOptions(options) {
       let normalized = options
 
@@ -610,8 +613,7 @@ export default {
       })
         .then(async () => {
           try {
-            // 从行数据中获取id，支持不同的id字段名
-            const id = row.id || row.Id || row.ID || row.idField
+            const id = this.getRowPrimaryKey(row)
             if (!id) {
               this.$message.error('删除失败：无法获取数据ID')
               return
@@ -644,10 +646,16 @@ export default {
         try {
           // 移除不需要的字段
           const submitData = { ...this.formData }
+          delete submitData.ItemId
+          delete submitData.itemId
           delete submitData.CreateTime
           delete submitData.UpdateTime
           delete submitData.createTime
           delete submitData.updateTime
+          delete submitData.created_time
+          delete submitData.updated_time
+          delete submitData.created_by
+          delete submitData.updated_by
 
           // 处理多选字段，将数组转换为逗号分隔的字符串
           const fields = Array.isArray(this.appConfig.fields) ? this.appConfig.fields : []
@@ -670,8 +678,7 @@ export default {
             })
           } else {
             // 更新数据
-            // 从行数据中获取id，支持不同的id字段名
-            const id = submitData.id || submitData.Id || submitData.ID || submitData.idField
+            const id = this.getRowPrimaryKey(this.formData)
             if (!id) {
               this.$message.error('更新失败：无法获取数据ID')
               return
