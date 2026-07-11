@@ -1,6 +1,6 @@
 <template>
   <div class="dynamic-app-container">
-    <!-- 动态加载的应用内容 -->
+    <!-- 动态加载的微应用内容 -->
     <div v-if="!loading && appConfig" class="app-content">
       <!-- 列表页面 -->
       <div class="list-page">
@@ -121,7 +121,7 @@
     <div v-else-if="!loading && !appConfig" class="loading-container">
       <div style="text-align: center; color: #909399">
         <el-icon size="48" style="margin-bottom: 10px"><WarningFilled /></el-icon>
-        <div>应用配置未找到</div>
+        <div>微应用配置未找到</div>
       </div>
     </div>
 
@@ -353,7 +353,7 @@ export default {
     // 监听路由变化，重新初始化应用
     $route: {
       handler: function (to) {
-        // 只有当路由是动态应用路由时才重新初始化
+        // 只有当路由是微应用路由时才重新初始化
         if (to.path.startsWith('/app/')) {
           this.initApp()
         }
@@ -388,28 +388,39 @@ export default {
           value: option.Value || option.value || ''
         }))
     },
-    // 初始化应用
+    // 初始化微应用
     async initApp() {
       this.loading = true
       try {
-        // 获取应用路径
+        // 获取微应用路径
         const appPath = this.$route.params.appPath
 
-        // 加载应用配置 - 使用现有的GetDynamicAppConfigs接口，并传入modelName参数
+        // 优先按微应用路径加载，兼容旧数据时回退到模型名称
         const { data: res } = await getDynamicAppConfigs({
           PageNum: 1,
-          PageSize: 1, // 只获取一个应用的配置
-          modelName: appPath // 传入appPath作为modelName参数
+          PageSize: 1,
+          microAppPath: appPath
         })
         if (res.success) {
-          // 直接使用返回的数据，因为已经通过modelName过滤
-          const config = res.data && res.data.length > 0 ? res.data[0] : null
+          let config = res.data && res.data.length > 0 ? res.data[0] : null
+
+          if (!config) {
+            const fallbackRes = await getDynamicAppConfigs({
+              PageNum: 1,
+              PageSize: 1,
+              modelName: appPath
+            })
+            if (fallbackRes.data.success) {
+              config = fallbackRes.data.data && fallbackRes.data.data.length > 0 ? fallbackRes.data.data[0] : null
+            }
+          }
 
           if (config) {
             // 将大驼峰命名转换为小驼峰命名，并过滤fields中的undefined值
             this.appConfig = {
               configName: config.ConfigName || config.configName || '',
               modelName: config.ModelName || config.modelName || '',
+              microAppPath: config.MicroAppPath || config.ApiPrefix || config.ModelName || config.modelName || '',
               configDesc: config.ConfigDesc || config.configDesc || '',
               status: config.Status !== undefined ? config.Status : config.status !== undefined ? config.status : 1,
               supportCreate:
@@ -478,13 +489,13 @@ export default {
             // 获取应用数据
             this.getAppData()
           } else {
-            this.$message.error('未找到对应的应用配置')
+            this.$message.error('未找到对应的微应用配置')
           }
         } else {
-          this.$message.error('加载应用配置失败：' + (res.msg || '未知错误'))
+          this.$message.error('加载微应用配置失败：' + (res.msg || '未知错误'))
         }
       } catch (error) {
-        this.$message.error('加载应用配置失败：' + (error.message || '网络错误'))
+        this.$message.error('加载微应用配置失败：' + (error.message || '网络错误'))
       } finally {
         this.loading = false
       }

@@ -12,7 +12,7 @@
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="addDynamicApp">创建动态API配置</el-button>
+          <el-button type="primary" @click="addDynamicApp">创建微应用</el-button>
         </el-col>
       </el-row>
 
@@ -28,6 +28,7 @@
         <el-table-column type="index" label="序号" width="80"></el-table-column>
         <el-table-column label="配置名称" prop="ConfigName"></el-table-column>
         <el-table-column label="数据模型" prop="ModelName"></el-table-column>
+        <el-table-column label="微应用路径" prop="MicroAppPath"></el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.Status === 1 ? 'success' : 'danger'">
@@ -78,6 +79,12 @@
         </el-form-item>
         <el-form-item label="数据模型" prop="ModelName">
           <el-input v-model="DynamicAppForm.ModelName" placeholder="请输入数据模型名称（英文）"></el-input>
+        </el-form-item>
+        <el-form-item label="微应用路径" prop="MicroAppPath">
+          <el-input
+            v-model="DynamicAppForm.MicroAppPath"
+            placeholder="请输入微应用路径，例如 customer_center"
+          ></el-input>
         </el-form-item>
         <el-form-item label="配置描述" prop="configDesc">
           <el-input
@@ -351,11 +358,12 @@ export default {
       selectedFieldData: null,
       // 生成的API列表
       generatedApis: [],
-      // CRUD配置表单
+      // 微应用配置表单
       DynamicAppForm: {
         ItemId: '',
         ConfigName: '',
         ModelName: '',
+        MicroAppPath: '',
         configDesc: '',
         Status: 1,
         SupportCreate: true,
@@ -376,6 +384,14 @@ export default {
           {
             pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
             message: '数据模型名称只能包含英文、数字和下划线，且以英文开头',
+            trigger: 'blur'
+          }
+        ],
+        MicroAppPath: [
+          { required: true, message: '请输入微应用路径', trigger: 'blur' },
+          {
+            pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
+            message: '微应用路径只能包含英文、数字、中划线和下划线，且以英文开头',
             trigger: 'blur'
           }
         ]
@@ -436,7 +452,7 @@ export default {
         options: this.normalizeFieldOptions(field.Options || field.options || [])
       }))
     },
-    // 获取动态API配置列表
+    // 获取微应用配置列表
     async getDynamicApps() {
       try {
         const params = {
@@ -449,18 +465,18 @@ export default {
         }
         const { data: res } = await getDynamicAppConfigs(params)
         if (res.success) {
-          // 确保返回的数据中ApiPrefix和configDesc字段不会是null，而是空字符串
+          // 兼容旧返回字段，并统一映射到微应用路径
           this.DynamicAppList = res.data.map((item) => ({
             ...item,
-            ApiPrefix: item.ApiPrefix || '',
-            configDesc: item.configDesc || ''
+            MicroAppPath: item.MicroAppPath || item.ApiPrefix || item.ModelName || '',
+            configDesc: item.ConfigDesc || item.configDesc || ''
           }))
           this.total = res.total
         } else {
-          this.$message.error(res.msg || '获取动态API配置列表失败')
+          this.$message.error(res.msg || '获取微应用配置列表失败')
         }
       } catch (error) {
-        this.$message.error('获取动态API配置列表失败：' + error.message)
+        this.$message.error('获取微应用配置列表失败：' + error.message)
       }
     },
     // 处理分页大小变化
@@ -473,13 +489,14 @@ export default {
       this.queryInfo.pagenum = newPage
       this.getDynamicApps()
     },
-    // 添加动态API配置
+    // 添加微应用
     addDynamicApp() {
-      this.dialogTitle = '添加动态API配置'
+      this.dialogTitle = '创建微应用'
       this.DynamicAppForm = {
         ItemId: '',
         ConfigName: '',
         ModelName: '',
+        MicroAppPath: '',
         configDesc: '',
         Status: 1,
         SupportCreate: true,
@@ -487,25 +504,23 @@ export default {
         SupportDelete: true,
         SupportImport: false,
         SupportExport: false,
-        ApiPrefix: '',
         Fields: []
       }
       this.dialogVisible = true
     },
-    // 编辑动态API配置
+    // 编辑微应用
     editDynamicApp(row) {
-      this.dialogTitle = '编辑动态API配置'
-      // 确保ApiPrefix和configDesc字段不会是null，而是空字符串
+      this.dialogTitle = '编辑微应用'
       this.DynamicAppForm = {
         ...row,
-        ApiPrefix: row.ApiPrefix || '',
-        configDesc: row.configDesc || ''
+        MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
+        configDesc: row.ConfigDesc || row.configDesc || ''
       }
       this.dialogVisible = true
     },
-    // 删除动态API配置
+    // 删除微应用
     deleteDynamicApp(ItemId) {
-      this.$confirm('确定要删除该动态API配置吗？', '警告', {
+      this.$confirm('确定要删除该微应用吗？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -532,11 +547,16 @@ export default {
       this.$refs.DynamicAppFormRef.validate(async (valid) => {
         if (!valid) return
         try {
+          const submitData = {
+            ...this.DynamicAppForm,
+            ConfigDesc: this.DynamicAppForm.configDesc || this.DynamicAppForm.ConfigDesc || '',
+            MicroAppPath: this.DynamicAppForm.MicroAppPath || this.DynamicAppForm.ModelName
+          }
           let res
           if (this.DynamicAppForm.ItemId) {
-            res = await updateDynamicAppConfig(this.DynamicAppForm)
+            res = await updateDynamicAppConfig(submitData)
           } else {
-            res = await addDynamicAppConfig(this.DynamicAppForm)
+            res = await addDynamicAppConfig(submitData)
           }
           if (res.data.success) {
             this.$message.success(res.data.msg || (this.DynamicAppForm.id ? '更新成功' : '添加成功'))
@@ -562,7 +582,7 @@ export default {
 
       this.DynamicAppForm = {
         ...row,
-        ApiPrefix: row.ApiPrefix || '',
+        MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
@@ -654,6 +674,7 @@ export default {
           ...this.DynamicAppForm,
           ConfigName: this.DynamicAppForm.ConfigName,
           ModelName: this.DynamicAppForm.ModelName,
+          MicroAppPath: this.DynamicAppForm.MicroAppPath,
           ConfigDesc: this.DynamicAppForm.configDesc || this.DynamicAppForm.ConfigDesc,
           Fields: this.DynamicAppForm.Fields.map((field) => ({
             Label: field.label,
@@ -694,7 +715,7 @@ export default {
 
       this.DynamicAppForm = {
         ...row,
-        ApiPrefix: row.ApiPrefix || '',
+        MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }

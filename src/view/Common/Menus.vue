@@ -116,6 +116,24 @@
           <el-input v-model="addForm.path" placeholder="请输入路由地址"></el-input>
         </el-form-item>
 
+        <el-form-item v-if="addForm.menuType !== '1'" label="微应用路径" prop="microAppPath">
+          <el-select
+            v-model="addForm.microAppPath"
+            clearable
+            filterable
+            placeholder="可选：选择已创建微应用"
+            style="width: 100%"
+            @change="handleMicroAppPathChange"
+          >
+            <el-option
+              v-for="app in microAppOptions"
+              :key="app.value"
+              :label="`${app.label} (${app.value})`"
+              :value="app.value"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item v-show="false" label="组件路径" prop="component">
           <el-input v-model="addForm.component" placeholder="请输入组件路径"></el-input>
         </el-form-item>
@@ -151,6 +169,7 @@ import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
+import { getDynamicAppConfigs } from '@/api/dynamicApp'
 
 export default {
   name: 'Menus',
@@ -172,12 +191,14 @@ export default {
     // 是否显示添加菜单对话框
     const addDialogVisible = ref(false)
     const dialogTitle = ref('添加菜单')
+    const microAppOptions = ref([])
     // 添加菜单的表单数据
     const addForm = reactive({
       parentId: 0,
       menuName: '',
       menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
       path: '',
+      microAppPath: '',
       component: '',
       perms: '',
       icon: '',
@@ -195,6 +216,40 @@ export default {
     const editMenuId = ref(0)
 
     const iconNames = Object.keys(ElementPlusIconsVue).filter((k) => k && k !== 'default')
+
+    const extractMicroAppPath = (path) => {
+      if (!path || typeof path !== 'string') return ''
+      const match = path.match(/^\/?app\/([^/?#]+)/i)
+      return match ? decodeURIComponent(match[1]) : ''
+    }
+
+    const handleMicroAppPathChange = (value) => {
+      if (!value) return
+      addForm.path = `app/${value}`
+    }
+
+    const loadMicroApps = async () => {
+      try {
+        const { data: res } = await getDynamicAppConfigs({ PageNum: 1, PageSize: 1000 })
+        if (!res.success || !Array.isArray(res.data)) {
+          microAppOptions.value = []
+          return
+        }
+
+        microAppOptions.value = res.data
+          .map((item) => {
+            const value = item.MicroAppPath || item.ApiPrefix || item.ModelName
+            if (!value) return null
+            return {
+              label: item.ConfigName || item.ModelName || value,
+              value
+            }
+          })
+          .filter(Boolean)
+      } catch {
+        microAppOptions.value = []
+      }
+    }
 
     // 获取菜单列表
     const getMenuList = async () => {
@@ -317,6 +372,7 @@ export default {
         menuName: '',
         menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
         path: '',
+        microAppPath: '',
         component: '',
         perms: '',
         icon: '',
@@ -335,6 +391,7 @@ export default {
         menuName: '',
         menuType: '0',
         path: '',
+        microAppPath: '',
         component: '',
         perms: '',
         icon: '',
@@ -361,6 +418,7 @@ export default {
         menuName: menu.menuName,
         menuType: menuTypeValue,
         path: menu.path,
+        microAppPath: extractMicroAppPath(menu.path),
         component: menu.component || '',
         perms: menu.perms || '',
         icon: menu.icon,
@@ -378,6 +436,7 @@ export default {
         menuName: '',
         menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
         path: '',
+        microAppPath: '',
         component: '',
         perms: '',
         icon: '',
@@ -399,6 +458,9 @@ export default {
         })
 
         try {
+          const resolvedPath =
+            addForm.microAppPath && addForm.menuType !== '1' ? `app/${addForm.microAppPath}` : addForm.path
+
           let res
           if (currentAction.value === 'add') {
             // 添加菜单
@@ -406,7 +468,7 @@ export default {
             formData.append('MType', addForm.menuType) // 0:内部菜单 1:外部菜单
             formData.append('MenuName', addForm.menuName)
             formData.append('Pid', addForm.parentId)
-            formData.append('MenuPath', addForm.path)
+            formData.append('MenuPath', resolvedPath)
             formData.append('Order', addForm.orderNum)
             if (addForm.icon !== null && addForm.icon !== undefined && addForm.icon !== '') {
               formData.append('Icon', addForm.icon)
@@ -422,8 +484,8 @@ export default {
             formData.append('MenuName', addForm.menuName)
 
             // 只有当path不为空时才添加到formData中
-            if (addForm.path !== null && addForm.path !== undefined && addForm.path !== '') {
-              formData.append('MenuPath', addForm.path)
+            if (resolvedPath !== null && resolvedPath !== undefined && resolvedPath !== '') {
+              formData.append('MenuPath', resolvedPath)
             }
 
             formData.append('Order', addForm.orderNum)
@@ -495,6 +557,7 @@ export default {
 
     onMounted(() => {
       getMenuList()
+      loadMicroApps()
     })
 
     return {
@@ -503,6 +566,7 @@ export default {
       menuOptions,
       addDialogVisible,
       dialogTitle,
+      microAppOptions,
       addForm,
       addFormRules,
       currentAction,
@@ -515,6 +579,7 @@ export default {
       showAddChildDialog,
       showEditDialog,
       addDialogClosed,
+      handleMicroAppPathChange,
       addMenu,
       removeMenu,
       isMenuLevelExceeded, // 添加这一行以导出函数
