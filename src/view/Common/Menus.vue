@@ -169,7 +169,7 @@ import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
-import { getDynamicAppConfigs } from '@/api/dynamicApp'
+import { getMicroAppConfigs } from '@/api/microApp'
 
 export default {
   name: 'Menus',
@@ -230,7 +230,7 @@ export default {
 
     const loadMicroApps = async () => {
       try {
-        const { data: res } = await getDynamicAppConfigs({ PageNum: 1, PageSize: 1000 })
+        const { data: res } = await getMicroAppConfigs({ PageNum: 1, PageSize: 1000 })
         if (!res.success || !Array.isArray(res.data)) {
           microAppOptions.value = []
           return

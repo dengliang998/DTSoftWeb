@@ -8,8 +8,8 @@ const AttachmentList = () => import('../view/attachment/attachmentlist.vue')
 const Menus = () => import('../view/Common/Menus.vue')
 const SystemSettings = () => import('../view/Common/SystemSettings.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
-const DynamicApiConfig = () => import('../view/DynamicApp/DynamicApiConfig.vue')
-const DynamicAppPage = () => import('../view/DynamicApp/DynamicAppPage.vue')
+const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
+const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
 const ApiKeyManagement = () => import('../view/ApiKey/ApiKeyManagement.vue')
 
 const withCache = (cacheName, extraMeta = {}) => ({
@@ -51,10 +51,10 @@ export const routes = [
         meta: withCache('SystemSettings')
       },
       {
-        path: '/DynamicApp/DynamicApiConfig',
-        name: 'DynamicApp',
-        component: DynamicApiConfig,
-        meta: withCache('DynamicApp')
+        path: '/MicroApp/MicroApiConfig',
+        name: 'MicroApp',
+        component: MicroApiConfig,
+        meta: withCache('MicroApp')
       },
       {
         path: '/apikey/management',
@@ -65,9 +65,9 @@ export const routes = [
       { path: '/jumppage', name: 'JumpPage', component: JumpPage, props: true, meta: withCache('JumpPage') },
       {
         path: '/app/:appPath',
-        name: 'DynamicAppPage',
-        component: DynamicAppPage,
-        meta: withCache('DynamicAppPage')
+        name: 'MicroAppPage',
+        component: MicroAppPage,
+        meta: withCache('MicroAppPage')
       }
     ]
   }

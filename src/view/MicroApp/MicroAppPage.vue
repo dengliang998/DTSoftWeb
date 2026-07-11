@@ -49,6 +49,66 @@
                 >
                   导入Excel
                 </el-button>
+                <el-button
+                  v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
+                  type="danger"
+                  icon="Delete"
+                  :disabled="selectedRows.length === 0"
+                  style="margin-right: 5px"
+                  @click="batchDeleteData"
+                >
+                  批量删除
+                </el-button>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row v-if="queryableFields.length > 0" :gutter="12" class="advanced-query-row">
+            <el-col v-for="field in queryableFields" :key="field.fieldName" :span="6">
+              <div class="query-field">
+                <span class="query-label">{{ field.label || field.fieldName }}</span>
+                <template v-if="field.queryMode === 'range'">
+                  <div class="range-query">
+                    <el-date-picker
+                      v-if="field.fieldType === 'datetime'"
+                      v-model="queryFilters[field.fieldName]"
+                      type="datetimerange"
+                      range-separator="至"
+                      start-placeholder="开始"
+                      end-placeholder="结束"
+                      style="width: 100%"
+                    ></el-date-picker>
+                    <template v-else>
+                      <el-input v-model="queryFilters[field.fieldName].start" clearable placeholder="最小值"></el-input>
+                      <el-input v-model="queryFilters[field.fieldName].end" clearable placeholder="最大值"></el-input>
+                    </template>
+                  </div>
+                </template>
+                <el-select
+                  v-else-if="['select', 'radio', 'checkbox'].includes(field.fieldType)"
+                  v-model="queryFilters[field.fieldName]"
+                  clearable
+                  :placeholder="'请选择' + (field.label || field.fieldName)"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="option in field.options || []"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  ></el-option>
+                </el-select>
+                <el-input
+                  v-else
+                  v-model="queryFilters[field.fieldName]"
+                  clearable
+                  :placeholder="field.queryMode === 'exact' ? '精确查询' : '模糊查询'"
+                ></el-input>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="query-actions">
+                <el-button type="primary" icon="Search" @click="applyQueryFilters">查询</el-button>
+                <el-button icon="RefreshLeft" @click="resetQueryFilters">重置</el-button>
               </div>
             </el-col>
           </el-row>
@@ -63,18 +123,29 @@
               stripe
               class="table-wrapper"
               height="100%"
+              @selection-change="handleSelectionChange"
+              @sort-change="handleSortChange"
             >
+              <el-table-column
+                v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
+                type="selection"
+                width="50"
+                fixed="left"
+              ></el-table-column>
               <!-- 序号列 -->
-              <el-table-column type="index" label="序号" width="80"></el-table-column>
+              <el-table-column type="index" label="序号" width="80" fixed="left"></el-table-column>
               <!-- 渲染所有有效的字段 -->
               <template v-for="field in appConfig.fields" :key="field.fieldName">
                 <el-table-column
                   v-if="field?.showInList && field?.fieldName"
                   :prop="field.fieldName"
                   :label="field.label || field.fieldName || '未知字段'"
+                  :width="field.columnWidth || undefined"
+                  :fixed="normalizeFixedColumn(field.fixed)"
+                  :sortable="field.sortable ? 'custom' : false"
                 ></el-table-column>
               </template>
-              <el-table-column label="操作" width="200">
+              <el-table-column label="操作" width="200" fixed="right">
                 <template #default="scope">
                   <div class="operation-buttons">
                     <el-button
@@ -116,8 +187,8 @@
     </div>
 
     <!-- 加载中 -->
-    <div v-if="loading" v-loading="loading" class="loading-container" element-loading-text="加载应用配置中..."></div>
-    <!-- 应用配置未找到 -->
+    <div v-if="loading" v-loading="loading" class="loading-container" element-loading-text="加载微应用配置中..."></div>
+    <!-- 微应用配置未找到 -->
     <div v-else-if="!loading && !appConfig" class="loading-container">
       <div style="text-align: center; color: #909399">
         <el-icon size="48" style="margin-bottom: 10px"><WarningFilled /></el-icon>
@@ -301,19 +372,20 @@
 
 <script>
 import {
-  createDynamicRuntimeData,
-  deleteDynamicRuntimeData,
-  exportDynamicRuntimeData,
-  getDynamicAppConfigs,
-  getDynamicRuntimeList,
-  importDynamicRuntimeData,
-  updateDynamicRuntimeData
-} from '@/api/dynamicApp'
+  batchDeleteMicroRuntimeData,
+  createMicroRuntimeData,
+  deleteMicroRuntimeData,
+  exportMicroRuntimeData,
+  getMicroAppConfigs,
+  getMicroRuntimeList,
+  importMicroRuntimeData,
+  updateMicroRuntimeData
+} from '@/api/microApp'
 export default {
-  name: 'DynamicAppPage',
+  name: 'MicroAppPage',
   data() {
     return {
-      // 应用配置
+      // 微应用配置
       appConfig: null,
       // 加载状态
       loading: false,
@@ -331,6 +403,12 @@ export default {
         list: [],
         total: 0
       },
+      selectedRows: [],
+      queryFilters: {},
+      sortInfo: {
+        prop: '',
+        order: ''
+      },
       // 表单数据
       formData: {},
       // 表单验证规则
@@ -347,6 +425,12 @@ export default {
       importFileList: [],
       // 导入加载状态
       importLoading: false
+    }
+  },
+  computed: {
+    queryableFields() {
+      const fields = Array.isArray(this.appConfig?.fields) ? this.appConfig.fields : []
+      return fields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
     }
   },
   watch: {
@@ -399,7 +483,7 @@ export default {
         const appPath = this.$route.params.appPath
 
         // 优先按微应用路径加载，兼容旧数据时回退到模型名称
-        const { data: res } = await getDynamicAppConfigs({
+        const { data: res } = await getMicroAppConfigs({
           PageNum: 1,
           PageSize: 1,
           microAppPath: appPath
@@ -408,7 +492,7 @@ export default {
           let config = res.data && res.data.length > 0 ? res.data[0] : null
 
           if (!config) {
-            const fallbackRes = await getDynamicAppConfigs({
+            const fallbackRes = await getMicroAppConfigs({
               PageNum: 1,
               PageSize: 1,
               modelName: appPath
@@ -444,6 +528,12 @@ export default {
                   : config.supportDelete !== undefined
                     ? config.supportDelete
                     : true,
+              supportBatchDelete:
+                config.SupportBatchDelete !== undefined
+                  ? config.SupportBatchDelete
+                  : config.supportBatchDelete !== undefined
+                    ? config.supportBatchDelete
+                    : false,
               supportImport:
                 config.SupportImport !== undefined
                   ? config.SupportImport
@@ -456,6 +546,7 @@ export default {
                   : config.supportExport !== undefined
                     ? config.supportExport
                     : false,
+              dataScope: config.DataScope || config.dataScope || 'all',
               fields: Array.isArray(config.Fields)
                 ? config.Fields.filter((field) => field && typeof field === 'object').map((field) => ({
                     label: field.Label || field.label || '',
@@ -480,6 +571,20 @@ export default {
                           ? field.editable
                           : true,
                     validation: field.Validation || field.validation || '',
+                    columnWidth: field.ColumnWidth || field.columnWidth || null,
+                    sortable:
+                      field.Sortable !== undefined
+                        ? field.Sortable
+                        : field.sortable !== undefined
+                          ? field.sortable
+                          : false,
+                    fixed: field.Fixed || field.fixed || 'none',
+                    queryMode: field.QueryMode || field.queryMode || 'none',
+                    minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
+                    maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
+                    minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
+                    maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
+                    pattern: field.Pattern || field.pattern || '',
                     defaultValue: field.DefaultValue || field.defaultValue || '',
                     options: this.normalizeFieldOptions(field.Options || field.options || [])
                   }))
@@ -488,6 +593,7 @@ export default {
 
             // 初始化表单数据
             this.initFormData()
+            this.initQueryFilters()
 
             // 获取应用数据
             this.getAppData()
@@ -523,12 +629,61 @@ export default {
       })
     },
 
+    initQueryFilters() {
+      const filters = {}
+      this.queryableFields.forEach((field) => {
+        if (field.queryMode === 'range') {
+          filters[field.fieldName] = field.fieldType === 'datetime' ? [] : { start: '', end: '' }
+        } else {
+          filters[field.fieldName] = ''
+        }
+      })
+      this.queryFilters = filters
+    },
+
     // 获取字段验证规则
     getFieldRules(field) {
       const rules = []
       // 必填验证
       if (field.required) {
         rules.push({ required: true, message: '请输入' + field.label, trigger: 'blur' })
+      }
+      if (field.minLength !== null && field.minLength !== undefined) {
+        rules.push({ min: field.minLength, message: `${field.label}不能少于${field.minLength}个字符`, trigger: 'blur' })
+      }
+      if (field.maxLength !== null && field.maxLength !== undefined) {
+        rules.push({ max: field.maxLength, message: `${field.label}不能超过${field.maxLength}个字符`, trigger: 'blur' })
+      }
+      if (field.fieldType === 'number' && (field.minValue !== null || field.maxValue !== null)) {
+        rules.push({
+          validator: (rule, value, callback) => {
+            if (value === null || value === undefined || value === '') {
+              callback()
+              return
+            }
+            if (field.minValue !== null && field.minValue !== undefined && Number(value) < Number(field.minValue)) {
+              callback(new Error(`${field.label}不能小于${field.minValue}`))
+              return
+            }
+            if (field.maxValue !== null && field.maxValue !== undefined && Number(value) > Number(field.maxValue)) {
+              callback(new Error(`${field.label}不能大于${field.maxValue}`))
+              return
+            }
+            callback()
+          },
+          trigger: 'blur'
+        })
+      }
+      if (field.pattern) {
+        try {
+          rules.push({
+            pattern: new RegExp(field.pattern),
+            message: `${field.label}格式不正确`,
+            trigger: 'blur'
+          })
+        } catch (error) {
+          console.error('字段正则校验解析失败：', error)
+        }
       }
       // 自定义验证规则
       if (field.validation) {
@@ -544,17 +699,67 @@ export default {
       return rules
     },
 
+    buildRuntimeQueryParams() {
+      const params = {
+        PageNum: this.pagination.currentPage,
+        PageSize: this.pagination.pageSize,
+        Keyword: this.searchKeyword
+      }
+
+      const filters = this.buildQueryFilters()
+      if (filters.length > 0) {
+        params.Filters = JSON.stringify(filters)
+      }
+      if (this.sortInfo.prop) {
+        params.SortField = this.sortInfo.prop
+        params.SortOrder = this.sortInfo.order
+      }
+
+      return params
+    },
+
+    buildQueryFilters() {
+      return this.queryableFields
+        .map((field) => {
+          const value = this.queryFilters[field.fieldName]
+          if (field.queryMode === 'range') {
+            if (field.fieldType === 'datetime' && Array.isArray(value)) {
+              return {
+                FieldName: field.fieldName,
+                Mode: 'range',
+                StartValue: value[0] || '',
+                EndValue: value[1] || ''
+              }
+            }
+            return {
+              FieldName: field.fieldName,
+              Mode: 'range',
+              StartValue: value?.start || '',
+              EndValue: value?.end || ''
+            }
+          }
+
+          return {
+            FieldName: field.fieldName,
+            Mode: field.queryMode,
+            Value: value
+          }
+        })
+        .filter((filter) => {
+          if (filter.Mode === 'range') {
+            return Boolean(filter.StartValue || filter.EndValue)
+          }
+          return filter.Value !== null && filter.Value !== undefined && filter.Value !== ''
+        })
+    },
+
     // 获取应用数据
     async getAppData() {
       try {
-        const params = {
-          PageNum: this.pagination.currentPage,
-          PageSize: this.pagination.pageSize,
-          Keyword: this.searchKeyword
-        }
+        const params = this.buildRuntimeQueryParams()
 
         // 调用应用对应的API获取数据
-        const { data: res } = await getDynamicRuntimeList({
+        const { data: res } = await getMicroRuntimeList({
           modelName: this.appConfig.modelName,
           params
         })
@@ -619,7 +824,7 @@ export default {
               return
             }
 
-            const { data: res } = await deleteDynamicRuntimeData({
+            const { data: res } = await deleteMicroRuntimeData({
               modelName: this.appConfig.modelName,
               id
             })
@@ -631,6 +836,40 @@ export default {
             }
           } catch (error) {
             this.$message.error('删除失败：' + (error.message || '网络错误'))
+          }
+        })
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
+    },
+
+    batchDeleteData() {
+      const ids = this.selectedRows.map((row) => this.getRowPrimaryKey(row)).filter(Boolean)
+      if (ids.length === 0) {
+        this.$message.warning('请选择要删除的数据')
+        return
+      }
+
+      this.$confirm(`确定要删除选中的 ${ids.length} 条数据吗？`, '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(async () => {
+          try {
+            const { data: res } = await batchDeleteMicroRuntimeData({
+              modelName: this.appConfig.modelName,
+              ids
+            })
+            if (res.success) {
+              this.$message.success(res.msg || '批量删除成功')
+              this.selectedRows = []
+              this.getAppData()
+            } else {
+              this.$message.error('批量删除失败：' + (res.msg || '未知错误'))
+            }
+          } catch (error) {
+            this.$message.error('批量删除失败：' + (error.message || '网络错误'))
           }
         })
         .catch(() => {
@@ -672,7 +911,7 @@ export default {
           let res
           if (this.dialogType === 'create') {
             // 新增数据
-            res = await createDynamicRuntimeData({
+            res = await createMicroRuntimeData({
               modelName: this.appConfig.modelName,
               data: submitData
             })
@@ -683,7 +922,7 @@ export default {
               this.$message.error('更新失败：无法获取数据ID')
               return
             }
-            res = await updateDynamicRuntimeData({
+            res = await updateMicroRuntimeData({
               modelName: this.appConfig.modelName,
               id,
               data: submitData
@@ -720,6 +959,30 @@ export default {
       this.pagination.currentPage = newPage
       this.getAppData()
     },
+    handleSelectionChange(selection) {
+      this.selectedRows = selection
+    },
+    handleSortChange({ prop, order }) {
+      this.sortInfo = {
+        prop: prop || '',
+        order: order || ''
+      }
+      this.pagination.currentPage = 1
+      this.getAppData()
+    },
+    applyQueryFilters() {
+      this.pagination.currentPage = 1
+      this.getAppData()
+    },
+    resetQueryFilters() {
+      this.searchKeyword = ''
+      this.initQueryFilters()
+      this.pagination.currentPage = 1
+      this.getAppData()
+    },
+    normalizeFixedColumn(fixed) {
+      return fixed === 'left' || fixed === 'right' ? fixed : false
+    },
     // 导出Excel数据
     async exportData() {
       // 检查列表数据是否为空
@@ -730,12 +993,12 @@ export default {
 
       try {
         // 构建查询参数
-        const params = {
-          Keyword: this.searchKeyword
-        }
+        const params = this.buildRuntimeQueryParams()
+        delete params.PageNum
+        delete params.PageSize
 
         // 发起导出请求
-        const { data: res } = await exportDynamicRuntimeData({
+        const { data: res } = await exportMicroRuntimeData({
           modelName: this.appConfig.modelName,
           params
         })
@@ -787,7 +1050,7 @@ export default {
         formData.append('file', this.importFileList[0].raw)
 
         // 发起导入请求
-        const { data: res } = await importDynamicRuntimeData({
+        const { data: res } = await importMicroRuntimeData({
           modelName: this.appConfig.modelName,
           data: formData
         })
@@ -875,6 +1138,35 @@ export default {
 .table-container {
   flex: 1;
   min-height: 0;
+}
+
+.advanced-query-row {
+  margin-bottom: 12px;
+}
+
+.query-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.query-label {
+  font-size: 12px;
+  color: #606266;
+  line-height: 18px;
+}
+
+.range-query {
+  display: flex;
+  gap: 6px;
+}
+
+.query-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 100%;
+  padding-top: 22px;
 }
 
 .table-wrapper {

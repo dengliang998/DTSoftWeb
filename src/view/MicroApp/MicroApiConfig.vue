@@ -5,20 +5,20 @@
       <!-- 搜索与添加区域 -->
       <el-row :gutter="20" style="margin-bottom: 15px">
         <el-col :span="6">
-          <el-input v-model="queryInfo.query" clearable placeholder="请输入配置名称" @clear="getDynamicApps">
+          <el-input v-model="queryInfo.query" clearable placeholder="请输入配置名称" @clear="getMicroApps">
             <template #append>
-              <el-button icon="Search" @click="getDynamicApps"></el-button>
+              <el-button icon="Search" @click="getMicroApps"></el-button>
             </template>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary" @click="addDynamicApp">创建微应用</el-button>
+          <el-button type="primary" @click="addMicroApp">创建微应用</el-button>
         </el-col>
       </el-row>
 
       <!-- 配置列表 -->
       <el-table
-        :data="DynamicAppList"
+        :data="MicroAppList"
         :row-style="{ height: '40px' }"
         :cell-style="{ padding: '0px' }"
         border
@@ -45,15 +45,10 @@
         <el-table-column label="操作" width="250">
           <template #default="scope">
             <div class="operation-buttons">
-              <el-button type="primary" size="small" icon="Edit" @click="editDynamicApp(scope.row)"></el-button>
+              <el-button type="primary" size="small" icon="Edit" @click="editMicroApp(scope.row)"></el-button>
               <el-button type="primary" size="small" icon="Setting" @click="visualConfig(scope.row)"></el-button>
               <el-button type="success" size="small" icon="Document" @click="generateApiDoc(scope.row)"></el-button>
-              <el-button
-                type="danger"
-                size="small"
-                icon="Delete"
-                @click="deleteDynamicApp(scope.row.ItemId)"
-              ></el-button>
+              <el-button type="danger" size="small" icon="Delete" @click="deleteMicroApp(scope.row.ItemId)"></el-button>
             </div>
           </template>
         </el-table-column>
@@ -73,33 +68,25 @@
 
     <!-- 配置基本信息对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" :close-on-click-modal="false">
-      <el-form ref="DynamicAppFormRef" :model="DynamicAppForm" :rules="rules" label-width="100px">
+      <el-form ref="MicroAppFormRef" :model="MicroAppForm" :rules="rules" label-width="100px">
         <el-form-item label="配置名称" prop="ConfigName">
-          <el-input v-model="DynamicAppForm.ConfigName" placeholder="请输入配置名称"></el-input>
+          <el-input v-model="MicroAppForm.ConfigName" placeholder="请输入配置名称"></el-input>
         </el-form-item>
         <el-form-item label="数据模型" prop="ModelName">
           <el-input
-            v-model="DynamicAppForm.ModelName"
+            v-model="MicroAppForm.ModelName"
             placeholder="请输入数据模型名称（英文）"
-            :disabled="Boolean(DynamicAppForm.ItemId)"
+            :disabled="Boolean(MicroAppForm.ItemId)"
           ></el-input>
         </el-form-item>
         <el-form-item label="微应用路径" prop="MicroAppPath">
-          <el-input
-            v-model="DynamicAppForm.MicroAppPath"
-            placeholder="请输入微应用路径，例如 customer_center"
-          ></el-input>
+          <el-input v-model="MicroAppForm.MicroAppPath" placeholder="请输入微应用路径，例如 customer_center"></el-input>
         </el-form-item>
         <el-form-item label="配置描述" prop="configDesc">
-          <el-input
-            v-model="DynamicAppForm.configDesc"
-            type="textarea"
-            placeholder="请输入配置描述"
-            :rows="3"
-          ></el-input>
+          <el-input v-model="MicroAppForm.configDesc" type="textarea" placeholder="请输入配置描述" :rows="3"></el-input>
         </el-form-item>
         <el-form-item label="状态">
-          <el-switch v-model="DynamicAppForm.Status" :active-value="1" :inactive-value="0"></el-switch>
+          <el-switch v-model="MicroAppForm.Status" :active-value="1" :inactive-value="0"></el-switch>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -126,7 +113,7 @@
                 添加字段
               </el-button>
               <el-tree
-                :data="DynamicAppForm.Fields"
+                :data="MicroAppForm.Fields"
                 :props="{ label: 'label', children: 'children' }"
                 node-key="fieldName"
                 :expand-on-click-node="false"
@@ -134,7 +121,7 @@
                 :default-expanded-keys="expandedKeys"
                 @node-click="selectField"
               >
-                <template #default="{ node, data }">
+                <template #default="{ data }">
                   <span>{{ data.label }}</span>
                   <el-button
                     type="text"
@@ -221,16 +208,60 @@
                 <el-form-item label="是否显示在列表">
                   <el-switch v-model="selectedFieldData.showInList"></el-switch>
                 </el-form-item>
+                <el-form-item label="列宽">
+                  <el-input-number
+                    v-model="selectedFieldData.columnWidth"
+                    :min="80"
+                    :max="600"
+                    :step="10"
+                    placeholder="自动"
+                  ></el-input-number>
+                </el-form-item>
+                <el-form-item label="支持排序">
+                  <el-switch v-model="selectedFieldData.sortable"></el-switch>
+                </el-form-item>
+                <el-form-item label="固定列">
+                  <el-select v-model="selectedFieldData.fixed" placeholder="请选择固定列位置">
+                    <el-option label="不固定" value="none"></el-option>
+                    <el-option label="固定在左侧" value="left"></el-option>
+                    <el-option label="固定在右侧" value="right"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="查询方式">
+                  <el-select v-model="selectedFieldData.queryMode" placeholder="请选择查询方式">
+                    <el-option label="不参与查询" value="none"></el-option>
+                    <el-option label="精确查询" value="exact"></el-option>
+                    <el-option label="模糊查询" value="fuzzy"></el-option>
+                    <el-option label="范围查询" value="range"></el-option>
+                  </el-select>
+                </el-form-item>
                 <el-form-item label="是否可编辑">
                   <el-switch v-model="selectedFieldData.editable"></el-switch>
                 </el-form-item>
-                <el-form-item label="字段验证规则">
-                  <el-input
-                    v-model="selectedFieldData.validation"
-                    type="textarea"
-                    placeholder="请输入验证规则，JSON格式"
-                    :rows="3"
-                  ></el-input>
+                <el-form-item label="长度范围">
+                  <div class="inline-control-row">
+                    <el-input-number
+                      v-model="selectedFieldData.minLength"
+                      :min="0"
+                      :max="10000"
+                      placeholder="最小长度"
+                    ></el-input-number>
+                    <el-input-number
+                      v-model="selectedFieldData.maxLength"
+                      :min="0"
+                      :max="10000"
+                      placeholder="最大长度"
+                    ></el-input-number>
+                  </div>
+                </el-form-item>
+                <el-form-item label="数值范围">
+                  <div class="inline-control-row">
+                    <el-input-number v-model="selectedFieldData.minValue" placeholder="最小值"></el-input-number>
+                    <el-input-number v-model="selectedFieldData.maxValue" placeholder="最大值"></el-input-number>
+                  </div>
+                </el-form-item>
+                <el-form-item label="正则校验">
+                  <el-input v-model="selectedFieldData.pattern" placeholder="请输入正则表达式"></el-input>
                 </el-form-item>
                 <el-form-item label="字段默认值">
                   <el-input v-model="selectedFieldData.defaultValue" placeholder="请输入字段默认值"></el-input>
@@ -250,21 +281,31 @@
               </div>
             </template>
 
-            <el-form :model="DynamicAppForm" label-width="120px">
+            <el-form :model="MicroAppForm" label-width="120px">
               <el-form-item label="支持新增">
-                <el-switch v-model="DynamicAppForm.SupportCreate"></el-switch>
+                <el-switch v-model="MicroAppForm.SupportCreate"></el-switch>
               </el-form-item>
               <el-form-item label="支持修改">
-                <el-switch v-model="DynamicAppForm.SupportUpdate"></el-switch>
+                <el-switch v-model="MicroAppForm.SupportUpdate"></el-switch>
               </el-form-item>
               <el-form-item label="支持删除">
-                <el-switch v-model="DynamicAppForm.SupportDelete"></el-switch>
+                <el-switch v-model="MicroAppForm.SupportDelete"></el-switch>
+              </el-form-item>
+              <el-form-item label="支持批量删除">
+                <el-switch v-model="MicroAppForm.SupportBatchDelete"></el-switch>
               </el-form-item>
               <el-form-item label="支持导入">
-                <el-switch v-model="DynamicAppForm.SupportImport"></el-switch>
+                <el-switch v-model="MicroAppForm.SupportImport"></el-switch>
               </el-form-item>
               <el-form-item label="支持导出">
-                <el-switch v-model="DynamicAppForm.SupportExport"></el-switch>
+                <el-switch v-model="MicroAppForm.SupportExport"></el-switch>
+              </el-form-item>
+              <el-form-item label="数据范围">
+                <el-select v-model="MicroAppForm.DataScope" placeholder="请选择数据范围">
+                  <el-option label="全部数据" value="all"></el-option>
+                  <el-option label="本人数据" value="self"></el-option>
+                  <el-option label="部门数据" value="department"></el-option>
+                </el-select>
               </el-form-item>
             </el-form>
           </el-card>
@@ -310,7 +351,7 @@
           </el-tab-pane>
           <el-tab-pane label="配置JSON" name="config-json">
             <div class="json-preview">
-              <pre>{{ JSON.stringify(DynamicAppForm, null, 2) }}</pre>
+              <pre>{{ JSON.stringify(MicroAppForm, null, 2) }}</pre>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -323,15 +364,10 @@
 </template>
 
 <script>
-import {
-  addDynamicAppConfig,
-  deleteDynamicAppConfig,
-  getDynamicAppConfigs,
-  updateDynamicAppConfig
-} from '@/api/dynamicApp'
+import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
 
 export default {
-  name: 'DynamicApp',
+  name: 'MicroApp',
   data() {
     return {
       // 查询条件
@@ -340,8 +376,8 @@ export default {
         pagenum: 1,
         pagesize: 10
       },
-      // CRUD配置列表
-      DynamicAppList: [],
+      // 微应用配置列表
+      MicroAppList: [],
       // 总数
       total: 0,
       // 对话框显示状态
@@ -363,7 +399,7 @@ export default {
       // 生成的API列表
       generatedApis: [],
       // 微应用配置表单
-      DynamicAppForm: {
+      MicroAppForm: {
         ItemId: '',
         ConfigName: '',
         ModelName: '',
@@ -373,8 +409,10 @@ export default {
         SupportCreate: true,
         SupportUpdate: true,
         SupportDelete: true,
+        SupportBatchDelete: false,
         SupportImport: false,
         SupportExport: false,
+        DataScope: 'all',
         Fields: []
       },
       // 表单验证规则
@@ -403,7 +441,7 @@ export default {
     }
   },
   created() {
-    this.getDynamicApps()
+    this.getMicroApps()
   },
   methods: {
     normalizeFieldOptions(options) {
@@ -452,12 +490,21 @@ export default {
           field.ShowInList !== undefined ? field.ShowInList : field.showInList !== undefined ? field.showInList : true,
         editable: field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
         validation: field.Validation || field.validation || '',
+        columnWidth: field.ColumnWidth || field.columnWidth || null,
+        sortable: field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
+        fixed: field.Fixed || field.fixed || 'none',
+        queryMode: field.QueryMode || field.queryMode || 'none',
+        minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
+        maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
+        minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
+        maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
+        pattern: field.Pattern || field.pattern || '',
         defaultValue: field.DefaultValue || field.defaultValue || '',
         options: this.normalizeFieldOptions(field.Options || field.options || [])
       }))
     },
     // 获取微应用配置列表
-    async getDynamicApps() {
+    async getMicroApps() {
       try {
         const params = {
           PageNum: this.queryInfo.pagenum,
@@ -467,12 +514,13 @@ export default {
         if (this.queryInfo.query) {
           params.Keyword = this.queryInfo.query
         }
-        const { data: res } = await getDynamicAppConfigs(params)
+        const { data: res } = await getMicroAppConfigs(params)
         if (res.success) {
           // 兼容旧返回字段，并统一映射到微应用路径
-          this.DynamicAppList = res.data.map((item) => ({
+          this.MicroAppList = res.data.map((item) => ({
             ...item,
             MicroAppPath: item.MicroAppPath || item.ApiPrefix || item.ModelName || '',
+            DataScope: item.DataScope || item.dataScope || 'all',
             configDesc: item.ConfigDesc || item.configDesc || ''
           }))
           this.total = res.total
@@ -486,17 +534,17 @@ export default {
     // 处理分页大小变化
     handleSizeChange(newSize) {
       this.queryInfo.pagesize = newSize
-      this.getDynamicApps()
+      this.getMicroApps()
     },
     // 处理当前页变化
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage
-      this.getDynamicApps()
+      this.getMicroApps()
     },
     // 添加微应用
-    addDynamicApp() {
+    addMicroApp() {
       this.dialogTitle = '创建微应用'
-      this.DynamicAppForm = {
+      this.MicroAppForm = {
         ItemId: '',
         ConfigName: '',
         ModelName: '',
@@ -506,24 +554,27 @@ export default {
         SupportCreate: true,
         SupportUpdate: true,
         SupportDelete: true,
+        SupportBatchDelete: false,
         SupportImport: false,
         SupportExport: false,
+        DataScope: 'all',
         Fields: []
       }
       this.dialogVisible = true
     },
     // 编辑微应用
-    editDynamicApp(row) {
+    editMicroApp(row) {
       this.dialogTitle = '编辑微应用'
-      this.DynamicAppForm = {
+      this.MicroAppForm = {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
+        DataScope: row.DataScope || row.dataScope || 'all',
         configDesc: row.ConfigDesc || row.configDesc || ''
       }
       this.dialogVisible = true
     },
     // 删除微应用
-    deleteDynamicApp(ItemId) {
+    deleteMicroApp(ItemId) {
       this.$confirm('确定要删除该微应用吗？', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -531,10 +582,10 @@ export default {
       })
         .then(async () => {
           try {
-            const { data: res } = await deleteDynamicAppConfig(ItemId)
+            const { data: res } = await deleteMicroAppConfig(ItemId)
             if (res.success) {
               this.$message.success(res.msg || '删除成功')
-              this.getDynamicApps()
+              this.getMicroApps()
             } else {
               this.$message.error(res.msg || '删除失败')
             }
@@ -548,24 +599,24 @@ export default {
     },
     // 提交表单
     async submitForm() {
-      this.$refs.DynamicAppFormRef.validate(async (valid) => {
+      this.$refs.MicroAppFormRef.validate(async (valid) => {
         if (!valid) return
         try {
           const submitData = {
-            ...this.DynamicAppForm,
-            ConfigDesc: this.DynamicAppForm.configDesc || this.DynamicAppForm.ConfigDesc || '',
-            MicroAppPath: this.DynamicAppForm.MicroAppPath || this.DynamicAppForm.ModelName
+            ...this.MicroAppForm,
+            ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc || '',
+            MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName
           }
           let res
-          if (this.DynamicAppForm.ItemId) {
-            res = await updateDynamicAppConfig(submitData)
+          if (this.MicroAppForm.ItemId) {
+            res = await updateMicroAppConfig(submitData)
           } else {
-            res = await addDynamicAppConfig(submitData)
+            res = await addMicroAppConfig(submitData)
           }
           if (res.data.success) {
-            this.$message.success(res.data.msg || (this.DynamicAppForm.id ? '更新成功' : '添加成功'))
+            this.$message.success(res.data.msg || (this.MicroAppForm.id ? '更新成功' : '添加成功'))
             this.dialogVisible = false
-            this.getDynamicApps()
+            this.getMicroApps()
           } else {
             this.$message.error(res.data.msg || '操作失败')
           }
@@ -584,14 +635,15 @@ export default {
 
       console.log('转换后的 Fields:', fields)
 
-      this.DynamicAppForm = {
+      this.MicroAppForm = {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
+        DataScope: row.DataScope || row.dataScope || 'all',
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
 
-      console.log('DynamicAppForm.Fields:', this.DynamicAppForm.Fields)
+      console.log('MicroAppForm.Fields:', this.MicroAppForm.Fields)
 
       // 初始化展开的节点
       this.expandedKeys = []
@@ -610,10 +662,19 @@ export default {
         showInList: true,
         editable: true,
         validation: '',
+        columnWidth: null,
+        sortable: false,
+        fixed: 'none',
+        queryMode: 'none',
+        minLength: null,
+        maxLength: null,
+        minValue: null,
+        maxValue: null,
+        pattern: '',
         defaultValue: '',
         options: []
       }
-      this.DynamicAppForm.Fields.push(newField)
+      this.MicroAppForm.Fields.push(newField)
     },
     // 添加选项
     addOption() {
@@ -661,9 +722,9 @@ export default {
     },
     // 删除字段
     deleteField(fieldName) {
-      const index = this.DynamicAppForm.Fields.findIndex((item) => item.fieldName === fieldName)
+      const index = this.MicroAppForm.Fields.findIndex((item) => item.fieldName === fieldName)
       if (index > -1) {
-        this.DynamicAppForm.Fields.splice(index, 1)
+        this.MicroAppForm.Fields.splice(index, 1)
         if (this.selectedFieldData && this.selectedFieldData.fieldName === fieldName) {
           this.selectedFieldKey = ''
           this.selectedFieldData = null
@@ -675,12 +736,13 @@ export default {
       try {
         // 将小驼峰命名转换为大驼峰命名，以适配后台接口
         const submitData = {
-          ...this.DynamicAppForm,
-          ConfigName: this.DynamicAppForm.ConfigName,
-          ModelName: this.DynamicAppForm.ModelName,
-          MicroAppPath: this.DynamicAppForm.MicroAppPath,
-          ConfigDesc: this.DynamicAppForm.configDesc || this.DynamicAppForm.ConfigDesc,
-          Fields: this.DynamicAppForm.Fields.map((field) => ({
+          ...this.MicroAppForm,
+          ConfigName: this.MicroAppForm.ConfigName,
+          ModelName: this.MicroAppForm.ModelName,
+          MicroAppPath: this.MicroAppForm.MicroAppPath,
+          ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc,
+          DataScope: this.MicroAppForm.DataScope || 'all',
+          Fields: this.MicroAppForm.Fields.map((field) => ({
             Label: field.label,
             FieldName: field.fieldName,
             FieldType: field.fieldType,
@@ -688,6 +750,15 @@ export default {
             ShowInList: field.showInList,
             Editable: field.editable,
             Validation: field.validation,
+            ColumnWidth: field.columnWidth,
+            Sortable: field.sortable,
+            Fixed: field.fixed || 'none',
+            QueryMode: field.queryMode || 'none',
+            MinLength: field.minLength,
+            MaxLength: field.maxLength,
+            MinValue: field.minValue,
+            MaxValue: field.maxValue,
+            Pattern: field.pattern,
             DefaultValue: field.defaultValue,
             Options: this.normalizeFieldOptions(field.options)
           }))
@@ -695,11 +766,11 @@ export default {
 
         console.log('提交的数据:', submitData)
 
-        const res = await updateDynamicAppConfig(submitData)
+        const res = await updateMicroAppConfig(submitData)
         if (res.data.success) {
           this.$message.success(res.data.msg || '保存成功')
           this.visualConfigVisible = false
-          this.getDynamicApps()
+          this.getMicroApps()
         } else {
           this.$message.error(res.data.msg || '保存失败')
         }
@@ -717,21 +788,22 @@ export default {
 
       console.log('转换后的 Fields:', fields)
 
-      this.DynamicAppForm = {
+      this.MicroAppForm = {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
+        DataScope: row.DataScope || row.dataScope || 'all',
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
 
-      console.log('DynamicAppForm.Fields:', this.DynamicAppForm.Fields)
+      console.log('MicroAppForm.Fields:', this.MicroAppForm.Fields)
 
       this.generateApis()
       this.apiDocVisible = true
     },
     // 生成API列表
     generateApis() {
-      const { ModelName, Fields, SupportCreate, SupportUpdate, SupportDelete } = this.DynamicAppForm
+      const { ModelName, Fields, SupportCreate, SupportUpdate, SupportDelete } = this.MicroAppForm
       const basePath = `/api/${ModelName.toLowerCase()}`
 
       this.generatedApis = []
@@ -743,7 +815,7 @@ export default {
       this.generatedApis.push({
         method: 'GET',
         path: `${basePath}`,
-        description: '获取' + this.DynamicAppForm.ConfigName + '列表',
+        description: '获取' + this.MicroAppForm.ConfigName + '列表',
         requestParams: [
           { name: 'pageNum', type: 'int', required: true, description: '页码' },
           { name: 'pageSize', type: 'int', required: true, description: '每页条数' },
@@ -775,7 +847,7 @@ export default {
       this.generatedApis.push({
         method: 'GET',
         path: `${basePath}/:id`,
-        description: '获取' + this.DynamicAppForm.ConfigName + '详情',
+        description: '获取' + this.MicroAppForm.ConfigName + '详情',
         requestParams: [{ name: 'id', type: 'long', required: true, description: 'ID' }],
         responseExample: JSON.stringify(
           {
@@ -799,7 +871,7 @@ export default {
         this.generatedApis.push({
           method: 'POST',
           path: `${basePath}`,
-          description: '添加' + this.DynamicAppForm.ConfigName,
+          description: '添加' + this.MicroAppForm.ConfigName,
           requestParams: fields
             .filter((f) => f.fieldName)
             .map((field) => ({
@@ -831,7 +903,7 @@ export default {
         this.generatedApis.push({
           method: 'PUT',
           path: `${basePath}/:id`,
-          description: '更新' + this.DynamicAppForm.ConfigName,
+          description: '更新' + this.MicroAppForm.ConfigName,
           requestParams: [
             { name: 'id', type: 'long', required: true, description: 'ID' },
             ...fields
@@ -860,7 +932,7 @@ export default {
         this.generatedApis.push({
           method: 'DELETE',
           path: `${basePath}/:id`,
-          description: '删除' + this.DynamicAppForm.ConfigName,
+          description: '删除' + this.MicroAppForm.ConfigName,
           requestParams: [{ name: 'id', type: 'long', required: true, description: 'ID' }],
           responseExample: JSON.stringify(
             {
@@ -953,6 +1025,12 @@ export default {
 /* 字段列表 */
 .field-list {
   padding: 10px 0;
+}
+
+.inline-control-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* 选项容器样式 */

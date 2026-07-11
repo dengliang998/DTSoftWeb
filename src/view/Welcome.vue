@@ -86,7 +86,7 @@
 </template>
 
 <script>
-import { getDynamicAppConfigs } from '@/api/dynamicApp'
+import { getMicroAppConfigs } from '@/api/microApp'
 import { getLogActionList } from '@/api/log'
 import { getRoleList } from '@/api/role'
 import { getUserList } from '@/api/user'
@@ -161,11 +161,11 @@ export default {
           path: '/role/rolesmenu'
         },
         {
-          label: '应用配置',
+          label: '微应用配置',
           value: 0,
           icon: 'Setting',
           color: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
-          path: '/DynamicApp/DynamicApiConfig'
+          path: '/MicroApp/MicroApiConfig'
         },
         {
           label: '操作日志',
@@ -180,7 +180,7 @@ export default {
         { name: '用户管理', icon: 'User', color: '#235bff', path: '/user/organization' },
         { name: '角色管理', icon: 'Avatar', color: '#00a889', path: '/role/rolesmenu' },
         { name: '菜单管理', icon: 'Operation', color: '#7c3aed', path: '/common/menus' },
-        { name: '应用配置', icon: 'Setting', color: '#0f766e', path: '/DynamicApp/DynamicApiConfig' },
+        { name: '微应用配置', icon: 'Setting', color: '#0f766e', path: '/MicroApp/MicroApiConfig' },
         { name: '操作日志', icon: 'Document', color: '#f59e0b', path: '/log/logaction' },
         { name: '附件管理', icon: 'DocumentCopy', color: '#475467', path: '/attachment/attachmentlist' }
       ]
@@ -239,8 +239,8 @@ export default {
           this.statsData[1].value = roleRes.data.Total || 0
         }
 
-        // 获取应用配置统计
-        const appRes = await getDynamicAppConfigs({ PageNum: 1, PageSize: 1 })
+        // 获取微应用配置统计
+        const appRes = await getMicroAppConfigs({ PageNum: 1, PageSize: 1 })
         if (appRes.data.success) {
           this.statsData[2].value = appRes.data.total || 0
         }
