@@ -78,7 +78,11 @@
           <el-input v-model="DynamicAppForm.ConfigName" placeholder="请输入配置名称"></el-input>
         </el-form-item>
         <el-form-item label="数据模型" prop="ModelName">
-          <el-input v-model="DynamicAppForm.ModelName" placeholder="请输入数据模型名称（英文）"></el-input>
+          <el-input
+            v-model="DynamicAppForm.ModelName"
+            placeholder="请输入数据模型名称（英文）"
+            :disabled="Boolean(DynamicAppForm.ItemId)"
+          ></el-input>
         </el-form-item>
         <el-form-item label="微应用路径" prop="MicroAppPath">
           <el-input
