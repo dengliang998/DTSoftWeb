@@ -386,6 +386,56 @@ export default {
     this.getDynamicApps()
   },
   methods: {
+    normalizeFieldOptions(options) {
+      let normalized = options
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) {
+        return []
+      }
+
+      return normalized
+        .filter((option) => option && typeof option === 'object')
+        .map((option) => ({
+          label: option.Label || option.label || '',
+          value: option.Value || option.value || ''
+        }))
+    },
+    normalizeFields(fields) {
+      let normalized = fields || []
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) {
+        return []
+      }
+
+      return normalized.map((field) => ({
+        label: field.Label || field.label || '',
+        fieldName: field.FieldName || field.fieldName || '',
+        fieldType: field.FieldType || field.fieldType || 'string',
+        required: field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
+        showInList:
+          field.ShowInList !== undefined ? field.ShowInList : field.showInList !== undefined ? field.showInList : true,
+        editable: field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
+        validation: field.Validation || field.validation || '',
+        defaultValue: field.DefaultValue || field.defaultValue || '',
+        options: this.normalizeFieldOptions(field.Options || field.options || [])
+      }))
+    },
     // 获取动态API配置列表
     async getDynamicApps() {
       try {
@@ -506,39 +556,7 @@ export default {
       console.log('Fields 数据类型:', typeof row.Fields)
       console.log('Fields 数据:', row.Fields)
 
-      // 确保 ApiPrefix 和 configDesc 字段不会是 null,而是空字符串
-      let fields = row.Fields || []
-
-      // 如果 Fields 是字符串,解析为数组
-      if (typeof fields === 'string') {
-        try {
-          fields = JSON.parse(fields)
-          console.log('解析后的 Fields:', fields)
-        } catch (e) {
-          console.error('Fields 解析失败:', e)
-          fields = []
-        }
-      }
-
-      // 确保 Fields 是数组
-      if (!Array.isArray(fields)) {
-        console.warn('Fields 不是数组,重置为空数组')
-        fields = []
-      }
-
-      // 将大驼峰命名转换为小驼峰命名
-      fields = fields.map((field) => ({
-        label: field.Label || field.label || '',
-        fieldName: field.FieldName || field.fieldName || '',
-        fieldType: field.FieldType || field.fieldType || 'string',
-        required: field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
-        showInList:
-          field.ShowInList !== undefined ? field.ShowInList : field.showInList !== undefined ? field.showInList : true,
-        editable: field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
-        validation: field.Validation || field.validation || '',
-        defaultValue: field.DefaultValue || field.defaultValue || '',
-        options: field.Options || field.options || []
-      }))
+      const fields = this.normalizeFields(row.Fields)
 
       console.log('转换后的 Fields:', fields)
 
@@ -646,7 +664,7 @@ export default {
             Editable: field.editable,
             Validation: field.validation,
             DefaultValue: field.defaultValue,
-            Options: field.options
+            Options: this.normalizeFieldOptions(field.options)
           }))
         }
 
@@ -670,39 +688,7 @@ export default {
       console.log('生成接口文档 - Fields 数据类型:', typeof row.Fields)
       console.log('生成接口文档 - Fields 数据:', row.Fields)
 
-      // 确保ApiPrefix和configDesc字段不会是null，而是空字符串
-      let fields = row.Fields || []
-
-      // 如果 Fields 是字符串，解析为数组
-      if (typeof fields === 'string') {
-        try {
-          fields = JSON.parse(fields)
-          console.log('解析后的 Fields:', fields)
-        } catch (e) {
-          console.error('Fields 解析失败:', e)
-          fields = []
-        }
-      }
-
-      // 确保 Fields 是数组
-      if (!Array.isArray(fields)) {
-        console.warn('Fields 不是数组，重置为空数组')
-        fields = []
-      }
-
-      // 将大驼峰命名转换为小驼峰命名
-      fields = fields.map((field) => ({
-        label: field.Label || field.label || '',
-        fieldName: field.FieldName || field.fieldName || '',
-        fieldType: field.FieldType || field.fieldType || 'string',
-        required: field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
-        showInList:
-          field.ShowInList !== undefined ? field.ShowInList : field.showInList !== undefined ? field.showInList : true,
-        editable: field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
-        validation: field.Validation || field.validation || '',
-        defaultValue: field.DefaultValue || field.defaultValue || '',
-        options: field.Options || field.options || []
-      }))
+      const fields = this.normalizeFields(row.Fields)
 
       console.log('转换后的 Fields:', fields)
 

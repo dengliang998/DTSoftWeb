@@ -366,6 +366,28 @@ export default {
     this.initApp()
   },
   methods: {
+    normalizeFieldOptions(options) {
+      let normalized = options
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) {
+        return []
+      }
+
+      return normalized
+        .filter((option) => option && typeof option === 'object')
+        .map((option) => ({
+          label: option.Label || option.label || '',
+          value: option.Value || option.value || ''
+        }))
+    },
     // 初始化应用
     async initApp() {
       this.loading = true
@@ -445,7 +467,7 @@ export default {
                           : true,
                     validation: field.Validation || field.validation || '',
                     defaultValue: field.DefaultValue || field.defaultValue || '',
-                    options: field.Options || field.options || []
+                    options: this.normalizeFieldOptions(field.Options || field.options || [])
                   }))
                 : []
             }
