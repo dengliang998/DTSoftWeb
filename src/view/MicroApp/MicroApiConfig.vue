@@ -67,33 +67,14 @@
     </el-card>
 
     <!-- 配置基本信息对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" :close-on-click-modal="false">
-      <el-form ref="MicroAppFormRef" :model="MicroAppForm" :rules="rules" label-width="100px">
-        <el-form-item label="配置名称" prop="ConfigName">
-          <el-input v-model="MicroAppForm.ConfigName" placeholder="请输入配置名称"></el-input>
-        </el-form-item>
-        <el-form-item label="数据模型" prop="ModelName">
-          <el-input
-            v-model="MicroAppForm.ModelName"
-            placeholder="请输入数据模型名称（英文）"
-            :disabled="Boolean(MicroAppForm.ItemId)"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="微应用路径" prop="MicroAppPath">
-          <el-input v-model="MicroAppForm.MicroAppPath" placeholder="请输入微应用路径，例如 customer_center"></el-input>
-        </el-form-item>
-        <el-form-item label="配置描述" prop="configDesc">
-          <el-input v-model="MicroAppForm.configDesc" type="textarea" placeholder="请输入配置描述" :rows="3"></el-input>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="MicroAppForm.Status" :active-value="1" :inactive-value="0"></el-switch>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-      </template>
-    </el-dialog>
+    <MicroAppConfigDialog
+      ref="MicroAppFormRef"
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      :form="MicroAppForm"
+      :rules="rules"
+      @submit="submitForm"
+    />
 
     <!-- 可视化配置对话框 -->
     <el-dialog
@@ -422,56 +403,21 @@
     </el-dialog>
 
     <!-- 接口文档对话框 -->
-    <el-dialog v-model="apiDocVisible" title="接口文档" width="80%" :top="'20vh'" :close-on-click-modal="false">
-      <div class="api-doc-container">
-        <el-tabs v-model="activeApiTab">
-          <el-tab-pane label="接口列表" name="api-list">
-            <div class="api-list">
-              <el-card v-for="api in generatedApis" :key="api.path" class="api-card">
-                <template #header>
-                  <div class="api-header">
-                    <el-tag :type="api.method === 'GET' ? 'success' : 'primary'" style="margin-right: 10px">
-                      {{ api.method }}
-                    </el-tag>
-                    <span>{{ api.path }}</span>
-                    <span style="margin-left: 10px; color: #909399">{{ api.description }}</span>
-                  </div>
-                </template>
-                <div class="api-content">
-                  <h4>请求参数</h4>
-                  <el-table :data="api.requestParams" size="small" border>
-                    <el-table-column label="参数名" prop="name"></el-table-column>
-                    <el-table-column label="类型" prop="type"></el-table-column>
-                    <el-table-column label="必填" prop="required"></el-table-column>
-                    <el-table-column label="说明" prop="description"></el-table-column>
-                  </el-table>
-                  <h4 style="margin-top: 15px">响应格式</h4>
-                  <div class="response-format">
-                    <pre>{{ api.responseExample }}</pre>
-                  </div>
-                </div>
-              </el-card>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane label="配置JSON" name="config-json">
-            <div class="json-preview">
-              <pre>{{ JSON.stringify(MicroAppForm, null, 2) }}</pre>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </div>
-      <template #footer>
-        <el-button @click="apiDocVisible = false">关 闭</el-button>
-      </template>
-    </el-dialog>
+    <ApiDocDialog v-model="apiDocVisible" :apis="generatedApis" />
   </div>
 </template>
 
 <script>
 import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
+import MicroAppConfigDialog from './components/MicroAppConfigDialog.vue'
+import ApiDocDialog from './components/ApiDocDialog.vue'
 
 export default {
   name: 'MicroApp',
+  components: {
+    MicroAppConfigDialog,
+    ApiDocDialog
+  },
   data() {
     return {
       // 查询条件

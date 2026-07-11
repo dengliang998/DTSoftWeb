@@ -69,144 +69,31 @@
     </el-card>
 
     <!-- 创建密钥对话框 -->
-    <el-dialog v-model="addDialogVisible" title="创建API密钥" width="50%" @close="addDialogClosed">
-      <el-form ref="addFormRef" :model="addForm" label-width="100px">
-        <el-form-item
-          label="密钥名称"
-          prop="KeyName"
-          :rules="[
-            { required: true, message: '密钥名称不能为空', trigger: 'blur' },
-            { max: 100, message: '密钥名称最多100字符', trigger: 'blur' }
-          ]"
-        >
-          <el-input v-model="addForm.KeyName" placeholder="请填写密钥名称（唯一）"></el-input>
-        </el-form-item>
-        <el-form-item
-          label="描述信息"
-          prop="Description"
-          :rules="[{ max: 500, message: '描述信息最多500字符', trigger: 'blur' }]"
-        >
-          <el-input
-            v-model="addForm.Description"
-            type="textarea"
-            :rows="3"
-            placeholder="请填写描述信息（可选）"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="过期时间">
-          <el-date-picker
-            v-model="addForm.ExpireTime"
-            type="datetime"
-            placeholder="选择过期时间（可选）"
-            format="YYYY-MM-DD HH:mm:ss"
-            value-format="YYYY-MM-DDTHH:mm:ss"
-            style="width: 100%"
-          ></el-date-picker>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="addDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addApiKey">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <ApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
 
     <!-- 修改密钥对话框 -->
-    <el-dialog v-model="editDialogVisible" title="修改API密钥" width="50%" @close="editDialogClosed">
-      <el-form ref="editFormRef" :model="editForm" label-width="100px">
-        <el-form-item label="密钥名称">
-          <el-input v-model="editForm.KeyName" disabled></el-input>
-        </el-form-item>
-        <el-form-item
-          label="描述信息"
-          prop="Description"
-          :rules="[{ max: 500, message: '描述信息最多500字符', trigger: 'blur' }]"
-        >
-          <el-input v-model="editForm.Description" type="textarea" :rows="3" placeholder="请填写描述信息"></el-input>
-        </el-form-item>
-        <el-form-item
-          label="启用状态"
-          prop="Enabled"
-          :rules="[{ required: true, message: '请选择启用状态', trigger: 'change' }]"
-        >
-          <el-switch v-model="editForm.Enabled" active-text="启用" inactive-text="禁用"></el-switch>
-        </el-form-item>
-        <el-form-item label="过期时间">
-          <el-date-picker
-            v-model="editForm.ExpireTime"
-            type="datetime"
-            placeholder="选择过期时间（可选）"
-            format="YYYY-MM-DD HH:mm:ss"
-            value-format="YYYY-MM-DDTHH:mm:ss"
-            style="width: 100%"
-          ></el-date-picker>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="editDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="editApiKey">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <ApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyListData" />
 
     <!-- 显示SecretKey对话框 -->
-    <el-dialog
-      v-model="secretKeyDialogVisible"
-      title="API密钥创建成功"
-      width="60%"
-      @close="secretKeyDialogVisible = false"
-    >
-      <el-alert
-        title="请妥善保管您的SecretKey！"
-        type="warning"
-        :closable="false"
-        show-icon
-        style="margin-bottom: 20px"
-      >
-        <template #default>
-          <p>SecretKey仅在创建时显示一次，请务必妥善保存。如果遗失，请重新创建新的密钥。</p>
-        </template>
-      </el-alert>
-
-      <el-descriptions :column="1" border>
-        <el-descriptions-item label="密钥名称">{{ secretKeyData.KeyName }}</el-descriptions-item>
-        <el-descriptions-item label="SecretKey">
-          <div style="display: flex; align-items: center; gap: 10px">
-            <el-input v-model="secretKeyData.SecretKey" readonly></el-input>
-            <el-button type="primary" @click="copySecretKey">复制</el-button>
-          </div>
-        </el-descriptions-item>
-      </el-descriptions>
-
-      <el-alert title="安全建议" type="info" :closable="false" show-icon style="margin-top: 20px">
-        <template #default>
-          <ul style="margin: 0; padding-left: 20px">
-            <li>请安全存储SecretKey，建议使用环境变量或密钥管理服务</li>
-            <li>不要在前端代码中硬编码SecretKey</li>
-            <li>定期更换API密钥</li>
-            <li>发现泄露请立即禁用并重新生成</li>
-          </ul>
-        </template>
-      </el-alert>
-
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button type="primary" @click="secretKeyDialogVisible = false">我已妥善保存</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <ApiKeySecretDialog v-model="secretKeyDialogVisible" :data="secretKeyData" />
   </div>
 </template>
 
 <script>
 import { defineComponent, reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getApiKeyList, createApiKey, updateApiKey, deleteApiKey } from '@/api/apikey'
+import { getApiKeyList, updateApiKey, deleteApiKey } from '@/api/apikey'
+import ApiKeyAddDialog from './components/ApiKeyAddDialog.vue'
+import ApiKeyEditDialog from './components/ApiKeyEditDialog.vue'
+import ApiKeySecretDialog from './components/ApiKeySecretDialog.vue'
 
 export default defineComponent({
   name: 'ApiKeyManagement',
+  components: {
+    ApiKeyAddDialog,
+    ApiKeyEditDialog,
+    ApiKeySecretDialog
+  },
   setup() {
     const loading = ref(false)
     const apiKeyList = ref([])
@@ -219,7 +106,6 @@ export default defineComponent({
 
     // 添加对话框
     const addDialogVisible = ref(false)
-    const addFormRef = ref(null)
     const addForm = reactive({
       KeyName: '',
       Description: '',
@@ -228,7 +114,6 @@ export default defineComponent({
 
     // 编辑对话框
     const editDialogVisible = ref(false)
-    const editFormRef = ref(null)
     const editForm = reactive({
       ItemId: 0,
       KeyName: '',
@@ -275,53 +160,14 @@ export default defineComponent({
     }
 
     // 添加对话框关闭
-    const addDialogClosed = () => {
-      addForm.KeyName = ''
-      addForm.Description = ''
-      addForm.ExpireTime = ''
-      if (addFormRef.value) {
-        addFormRef.value.resetFields()
-      }
-    }
+    // addDialogClosed handled by ApiKeyAddDialog component
 
     // 创建API密钥
-    const addApiKey = async () => {
-      if (!addFormRef.value) return
-
-      await addFormRef.value.validate(async (valid) => {
-        if (!valid) return
-
-        try {
-          const data = {
-            KeyName: addForm.KeyName
-          }
-          if (addForm.Description) {
-            data.Description = addForm.Description
-          }
-          if (addForm.ExpireTime) {
-            data.ExpireTime = addForm.ExpireTime
-          }
-
-          const response = await createApiKey(data)
-          if (response.data.Code === 200) {
-            ElMessage.success('创建成功')
-            addDialogVisible.value = false
-
-            // 显示SecretKey
-            const resultData = response.data.Data
-            secretKeyData.KeyName = resultData.KeyName
-            secretKeyData.SecretKey = resultData.SecretKey
-            secretKeyDialogVisible.value = true
-
-            // 刷新列表
-            getApiKeyListData()
-          } else {
-            ElMessage.error(response.data.Message || '创建失败')
-          }
-        } catch (error) {
-          ElMessage.error('创建失败：' + (error.response?.data?.Message || error.message))
-        }
-      })
+    const onApiKeyCreated = (resultData) => {
+      secretKeyData.KeyName = resultData.KeyName
+      secretKeyData.SecretKey = resultData.SecretKey
+      secretKeyDialogVisible.value = true
+      getApiKeyListData()
     }
 
     // 显示编辑对话框
@@ -335,44 +181,9 @@ export default defineComponent({
     }
 
     // 编辑对话框关闭
-    const editDialogClosed = () => {
-      if (editFormRef.value) {
-        editFormRef.value.resetFields()
-      }
-    }
+    // editDialogClosed handled by ApiKeyEditDialog component
 
     // 更新API密钥
-    const editApiKey = async () => {
-      if (!editFormRef.value) return
-
-      await editFormRef.value.validate(async (valid) => {
-        if (!valid) return
-
-        try {
-          const data = {
-            ItemId: editForm.ItemId,
-            Enabled: editForm.Enabled
-          }
-          if (editForm.Description) {
-            data.Description = editForm.Description
-          }
-          if (editForm.ExpireTime) {
-            data.ExpireTime = editForm.ExpireTime
-          }
-
-          const response = await updateApiKey(data)
-          if (response.data.Code === 200) {
-            ElMessage.success('更新成功')
-            editDialogVisible.value = false
-            getApiKeyListData()
-          } else {
-            ElMessage.error(response.data.Message || '更新失败')
-          }
-        } catch (error) {
-          ElMessage.error('更新失败：' + (error.response?.data?.Message || error.message))
-        }
-      })
-    }
 
     // 状态变更
     const handleStatusChange = async (row) => {
@@ -427,14 +238,7 @@ export default defineComponent({
     }
 
     // 复制SecretKey
-    const copySecretKey = async () => {
-      try {
-        await navigator.clipboard.writeText(secretKeyData.SecretKey)
-        ElMessage.success('已复制到剪贴板')
-      } catch (error) {
-        ElMessage.error('复制失败，请手动复制')
-      }
-    }
+    // copySecretKey handled by ApiKeySecretDialog component
 
     // 格式化日期
     const formatDate = (dateStr) => {
@@ -464,22 +268,16 @@ export default defineComponent({
       queryInfo,
       getApiKeyList: getApiKeyListData,
       addDialogVisible,
-      addFormRef,
       addForm,
       showAddDialog,
-      addDialogClosed,
-      addApiKey,
+      onApiKeyCreated,
       editDialogVisible,
-      editFormRef,
       editForm,
       showEditDialog,
-      editDialogClosed,
-      editApiKey,
       handleStatusChange,
       removeApiKey,
       secretKeyDialogVisible,
       secretKeyData,
-      copySecretKey,
       formatDate,
       indexMethod
     }

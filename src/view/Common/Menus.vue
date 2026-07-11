@@ -64,115 +64,30 @@
     </el-card>
 
     <!-- 添加菜单对话框 -->
-    <el-dialog v-model="addDialogVisible" :title="dialogTitle" width="50%" @close="addDialogClosed">
-      <!-- 内容主体区域 -->
-      <el-form ref="addFormRef" :model="addForm" label-width="100px" :rules="addFormRules">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="上级菜单" prop="parentId">
-              <el-tree-select
-                v-model="addForm.parentId"
-                :data="menuOptions"
-                node-key="id"
-                :props="{ label: 'menuName', children: 'children' }"
-                value-key="id"
-                placeholder="请选择上级菜单"
-                check-strictly
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="菜单类型" prop="menuType">
-              <el-radio-group v-model="addForm.menuType">
-                <el-radio value="0">内部菜单</el-radio>
-                <el-radio value="1">外部菜单</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="菜单名称" prop="menuName">
-          <el-input v-model="addForm.menuName" placeholder="请输入菜单名称"></el-input>
-        </el-form-item>
-
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="显示排序" prop="orderNum">
-              <el-input-number v-model="addForm.orderNum" controls-position="right" :min="0" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="是否可见" prop="visible">
-              <el-radio-group v-model="addForm.visible">
-                <el-radio :value="true">显示</el-radio>
-                <el-radio :value="false">隐藏</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item v-if="addForm.menuType !== 'F'" label="路由地址" prop="path">
-          <el-input v-model="addForm.path" placeholder="请输入路由地址"></el-input>
-        </el-form-item>
-
-        <el-form-item v-if="addForm.menuType !== '1'" label="微应用路径" prop="microAppPath">
-          <el-select
-            v-model="addForm.microAppPath"
-            clearable
-            filterable
-            placeholder="可选：选择已创建微应用"
-            style="width: 100%"
-            @change="handleMicroAppPathChange"
-          >
-            <el-option
-              v-for="app in microAppOptions"
-              :key="app.value"
-              :label="`${app.label} (${app.value})`"
-              :value="app.value"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item v-show="false" label="组件路径" prop="component">
-          <el-input v-model="addForm.component" placeholder="请输入组件路径"></el-input>
-        </el-form-item>
-
-        <!-- 权限标识字段已移除，因为已移除按钮类型 -->
-
-        <el-form-item label="菜单图标" prop="icon">
-          <el-select v-model="addForm.icon" filterable clearable placeholder="请选择图标（可搜索）" style="width: 100%">
-            <el-option v-for="name in iconNames" :key="name" :label="name" :value="name">
-              <div class="icon-option">
-                <el-icon class="icon-option__icon">
-                  <component :is="ElementPlusIconsVue[name]" />
-                </el-icon>
-                <span class="icon-option__name">{{ name }}</span>
-              </div>
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <!-- 底部区域 -->
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="addDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addMenu">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <MenuFormDialog
+      v-model="addDialogVisible"
+      :title="dialogTitle"
+      :form="addForm"
+      :form-rules="addFormRules"
+      :menu-options="menuOptions"
+      @submit="addMenu"
+    />
   </div>
 </template>
 
 <script>
 import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { Search, Plus, Edit, Delete } from '@element-plus/icons-vue'
+import MenuFormDialog from './components/MenuFormDialog.vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
 import { getMicroAppConfigs } from '@/api/microApp'
 
 export default {
   name: 'Menus',
+  components: {
+    MenuFormDialog
+  },
   setup() {
     const { proxy } = getCurrentInstance()
 
@@ -428,100 +343,81 @@ export default {
       addDialogVisible.value = true
     }
 
-    // 关闭添加对话框
-    const addDialogClosed = () => {
-      proxy.$refs.addFormRef.resetFields()
-      Object.assign(addForm, {
-        parentId: 0,
-        menuName: '',
-        menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
-        path: '',
-        microAppPath: '',
-        component: '',
-        perms: '',
-        icon: '',
-        orderNum: 0,
-        visible: true
-      })
-    }
+    // 关闭添加对话框 (handled by MenuFormDialog component)
 
     // 添加或修改菜单
-    const addMenu = () => {
-      proxy.$refs.addFormRef.validate(async (valid) => {
-        if (!valid) return
-
-        const loading = proxy.$loading({
-          lock: true,
-          text: '提交中...',
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        })
-
-        try {
-          const resolvedPath =
-            addForm.microAppPath && addForm.menuType !== '1' ? `app/${addForm.microAppPath}` : addForm.path
-
-          let res
-          if (currentAction.value === 'add') {
-            // 添加菜单
-            const formData = new FormData()
-            formData.append('MType', addForm.menuType) // 0:内部菜单 1:外部菜单
-            formData.append('MenuName', addForm.menuName)
-            formData.append('Pid', addForm.parentId)
-            formData.append('MenuPath', resolvedPath)
-            formData.append('Order', addForm.orderNum)
-            if (addForm.icon !== null && addForm.icon !== undefined && addForm.icon !== '') {
-              formData.append('Icon', addForm.icon)
-            }
-            formData.append('IsHidden', !addForm.visible) // 注意：visible与IsHidden是相反的含义
-
-            res = await addMenuApi(formData)
-          } else {
-            // 修改菜单 - 使用新的 UpdateMenu 接口
-            const formData = new FormData()
-            formData.append('ItemId', editMenuId.value)
-            formData.append('Pid', addForm.parentId)
-            formData.append('MenuName', addForm.menuName)
-
-            // 只有当path不为空时才添加到formData中
-            if (resolvedPath !== null && resolvedPath !== undefined && resolvedPath !== '') {
-              formData.append('MenuPath', resolvedPath)
-            }
-
-            formData.append('Order', addForm.orderNum)
-
-            // 只有当icon不为空时才添加到formData中
-            if (addForm.icon !== null && addForm.icon !== undefined && addForm.icon !== '') {
-              formData.append('Icon', addForm.icon)
-            }
-
-            formData.append('IsHidden', !addForm.visible) // 注意：visible与IsHidden是相反的含义
-
-            // 确保MType有正确的值
-            const mTypeValue = addForm.menuType !== undefined ? addForm.menuType : '0'
-            formData.append('MType', mTypeValue)
-
-            res = await updateMenu(formData)
-          }
-
-          // 检查响应数据结构并正确处理成功/失败情况
-          if (res.data.StateCode === 0 && res.data.success) {
-            proxy.$message.success(currentAction.value === 'add' ? '添加菜单成功' : '修改菜单成功')
-            addDialogVisible.value = false
-            getMenuList()
-          } else {
-            proxy.$message.error(res.data.msg || res.data.message || '操作失败')
-          }
-        } catch (error) {
-          proxy.$message.error(
-            (currentAction.value === 'add' ? '添加' : '修改') +
-              '菜单失败：' +
-              (error.response?.data?.message || error.message)
-          )
-        } finally {
-          loading.close()
-        }
+    const addMenu = async () => {
+      const loading = proxy.$loading({
+        lock: true,
+        text: '提交中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
       })
+
+      try {
+        const resolvedPath =
+          addForm.microAppPath && addForm.menuType !== '1' ? `app/${addForm.microAppPath}` : addForm.path
+
+        let res
+        if (currentAction.value === 'add') {
+          // 添加菜单
+          const formData = new FormData()
+          formData.append('MType', addForm.menuType) // 0:内部菜单 1:外部菜单
+          formData.append('MenuName', addForm.menuName)
+          formData.append('Pid', addForm.parentId)
+          formData.append('MenuPath', resolvedPath)
+          formData.append('Order', addForm.orderNum)
+          if (addForm.icon !== null && addForm.icon !== undefined && addForm.icon !== '') {
+            formData.append('Icon', addForm.icon)
+          }
+          formData.append('IsHidden', !addForm.visible) // 注意：visible与IsHidden是相反的含义
+
+          res = await addMenuApi(formData)
+        } else {
+          // 修改菜单 - 使用新的 UpdateMenu 接口
+          const formData = new FormData()
+          formData.append('ItemId', editMenuId.value)
+          formData.append('Pid', addForm.parentId)
+          formData.append('MenuName', addForm.menuName)
+
+          // 只有当path不为空时才添加到formData中
+          if (resolvedPath !== null && resolvedPath !== undefined && resolvedPath !== '') {
+            formData.append('MenuPath', resolvedPath)
+          }
+
+          formData.append('Order', addForm.orderNum)
+
+          // 只有当icon不为空时才添加到formData中
+          if (addForm.icon !== null && addForm.icon !== undefined && addForm.icon !== '') {
+            formData.append('Icon', addForm.icon)
+          }
+
+          formData.append('IsHidden', !addForm.visible) // 注意：visible与IsHidden是相反的含义
+
+          // 确保MType有正确的值
+          const mTypeValue = addForm.menuType !== undefined ? addForm.menuType : '0'
+          formData.append('MType', mTypeValue)
+
+          res = await updateMenu(formData)
+        }
+
+        // 检查响应数据结构并正确处理成功/失败情况
+        if (res.data.StateCode === 0 && res.data.success) {
+          proxy.$message.success(currentAction.value === 'add' ? '添加菜单成功' : '修改菜单成功')
+          addDialogVisible.value = false
+          getMenuList()
+        } else {
+          proxy.$message.error(res.data.msg || res.data.message || '操作失败')
+        }
+      } catch (error) {
+        proxy.$message.error(
+          (currentAction.value === 'add' ? '添加' : '修改') +
+            '菜单失败：' +
+            (error.response?.data?.message || error.message)
+        )
+      } finally {
+        loading.close()
+      }
     }
 
     // 删除菜单
@@ -578,7 +474,6 @@ export default {
       showAddDialog,
       showAddChildDialog,
       showEditDialog,
-      addDialogClosed,
       handleMicroAppPathChange,
       addMenu,
       removeMenu,

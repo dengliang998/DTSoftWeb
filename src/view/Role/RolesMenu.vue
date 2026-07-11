@@ -82,42 +82,11 @@
       ></el-pagination>
     </el-card>
 
-    <!-- 添加用户的对话框 -->
-    <el-dialog v-model="addDialogVisible" title="添加角色" width="50%" @close="addDialogClosed">
-      <!-- 内容主体区域 -->
-      <el-form ref="addFormRef" :model="addForm" label-width="80px">
-        <el-form-item label="角色名称" prop="RoleName" :rules="[{ required: true, message: '角色名称不能为空' }]">
-          <el-input v-model="addForm.RoleName" placeholder="请填写角色名称"></el-input>
-        </el-form-item>
-      </el-form>
-      <!-- 底部区域 -->
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="addDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addRole">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 添加角色对话框 -->
+    <RoleAddDialog v-model="addDialogVisible" :form="addForm" @success="getRoleList" />
 
-    <!-- 修改用户的对话框 -->
-    <el-dialog v-model="editDialogVisible" title="修改角色" width="50%" @close="editDialogClosed">
-      <!-- 内容主体区域 -->
-      <el-form ref="editFormRef" :model="editForm" label-width="80px">
-        <el-form-item label="角色编号">
-          <el-input v-model="editForm.id" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="角色名称" prop="RoleName" :rules="[{ required: true, message: '角色名称不能为空' }]">
-          <el-input v-model="editForm.RoleName"></el-input>
-        </el-form-item>
-      </el-form>
-      <!-- 底部区域 -->
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="editDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="editRoleInfo">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 修改角色对话框 -->
+    <RoleEditDialog v-model="editDialogVisible" :form="editForm" @success="getRoleList" />
     <!-- 添加成员 -->
     <el-dialog v-model="AddMemberDialogVisible" title="添加成员" width="50%" @close="AddMemberDialogVisible = false">
       <!-- 内容主体区域 -->
@@ -160,79 +129,8 @@
       :selected-users="RoleMemberList"
       @confirm="handleUserSelected"
     />
-    <!-- 菜单配置 -->
-    <el-dialog
-      v-model="MenuDialogVisible"
-      class="menu-auth-dialog"
-      width="720px"
-      align-center
-      :close-on-click-modal="false"
-      @close="closeMenuDialog"
-    >
-      <template #header>
-        <div class="menu-auth-header">
-          <div>
-            <div class="menu-auth-title">菜单权限配置</div>
-            <div class="menu-auth-subtitle">角色编码：{{ CurrentSelRoleID || '-' }}</div>
-          </div>
-          <el-tag type="info" effect="plain">已选 {{ selectedPermissionCount }} 项</el-tag>
-        </div>
-      </template>
-      <!-- 内容主体区域 -->
-      <div class="menu-auth-panel">
-        <div class="menu-auth-toolbar">
-          <el-input
-            v-model="menuFilterKeyword"
-            clearable
-            placeholder="搜索已加载菜单"
-            prefix-icon="Search"
-            class="menu-auth-search"
-          ></el-input>
-          <div class="menu-auth-actions">
-            <el-button size="small" icon="Expand" @click="expandLoadedMenus">展开</el-button>
-            <el-button size="small" icon="Fold" @click="collapseLoadedMenus">收起</el-button>
-            <el-button class="menu-auth-clear-button" size="small" plain icon="Delete" @click="clearCheckedMenus">
-              清空
-            </el-button>
-          </div>
-        </div>
-
-        <div class="menu-auth-meta">
-          <span>菜单权限树</span>
-          <span v-if="halfCheckedMenuCount">半选 {{ halfCheckedMenuCount }} 项</span>
-        </div>
-
-        <el-scrollbar class="menu-tree-scrollbar">
-          <div class="menu-tree-surface">
-            <el-tree
-              v-if="MenuDialogVisible"
-              ref="tree"
-              class="menu-auth-tree"
-              :data="MenuTreeData"
-              :props="treeprops"
-              :filter-node-method="filterMenuNode"
-              node-key="id"
-              :default-expanded-keys="TreeExpanded"
-              :default-checked-keys="TreeChecked"
-              show-checkbox
-              default-expand-all
-              empty-text="暂无菜单"
-              @check="syncMenuCheckStats"
-            ></el-tree>
-          </div>
-        </el-scrollbar>
-      </div>
-      <!-- 底部区域 -->
-      <template #footer>
-        <div class="menu-auth-footer">
-          <span>将保存 {{ selectedPermissionCount }} 个菜单权限节点</span>
-          <div>
-            <el-button @click="MenuDialogVisible = false">取 消</el-button>
-            <el-button type="primary" icon="Setting" @click="EditRoleMenuAuthority">保存权限</el-button>
-          </div>
-        </div>
-      </template>
-    </el-dialog>
+    <!-- 菜单权限配置对话框 -->
+    <MenuAuthDialog v-model="MenuDialogVisible" :role-id="CurrentSelRoleID" @success="MenuDialogVisible = false" />
   </div>
 </template>
 
@@ -240,10 +138,16 @@
 import { addRoleMember, createRole, deleteRole, getRole, getRoleList, getRoleMemberList, updateRole } from '@/api/role'
 import { getMenu, getRoleMenuMap, updateMenuAuthority } from '@/api/menu'
 import UserSelector from '@/components/user/UserSelector.vue'
+import RoleAddDialog from './components/RoleAddDialog.vue'
+import RoleEditDialog from './components/RoleEditDialog.vue'
+import MenuAuthDialog from './components/MenuAuthDialog.vue'
 export default {
   name: 'Role',
   components: {
-    UserSelector
+    UserSelector,
+    RoleAddDialog,
+    RoleEditDialog,
+    MenuAuthDialog
   },
   data() {
     return {

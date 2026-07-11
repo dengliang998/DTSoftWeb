@@ -210,187 +210,21 @@
     </div>
 
     <!-- 新增/编辑数据对话框 -->
-    <el-dialog
+    <MicroAppFormDialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      :width="getFormDialogWidth()"
-      :top="'20vh'"
-      :close-on-click-modal="false"
-    >
-      <div class="dialog-form-container">
-        <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-          <!-- 表单字段 -->
-          <el-row :gutter="16">
-            <el-col v-for="(field, index) in orderedFields" :key="index" :span="getFormFieldSpan()">
-              <el-form-item
-                :label="field.label || field.fieldName || `字段${index}`"
-                :prop="field.fieldName"
-                :rules="getFieldRules(field)"
-              >
-                <!-- 根据字段类型渲染不同的表单控件 -->
-                <el-input
-                  v-if="field.fieldType === 'string'"
-                  v-model="formData[field.fieldName]"
-                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                ></el-input>
-
-                <el-input-number
-                  v-else-if="field.fieldType === 'number'"
-                  v-model="formData[field.fieldName]"
-                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                  style="width: 100%"
-                ></el-input-number>
-
-                <el-date-picker
-                  v-else-if="field.fieldType === 'datetime'"
-                  v-model="formData[field.fieldName]"
-                  :type="getDatePickerType(field)"
-                  :value-format="getDateValueFormat(field)"
-                  :format="getDateDisplayFormat(field)"
-                  :placeholder="'选择' + (field.label || field.fieldName || `字段${index}`)"
-                  style="width: 100%"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                ></el-date-picker>
-
-                <el-switch
-                  v-else-if="field.fieldType === 'boolean'"
-                  v-model="formData[field.fieldName]"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                ></el-switch>
-
-                <el-input
-                  v-else-if="field.fieldType === 'textarea'"
-                  v-model="formData[field.fieldName]"
-                  type="textarea"
-                  :rows="4"
-                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                ></el-input>
-
-                <el-select
-                  v-else-if="field.fieldType === 'select'"
-                  v-model="formData[field.fieldName]"
-                  :placeholder="'请选择' + (field.label || field.fieldName || `字段${index}`)"
-                  style="width: 100%"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                >
-                  <!-- 根据配置动态生成选项 -->
-                  <el-option
-                    v-for="option in field.options || []"
-                    :key="option.value"
-                    :label="option.label"
-                    :value="option.value"
-                  ></el-option>
-                  <!-- 默认选项 -->
-                  <el-option v-if="!(field.options && field.options.length)" label="选项1" value="1"></el-option>
-                  <el-option v-if="!(field.options && field.options.length)" label="选项2" value="2"></el-option>
-                </el-select>
-
-                <!-- 单选框组 -->
-                <el-radio-group
-                  v-else-if="field.fieldType === 'radio'"
-                  v-model="formData[field.fieldName]"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                >
-                  <!-- 根据配置动态生成单选选项 -->
-                  <el-radio v-for="option in field.options || []" :key="option.value" :label="option.value">
-                    {{ option.label }}
-                  </el-radio>
-                  <!-- 默认选项 -->
-                  <el-radio v-if="!(field.options && field.options.length)" label="1">选项1</el-radio>
-                  <el-radio v-if="!(field.options && field.options.length)" label="2">选项2</el-radio>
-                </el-radio-group>
-
-                <!-- 多选框组 -->
-                <el-checkbox-group
-                  v-else-if="field.fieldType === 'checkbox'"
-                  v-model="formData[field.fieldName]"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                >
-                  <!-- 根据配置动态生成多选选项 -->
-                  <el-checkbox v-for="option in field.options || []" :key="option.value" :label="option.value">
-                    {{ option.label }}
-                  </el-checkbox>
-                  <!-- 默认选项 -->
-                  <el-checkbox v-if="!(field.options && field.options.length)" label="1">选项1</el-checkbox>
-                  <el-checkbox v-if="!(field.options && field.options.length)" label="2">选项2</el-checkbox>
-                </el-checkbox-group>
-
-                <!-- 其他字段类型默认显示为文本输入框 -->
-                <el-input
-                  v-else
-                  v-model="formData[field.fieldName]"
-                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-                  :disabled="dialogType === 'edit' && !field.editable"
-                ></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-form>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitForm">提交</el-button>
-        </span>
-      </template>
-    </el-dialog>
+      :dialog-type="dialogType"
+      :form-data="formData"
+      :form-rules="formRules"
+      :ordered-fields="orderedFields"
+      :app-config="appConfig"
+      :form-dialog-width="getFormDialogWidth()"
+      :form-field-span="getFormFieldSpan()"
+      @success="onFormDialogSuccess"
+    />
 
     <!-- 导入对话框 -->
-    <el-dialog
-      v-model="importDialogVisible"
-      title="Excel导入"
-      width="50%"
-      :top="'20vh'"
-      :close-on-click-modal="false"
-      :close-on-press-escape="!importLoading"
-    >
-      <el-form label-width="100px">
-        <el-form-item label="选择文件">
-          <el-upload
-            v-model:file-list="importFileList"
-            :auto-upload="false"
-            :show-file-list="true"
-            accept=".xlsx,.xls"
-            drag
-            :multiple="false"
-            :disabled="importLoading"
-            @change="handleFileChange"
-          >
-            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-            <div class="el-upload__text">
-              拖拽文件到此处或
-              <em>点击上传</em>
-            </div>
-            <template #tip>
-              <div class="el-upload__tip">支持上传 .xlsx, .xls 格式文件</div>
-            </template>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="导入说明">
-          <div class="import-tips">
-            <p>• 请确保Excel文件列头与系统字段匹配</p>
-            <p>• 数据量较大时可能需要等待较长时间</p>
-            <p>• 导入过程中请勿关闭页面</p>
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button :disabled="importLoading" @click="closeImportDialog">取消</el-button>
-          <el-button
-            type="primary"
-            :loading="importLoading"
-            :disabled="importLoading || importFileList.length === 0"
-            @click="importData"
-          >
-            {{ importLoading ? '导入中...' : '导入' }}
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <MicroAppImportDialog v-model="importDialogVisible" :app-config="appConfig" @success="onImportDialogSuccess" />
   </div>
 </template>
 
@@ -405,8 +239,14 @@ import {
   importMicroRuntimeData,
   updateMicroRuntimeData
 } from '@/api/microApp'
+import MicroAppFormDialog from './components/MicroAppFormDialog.vue'
+import MicroAppImportDialog from './components/MicroAppImportDialog.vue'
 export default {
   name: 'MicroAppPage',
+  components: {
+    MicroAppFormDialog,
+    MicroAppImportDialog
+  },
   data() {
     return {
       // 微应用配置
@@ -1217,54 +1057,21 @@ export default {
     },
     // 打开导入对话框
     openImportDialog() {
-      this.importFileList = []
       this.importDialogVisible = true
     },
-    // 关闭导入对话框
-    closeImportDialog() {
-      this.importFileList = []
-      this.importDialogVisible = false
+    onFormDialogSuccess() {
+      this.dialogVisible = false
+      this.getAppData()
+      this.initFormData()
     },
-    // 处理文件选择
-    handleFileChange(file, fileList) {
-      // 确保只保留最新选择的一个文件
-      this.importFileList = fileList.slice(-1)
-    },
-    // 导入Excel数据
-    async importData() {
-      if (this.importFileList.length === 0) {
-        this.$message.error('请选择要导入的文件')
-        return
-      }
-
-      // 设置加载状态
-      this.importLoading = true
-
-      try {
-        // 创建FormData对象，添加文件
-        const formData = new FormData()
-        formData.append('file', this.importFileList[0].raw)
-
-        // 发起导入请求
-        const { data: res } = await importMicroRuntimeData({
-          modelName: this.appConfig.modelName,
-          data: formData
-        })
-
-        if (res.success) {
-          this.$message.success(res.msg || '导入成功')
-          this.closeImportDialog()
-          this.getAppData() // 重新加载数据
-        } else {
-          this.$message.error(res.msg || '导入失败')
-        }
-      } catch (error) {
-        this.$message.error('导入失败：' + (error.message || '网络错误'))
-      } finally {
-        // 无论成功或失败，都关闭加载状态
-        this.importLoading = false
-      }
+    onImportDialogSuccess() {
+      this.getAppData()
     }
+    // 关闭导入对话框
+
+    // 处理文件选择
+
+    // importData handled by MicroAppImportDialog component
   }
 }
 </script>

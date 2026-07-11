@@ -136,27 +136,8 @@
       </main>
     </div>
 
-    <!-- 修改密码的对话框 -->
-    <el-dialog v-model="ModifyPwdDialogVisible" title="修改密码" width="30%" @close="ModifyPwdDialogClosed">
-      <el-form ref="ModifyPwdFormRef" :model="ModifyPwdForm" label-width="70px" class="modify-pwd-form">
-        <el-form-item label="原密码" prop="OldPwd">
-          <el-input v-model="ModifyPwdForm.OldPwd" show-password></el-input>
-        </el-form-item>
-        <el-form-item label="新密码" prop="NewPwd">
-          <el-input v-model="ModifyPwdForm.NewPwd" show-password></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="ConfirmPwd">
-          <el-input v-model="ModifyPwdForm.ConfirmPwd" show-password></el-input>
-        </el-form-item>
-      </el-form>
-      <!-- 底部区域 -->
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="ModifyPwdDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="ModifyPassword">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 修改密码对话框 -->
+    <ModifyPwdDialog v-model="ModifyPwdDialogVisible" :form="ModifyPwdForm" @success="ModifyPwdDialogVisible = false" />
 
     <!-- 修改用户的对话框 -->
     <el-dialog v-model="UserDialogVisible" title="修改用户信息" width="50%" @close="UserDialogClosed">
@@ -174,6 +155,7 @@
 
 <script>
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
+import ModifyPwdDialog from './components/ModifyPwdDialog.vue'
 import { getMenu } from '@/api/menu'
 import { getUserAccount } from '@/core/session'
 import {
@@ -194,18 +176,13 @@ import {
   shouldSkipTab,
   upsertTab
 } from '@/modules/home/tabs'
-import {
-  createModifyPwdForm,
-  loadCurrentUserProfile,
-  logoutAndClearSession,
-  prepareModifyPwdForm,
-  submitModifyPassword
-} from '@/modules/home/userPanel'
+import { createModifyPwdForm, loadCurrentUserProfile, logoutAndClearSession } from '@/modules/home/userPanel'
 import { fetchAndCacheSystemInfo, getCachedSystemName } from '@/utils/sysConfig'
 export default {
   name: 'Home',
   components: {
-    UserInfoComponents
+    UserInfoComponents,
+    ModifyPwdDialog
   },
   data() {
     return {
@@ -289,7 +266,7 @@ export default {
       if (command == 'logout') {
         this.logout()
       } else if (command === 'ModifyPwdDialog') {
-        this.ModifyPwdDialog()
+        this.ModifyPwdDialogVisible = true
       } else if (command === 'ModifyAccountInfoDialog') {
         this.UserDialogVisible = true
       }
@@ -310,34 +287,7 @@ export default {
         this.$message.error('用户信息初始化失败，请稍后重试！')
       }
     },
-    ModifyPwdDialog() {
-      prepareModifyPwdForm(this.ModifyPwdForm)
-      //打开修改密码对话框
-      this.ModifyPwdDialogVisible = true
-    },
-    ModifyPassword() {
-      const me = this
-      if (me.ModifyPwdForm.OldPwd !== '' && me.ModifyPwdForm.NewPwd !== '' && me.ModifyPwdForm.ConfirmPwd !== '') {
-        if (me.ModifyPwdForm.NewPwd === me.ModifyPwdForm.ConfirmPwd) {
-          submitModifyPassword(me.ModifyPwdForm)
-            .then(function (response) {
-              if (response.data.success) {
-                me.$message.success(response.data.Msg)
-                me.ModifyPwdDialogVisible = false
-              } else {
-                me.$message.error('修改失败：' + response.data.Msg)
-              }
-            })
-            .catch(function (error) {
-              me.$message.error(error.message || '修改失败')
-            })
-        } else {
-          me.$message.error('密码不一致')
-        }
-      } else {
-        me.$message.error('密码不能为空')
-      }
-    },
+
     UpdateUserInfo() {
       this.$refs.UserInfo.UpdateUserInfo()
       this.UserDialogVisible = false
@@ -469,9 +419,6 @@ export default {
       this.openedTabs = createDefaultTabs()
       this.activeTab = '/welcome'
       this.rebuildCachedViews()
-    },
-    ModifyPwdDialogClosed() {
-      this.$refs.ModifyPwdFormRef.resetFields()
     }
   }
 }

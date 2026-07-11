@@ -135,44 +135,14 @@
     </el-card>
 
     <!-- 部门管理对话框 -->
-    <el-dialog v-model="deptDialogVisible" :title="deptDialogTitle" width="50%" @close="deptDialogClosed">
-      <el-form ref="deptFormRef" :model="deptForm" label-width="100px">
-        <el-form-item label="上级部门" prop="ParentId">
-          <el-tree-select
-            v-model="deptForm.ParentId"
-            :data="deptTreeOptions"
-            node-key="ItemId"
-            :props="{ label: 'OuName', children: 'Children' }"
-            value-key="ItemId"
-            placeholder="请选择上级部门(不选则为顶级部门)"
-            check-strictly
-            clearable
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="部门名称" prop="OuName">
-          <el-input v-model="deptForm.OuName" placeholder="请输入部门名称"></el-input>
-        </el-form-item>
-        <el-form-item label="部门编码" prop="OuCode">
-          <el-input v-model="deptForm.OuCode" placeholder="请输入部门编码"></el-input>
-        </el-form-item>
-        <el-form-item label="排序号" prop="SortOrder">
-          <el-input-number v-model="deptForm.SortOrder" :min="0" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="是否禁用" prop="Disable">
-          <el-switch v-model="deptForm.Disable" />
-        </el-form-item>
-        <el-form-item label="备注" prop="Remark">
-          <el-input v-model="deptForm.Remark" type="textarea" :rows="3" placeholder="请输入备注"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="deptDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="saveDept">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <DeptDialog
+      v-model="deptDialogVisible"
+      :title="deptDialogTitle"
+      :form="deptForm"
+      :dept-tree-options="deptTreeOptions"
+      :action="deptAction"
+      @success="onDeptSaved"
+    />
 
     <!-- 添加用户的对话框 -->
     <el-dialog
@@ -222,26 +192,8 @@
       </template>
     </el-dialog>
 
-    <!-- 密码重置的对话框 -->
-    <el-dialog v-model="ResetPwdDialogVisible" title="重置密码" width="30%" @close="resetPasswordDialogClosed">
-      <el-form ref="resetPasswordFormRef" :model="ResetPwdForm" label-width="70px">
-        <el-form-item label="账号">
-          <el-input v-model="ResetPwdForm.Account" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="新密码" prop="NewPwd">
-          <el-input v-model="ResetPwdForm.NewPwd" show-password></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="ConfirmPwd">
-          <el-input v-model="ResetPwdForm.ConfirmPwd" show-password></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="ResetPwdDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="ResetPassword">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 密码重置对话框 -->
+    <ResetPwdDialog v-model="ResetPwdDialogVisible" :form="ResetPwdForm" @success="onResetPwdSuccess" />
   </div>
 </template>
 
@@ -249,6 +201,8 @@
 import { createOu, deleteOu, getAllOus, updateOu } from '@/api/organization'
 import { deleteUser, getUserList, modifyUserInfo, resetPassword } from '@/api/user'
 import UserInfoComponents from '../../components/user/UserInfoComponents.vue'
+import DeptDialog from './components/DeptDialog.vue'
+import ResetPwdDialog from './components/ResetPwdDialog.vue'
 import { Search, Plus, Edit, Delete, Unlock, OfficeBuilding } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
@@ -256,6 +210,8 @@ export default {
   name: 'Organization',
   components: {
     UserInfoComponents,
+    DeptDialog,
+    ResetPwdDialog,
     OfficeBuilding
   },
   data() {
@@ -547,16 +503,9 @@ export default {
     },
 
     // 关闭部门对话框
-    deptDialogClosed() {
-      this.deptForm = {
-        ItemId: null,
-        OuName: '',
-        OuCode: '',
-        ParentId: null,
-        SortOrder: 0,
-        Disable: false,
-        Remark: ''
-      }
+    onDeptSaved() {
+      this.deptDialogVisible = false
+      this.getDeptTree(true)
     },
 
     // ========== 用户管理方法 ==========
@@ -621,30 +570,9 @@ export default {
       this.ResetPwdDialogVisible = true
     },
 
-    async ResetPassword() {
-      if (!this.ResetPwdForm.NewPwd || !this.ResetPwdForm.ConfirmPwd) {
-        return this.$message.error('密码不能为空')
-      }
-
-      if (this.ResetPwdForm.NewPwd !== this.ResetPwdForm.ConfirmPwd) {
-        return this.$message.error('密码不一致')
-      }
-
-      const { data: res } = await resetPassword({
-        account: this.ResetPwdForm.Account,
-        password: this.ResetPwdForm.ConfirmPwd
-      })
-      if (res.success) {
-        this.$message.success(res.Msg)
-        this.ResetPwdDialogVisible = false
-        this.getUserList()
-      } else {
-        this.$message.error('重置失败:' + res.Msg)
-      }
-    },
-
-    resetPasswordDialogClosed() {
-      this.$refs.resetPasswordFormRef.resetFields()
+    onResetPwdSuccess() {
+      this.ResetPwdDialogVisible = false
+      this.getUserList()
     },
 
     UpdateUserInfo() {

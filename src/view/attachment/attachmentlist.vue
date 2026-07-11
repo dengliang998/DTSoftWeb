@@ -102,9 +102,7 @@
     </el-card>
 
     <!-- 视频预览对话框 -->
-    <el-dialog v-model="VideoPreviewDialogVisible" title="视频预览" width="60%" @close="VideoPreviewDialogClosed">
-      <video :src="Video" controls style="width: 100%; height: auto"></video>
-    </el-dialog>
+    <VideoPreviewDialog v-model="VideoPreviewDialogVisible" :video-url="Video" />
 
     <el-image-viewer v-if="ShowViewer" :url-list="[guidePic]" @close="showViewerClose"></el-image-viewer>
   </div>
@@ -114,11 +112,13 @@
 import { getFileDownloadUrl, getFileList, getUploadHeaders, previewOfficeFile, removeFile } from '@/api/file'
 import { ElImageViewer } from 'element-plus'
 import { Download, Picture, VideoCamera, Delete } from '@element-plus/icons-vue'
+import VideoPreviewDialog from './components/VideoPreviewDialog.vue'
 
 export default {
   name: 'Attachment',
   components: {
     ElImageViewer,
+    VideoPreviewDialog,
     Download,
     Picture,
     VideoCamera,
@@ -275,9 +275,7 @@ export default {
       this.Video = getFileDownloadUrl(FileID)
       this.VideoPreviewDialogVisible = true
     },
-    VideoPreviewDialogClosed() {
-      this.VideoPreviewDialogVisible = false
-    },
+
     FilePreviewDialogClosed() {
       this.FilePreviewDialogVisible = false
     },
