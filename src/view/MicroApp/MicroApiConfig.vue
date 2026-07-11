@@ -246,6 +246,15 @@
                     <el-option label="范围查询" value="range"></el-option>
                   </el-select>
                 </el-form-item>
+                <el-form-item v-if="selectedFieldData.queryMode !== 'none'" label="查询宽度">
+                  <el-input-number
+                    v-model="selectedFieldData.queryWidth"
+                    :min="100"
+                    :max="600"
+                    :step="10"
+                    placeholder="150"
+                  ></el-input-number>
+                </el-form-item>
                 <el-form-item label="是否可编辑">
                   <el-switch v-model="selectedFieldData.editable"></el-switch>
                 </el-form-item>
@@ -320,6 +329,14 @@
               </el-form-item>
               <el-form-item label="表单列数">
                 <el-select v-model="MicroAppForm.FormColumns" placeholder="请选择每行列数">
+                  <el-option label="1 列" :value="1"></el-option>
+                  <el-option label="2 列" :value="2"></el-option>
+                  <el-option label="3 列" :value="3"></el-option>
+                  <el-option label="4 列" :value="4"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="搜索列数">
+                <el-select v-model="MicroAppForm.QueryColumns" placeholder="请选择每行搜索字段数">
                   <el-option label="1 列" :value="1"></el-option>
                   <el-option label="2 列" :value="2"></el-option>
                   <el-option label="3 列" :value="3"></el-option>
@@ -433,6 +450,7 @@ export default {
         SupportExport: false,
         DataScope: 'all',
         FormColumns: 1,
+        QueryColumns: 1,
         Fields: []
       },
       // 表单验证规则
@@ -490,6 +508,10 @@ export default {
       const value = Number(formColumns)
       return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
     },
+    normalizeQueryColumns(queryColumns) {
+      const value = Number(queryColumns)
+      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+    },
     normalizeFieldOrder(fields) {
       return Array.isArray(fields)
         ? [...fields]
@@ -545,6 +567,12 @@ export default {
             field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
           fixed: field.Fixed || field.fixed || 'none',
           queryMode: field.QueryMode || field.queryMode || 'none',
+          queryWidth:
+            field.QueryWidth !== undefined && field.QueryWidth !== null
+              ? field.QueryWidth
+              : field.queryWidth !== undefined && field.queryWidth !== null
+                ? field.queryWidth
+                : 150,
           dateFormat: field.DateFormat || field.dateFormat || 'datetime',
           minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
           maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
@@ -575,6 +603,7 @@ export default {
             MicroAppPath: item.MicroAppPath || item.ApiPrefix || item.ModelName || '',
             DataScope: item.DataScope || item.dataScope || 'all',
             FormColumns: this.normalizeFormColumns(item.FormColumns || item.formColumns),
+            QueryColumns: this.normalizeQueryColumns(item.QueryColumns || item.queryColumns),
             configDesc: item.ConfigDesc || item.configDesc || ''
           }))
           this.total = res.total
@@ -613,6 +642,7 @@ export default {
         SupportExport: false,
         DataScope: 'all',
         FormColumns: 1,
+        QueryColumns: 1,
         Fields: []
       }
       this.dialogVisible = true
@@ -625,6 +655,7 @@ export default {
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
+        QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         configDesc: row.ConfigDesc || row.configDesc || ''
       }
       this.dialogVisible = true
@@ -662,7 +693,8 @@ export default {
             ...this.MicroAppForm,
             ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc || '',
             MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName,
-            FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns)
+            FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
+            QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns)
           }
           let res
           if (this.MicroAppForm.ItemId) {
@@ -697,6 +729,7 @@ export default {
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
+        QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
@@ -724,6 +757,7 @@ export default {
         sortable: false,
         fixed: 'none',
         queryMode: 'none',
+        queryWidth: 150,
         dateFormat: 'datetime',
         sortOrder: this.MicroAppForm.Fields.length + 1,
         minLength: null,
@@ -824,6 +858,7 @@ export default {
           ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc,
           DataScope: this.MicroAppForm.DataScope || 'all',
           FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
+          QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
           Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => ({
             Label: field.label,
             FieldName: field.fieldName,
@@ -837,6 +872,7 @@ export default {
             Sortable: field.sortable,
             Fixed: field.fixed || 'none',
             QueryMode: field.queryMode || 'none',
+            QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,
             DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
             MinLength: field.minLength,
             MaxLength: field.maxLength,
@@ -877,6 +913,7 @@ export default {
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
+        QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }

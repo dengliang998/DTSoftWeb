@@ -6,68 +6,45 @@
       <div class="list-page">
         <el-card class="table-card">
           <!-- 搜索与添加区域 -->
-          <el-row :gutter="20" style="margin-bottom: 15px">
-            <el-col :span="14">
-              <div style="display: flex; align-items: center">
-                <!-- 搜索区域 -->
-                <el-input
-                  v-model="searchKeyword"
-                  clearable
-                  placeholder="请输入关键词搜索"
-                  style="width: 50%; margin-right: 5px"
-                  @clear="getAppData"
-                >
-                  <template #append>
-                    <el-button icon="Search" @click="getAppData"></el-button>
-                  </template>
-                </el-input>
-                <!-- 操作按钮 -->
-                <el-button
-                  v-if="appConfig.supportCreate"
-                  type="primary"
-                  icon="Plus"
-                  style="margin-left: 15px"
-                  @click="openCreateDialog"
-                >
-                  新增
-                </el-button>
-                <el-button
-                  v-if="appConfig.supportExport"
-                  type="primary"
-                  icon="Download"
-                  style="margin-right: 5px"
-                  @click="exportData"
-                >
-                  导出Excel
-                </el-button>
-                <el-button
-                  v-if="appConfig.supportImport"
-                  type="primary"
-                  icon="Upload"
-                  style="margin-right: 5px"
-                  @click="openImportDialog"
-                >
-                  导入Excel
-                </el-button>
-                <el-button
-                  v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
-                  type="danger"
-                  icon="Delete"
-                  :disabled="selectedRows.length === 0"
-                  style="margin-right: 5px"
-                  @click="batchDeleteData"
-                >
-                  批量删除
-                </el-button>
-              </div>
-            </el-col>
-          </el-row>
-          <el-row v-if="queryableFields.length > 0" :gutter="12" class="advanced-query-row">
-            <el-col v-for="field in queryableFields" :key="field.fieldName" :span="6">
-              <div class="query-field">
+          <div class="list-toolbar">
+            <div class="toolbar-actions">
+              <el-button v-if="appConfig.supportCreate" type="primary" icon="Plus" @click="openCreateDialog">
+                新增
+              </el-button>
+              <el-button v-if="appConfig.supportExport" type="primary" icon="Download" @click="exportData">
+                导出Excel
+              </el-button>
+              <el-button v-if="appConfig.supportImport" type="primary" icon="Upload" @click="openImportDialog">
+                导入Excel
+              </el-button>
+              <el-button
+                v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
+                type="danger"
+                icon="Delete"
+                :disabled="selectedRows.length === 0"
+                @click="batchDeleteData"
+              >
+                批量删除
+              </el-button>
+            </div>
+            <el-input
+              v-model="searchKeyword"
+              class="toolbar-search"
+              clearable
+              placeholder="请输入关键词搜索"
+              @clear="getAppData"
+            >
+              <template #append>
+                <el-button icon="Search" @click="getAppData"></el-button>
+              </template>
+            </el-input>
+          </div>
+          <div v-if="queryableFields.length > 0" class="advanced-query-row">
+            <div v-for="(row, rowIndex) in queryFieldRows" :key="rowIndex" class="advanced-query-line">
+              <div v-for="field in row" :key="field.fieldName" class="query-field">
                 <span class="query-label">{{ field.label || field.fieldName }}</span>
                 <template v-if="field.queryMode === 'range'">
-                  <div class="range-query">
+                  <div class="range-query" :style="getQueryRangeStyle(field)">
                     <template v-if="field.fieldType === 'datetime' && getDateFormatType(field) === 'year'">
                       <el-date-picker
                         v-model="queryFilters[field.fieldName][0]"
@@ -106,9 +83,10 @@
                 <el-select
                   v-else-if="['select', 'radio', 'checkbox'].includes(field.fieldType)"
                   v-model="queryFilters[field.fieldName]"
+                  class="query-control"
+                  :style="getQueryControlStyle(field)"
                   clearable
                   :placeholder="'请选择' + (field.label || field.fieldName)"
-                  style="width: 100%"
                 >
                   <el-option
                     v-for="option in field.options || []"
@@ -120,28 +98,29 @@
                 <el-date-picker
                   v-else-if="field.fieldType === 'datetime'"
                   v-model="queryFilters[field.fieldName]"
+                  class="query-control"
+                  :style="getQueryControlStyle(field)"
                   :type="getDatePickerType(field)"
                   :value-format="getDateValueFormat(field)"
                   :format="getDateDisplayFormat(field)"
                   clearable
                   :placeholder="'请选择' + (field.label || field.fieldName)"
-                  style="width: 100%"
                 ></el-date-picker>
                 <el-input
                   v-else
                   v-model="queryFilters[field.fieldName]"
+                  class="query-control"
+                  :style="getQueryControlStyle(field)"
                   clearable
                   :placeholder="field.queryMode === 'exact' ? '精确查询' : '模糊查询'"
                 ></el-input>
               </div>
-            </el-col>
-            <el-col :span="4">
-              <div class="query-actions">
+              <div v-if="rowIndex === queryFieldRows.length - 1" class="query-actions">
                 <el-button type="primary" icon="Search" @click="applyQueryFilters">查询</el-button>
                 <el-button icon="RefreshLeft" @click="resetQueryFilters">重置</el-button>
               </div>
-            </el-col>
-          </el-row>
+            </div>
+          </div>
 
           <!-- 数据列表 -->
           <div class="table-container">
@@ -479,6 +458,16 @@ export default {
     },
     queryableFields() {
       return this.orderedFields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
+    },
+    queryFieldRows() {
+      const columns = this.normalizeQueryColumns(this.appConfig?.queryColumns)
+      const rows = []
+
+      for (let index = 0; index < this.queryableFields.length; index += columns) {
+        rows.push(this.queryableFields.slice(index, index + columns))
+      }
+
+      return rows
     }
   },
   watch: {
@@ -527,6 +516,10 @@ export default {
       const value = Number(formColumns)
       return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
     },
+    normalizeQueryColumns(queryColumns) {
+      const value = Number(queryColumns)
+      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+    },
     getFormFieldSpan() {
       return 24 / this.normalizeFormColumns(this.appConfig?.formColumns)
     },
@@ -538,6 +531,26 @@ export default {
         4: '90%'
       }
       return widthMap[this.normalizeFormColumns(this.appConfig?.formColumns)]
+    },
+    normalizeQueryWidth(queryWidth) {
+      const value = Number(queryWidth)
+      return Number.isInteger(value) && value >= 100 && value <= 600 ? value : 150
+    },
+    getQueryControlStyle(field) {
+      const width = this.normalizeQueryWidth(field?.queryWidth)
+      return {
+        width: `${width}px`,
+        flex: `0 1 ${width}px`,
+        maxWidth: 'calc(100% - 60px)'
+      }
+    },
+    getQueryRangeStyle(field) {
+      const width = Math.max(this.normalizeQueryWidth(field?.queryWidth), 220)
+      return {
+        width: `${width}px`,
+        flex: `0 1 ${width}px`,
+        maxWidth: 'calc(100% - 60px)'
+      }
     },
     normalizeFieldOrder(fields) {
       return Array.isArray(fields)
@@ -625,6 +638,7 @@ export default {
                     : false,
               dataScope: config.DataScope || config.dataScope || 'all',
               formColumns: this.normalizeFormColumns(config.FormColumns || config.formColumns),
+              queryColumns: this.normalizeQueryColumns(config.QueryColumns || config.queryColumns),
               fields: Array.isArray(config.Fields)
                 ? this.normalizeFieldOrder(
                     config.Fields.filter((field) => field && typeof field === 'object').map((field, index) => ({
@@ -665,6 +679,12 @@ export default {
                             : false,
                       fixed: field.Fixed || field.fixed || 'none',
                       queryMode: field.QueryMode || field.queryMode || 'none',
+                      queryWidth:
+                        field.QueryWidth !== undefined && field.QueryWidth !== null
+                          ? field.QueryWidth
+                          : field.queryWidth !== undefined && field.queryWidth !== null
+                            ? field.queryWidth
+                            : 150,
                       dateFormat: field.DateFormat || field.dateFormat || 'datetime',
                       minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
                       maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
@@ -1316,33 +1336,89 @@ export default {
   min-height: 0;
 }
 
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-actions :deep(.el-button + .el-button),
+.query-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.toolbar-search {
+  width: 240px;
+  flex: 0 0 240px;
+}
+
 .advanced-query-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 12px;
+  max-width: 100%;
+}
+
+.advanced-query-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .query-field {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .query-label {
+  flex: 0 0 52px;
   font-size: 12px;
   color: #606266;
   line-height: 18px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.query-control {
+  width: 150px;
+  flex: 0 1 150px;
+  max-width: calc(100% - 60px);
 }
 
 .range-query {
   display: flex;
   gap: 6px;
+  width: 220px;
+  flex: 0 1 220px;
+  max-width: calc(100% - 60px);
+}
+
+.range-query :deep(.el-input),
+.range-query :deep(.el-date-editor) {
+  flex: 1;
 }
 
 .query-actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 6px;
-  height: 100%;
-  padding-top: 22px;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .table-wrapper {
