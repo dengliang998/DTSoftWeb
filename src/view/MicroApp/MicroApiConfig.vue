@@ -96,261 +96,329 @@
     </el-dialog>
 
     <!-- 可视化配置对话框 -->
-    <el-dialog v-model="visualConfigVisible" title="可视化配置" width="90%" :close-on-click-modal="false" fullscreen>
+    <el-dialog
+      v-model="visualConfigVisible"
+      title="可视化配置"
+      width="90%"
+      :close-on-click-modal="false"
+      fullscreen
+      class="visual-config-dialog"
+    >
       <div class="visual-config-container">
-        <!-- 左侧配置面板 -->
-        <div class="config-panel">
-          <el-card class="panel-card">
-            <template #header>
-              <div class="card-header">
-                <span>模型字段配置</span>
-              </div>
-            </template>
-
-            <!-- 字段列表 -->
-            <div class="field-list">
-              <el-button type="primary" size="small" icon="Plus" style="margin-bottom: 10px" @click="addField">
-                添加字段
-              </el-button>
-              <el-tree
-                :data="MicroAppForm.Fields"
-                :props="{ label: 'label', children: 'children' }"
-                node-key="fieldName"
-                :expand-on-click-node="false"
-                :current-node-key="selectedFieldKey"
-                :default-expanded-keys="expandedKeys"
-                draggable
-                :allow-drop="allowFieldDrop"
-                @node-drop="handleFieldDrop"
-                @node-click="selectField"
-              >
-                <template #default="{ data }">
-                  <div class="field-tree-node">
-                    <span class="field-tree-node__main">
-                      <el-icon class="field-tree-node__drag"><Rank /></el-icon>
-                      <span>{{ data.label }}</span>
-                    </span>
-                    <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
-                      删除
-                    </button>
-                  </div>
-                </template>
-              </el-tree>
+        <aside class="field-sidebar">
+          <div class="sidebar-head">
+            <div>
+              <div class="section-kicker">字段模型</div>
+              <div class="section-title">模型字段配置</div>
             </div>
-          </el-card>
-        </div>
+            <el-button type="primary" size="small" icon="Plus" @click="addField">新增</el-button>
+          </div>
 
-        <!-- 中间字段属性配置 -->
-        <div class="property-panel">
-          <el-card class="panel-card">
-            <template #header>
-              <div class="card-header">
-                <span>字段属性配置</span>
+          <div class="field-metrics">
+            <div class="metric-item">
+              <span class="metric-value">{{ MicroAppForm.Fields.length }}</span>
+              <span class="metric-label">字段</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">{{ queryConfigCount }}</span>
+              <span class="metric-label">查询</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">{{ listConfigCount }}</span>
+              <span class="metric-label">列表</span>
+            </div>
+          </div>
+
+          <el-tree
+            class="field-tree"
+            :data="MicroAppForm.Fields"
+            :props="{ label: 'label', children: 'children' }"
+            node-key="fieldName"
+            :expand-on-click-node="false"
+            :current-node-key="selectedFieldKey"
+            :default-expanded-keys="expandedKeys"
+            draggable
+            :allow-drop="allowFieldDrop"
+            @node-drop="handleFieldDrop"
+            @node-click="selectField"
+          >
+            <template #default="{ data }">
+              <div class="field-tree-node">
+                <span class="field-tree-node__main">
+                  <el-icon class="field-tree-node__drag"><Rank /></el-icon>
+                  <span class="field-tree-node__text">
+                    <span class="field-tree-node__label">{{ data.label || '未命名字段' }}</span>
+                    <span class="field-tree-node__meta">{{ data.fieldName || 'field_name' }}</span>
+                  </span>
+                </span>
+                <span class="field-tree-node__side">
+                  <el-tag size="small" effect="plain" :type="getFieldTypeTagType(data.fieldType)">
+                    {{ getFieldTypeLabel(data.fieldType) }}
+                  </el-tag>
+                  <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
+                    删除
+                  </button>
+                </span>
               </div>
             </template>
+          </el-tree>
+        </aside>
 
-            <div v-if="selectedFieldData" class="property-form">
-              <el-form :model="selectedFieldData" label-width="120px">
-                <el-form-item label="字段名称">
-                  <el-input v-model="selectedFieldData.label" placeholder="请输入字段显示名称"></el-input>
-                </el-form-item>
-                <el-form-item label="字段标识">
-                  <el-input v-model="selectedFieldData.fieldName" placeholder="请输入字段标识（英文）"></el-input>
-                </el-form-item>
-                <el-form-item label="字段类型">
-                  <el-select
-                    v-model="selectedFieldData.fieldType"
-                    placeholder="请选择字段类型"
-                    @change="handleFieldTypeChange"
-                  >
-                    <el-option label="文本" value="string"></el-option>
-                    <el-option label="数字" value="number"></el-option>
-                    <el-option label="日期时间" value="datetime"></el-option>
-                    <el-option label="布尔值" value="boolean"></el-option>
-                    <el-option label="文本域" value="textarea"></el-option>
-                    <el-option label="下拉选择" value="select"></el-option>
-                    <el-option label="单选" value="radio"></el-option>
-                    <el-option label="多选" value="checkbox"></el-option>
+        <main class="visual-workspace">
+          <section class="workspace-panel app-settings-panel">
+            <div class="panel-head">
+              <div>
+                <div class="section-kicker">生成策略</div>
+                <div class="section-title">页面能力</div>
+              </div>
+              <div class="visual-config-actions">
+                <el-button @click="visualConfigVisible = false">取消</el-button>
+                <el-button type="primary" @click="saveVisualConfig">保存配置</el-button>
+              </div>
+            </div>
+
+            <el-form :model="MicroAppForm" class="compact-form" label-position="top">
+              <div class="switch-matrix">
+                <label class="switch-tile">
+                  <span>新增</span>
+                  <el-switch v-model="MicroAppForm.SupportCreate"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>修改</span>
+                  <el-switch v-model="MicroAppForm.SupportUpdate"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>删除</span>
+                  <el-switch v-model="MicroAppForm.SupportDelete"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>批量删除</span>
+                  <el-switch v-model="MicroAppForm.SupportBatchDelete"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>导入</span>
+                  <el-switch v-model="MicroAppForm.SupportImport"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>导出</span>
+                  <el-switch v-model="MicroAppForm.SupportExport"></el-switch>
+                </label>
+              </div>
+
+              <div class="settings-grid">
+                <el-form-item label="数据范围">
+                  <el-select v-model="MicroAppForm.DataScope" placeholder="请选择数据范围">
+                    <el-option label="全部数据" value="all"></el-option>
+                    <el-option label="本人数据" value="self"></el-option>
+                    <el-option label="部门数据" value="department"></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item v-if="selectedFieldData.fieldType === 'datetime'" label="日期格式">
-                  <el-select v-model="selectedFieldData.dateFormat" placeholder="请选择日期格式">
-                    <el-option label="年" value="year"></el-option>
-                    <el-option label="年月" value="month"></el-option>
-                    <el-option label="年月日" value="date"></el-option>
-                    <el-option label="时间" value="datetime"></el-option>
+                <el-form-item label="表单列数">
+                  <el-select v-model="MicroAppForm.FormColumns" placeholder="请选择每行列数">
+                    <el-option label="1 列" :value="1"></el-option>
+                    <el-option label="2 列" :value="2"></el-option>
+                    <el-option label="3 列" :value="3"></el-option>
+                    <el-option label="4 列" :value="4"></el-option>
                   </el-select>
                 </el-form-item>
-                <!-- 下拉选择/单选/多选值配置 -->
-                <el-form-item
-                  v-show="
-                    selectedFieldData.fieldType === 'select' ||
-                    selectedFieldData.fieldType === 'radio' ||
-                    selectedFieldData.fieldType === 'checkbox'
-                  "
-                  label="选项配置"
-                >
+                <el-form-item label="搜索列数">
+                  <el-select v-model="MicroAppForm.QueryColumns" placeholder="请选择每行搜索字段数">
+                    <el-option label="1 列" :value="1"></el-option>
+                    <el-option label="2 列" :value="2"></el-option>
+                    <el-option label="3 列" :value="3"></el-option>
+                    <el-option label="4 列" :value="4"></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-form>
+          </section>
+
+          <section class="workspace-panel field-editor-panel">
+            <template v-if="selectedFieldData">
+              <div class="field-editor-head">
+                <div>
+                  <div class="section-kicker">字段属性</div>
+                  <div class="field-editor-title">
+                    {{ selectedFieldData.label || '未命名字段' }}
+                    <el-tag size="small" effect="plain" :type="getFieldTypeTagType(selectedFieldData.fieldType)">
+                      {{ getFieldTypeLabel(selectedFieldData.fieldType) }}
+                    </el-tag>
+                  </div>
+                </div>
+                <div class="field-editor-meta">{{ selectedFieldData.fieldName || 'field_name' }}</div>
+              </div>
+
+              <el-form :model="selectedFieldData" class="field-config-form" label-position="top">
+                <div class="config-section">
+                  <div class="config-section-title">基础信息</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="字段名称">
+                      <el-input v-model="selectedFieldData.label" placeholder="例如：客户名称"></el-input>
+                    </el-form-item>
+                    <el-form-item label="字段标识">
+                      <el-input v-model="selectedFieldData.fieldName" placeholder="例如：customer_name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="字段类型">
+                      <el-select
+                        v-model="selectedFieldData.fieldType"
+                        placeholder="请选择字段类型"
+                        @change="handleFieldTypeChange"
+                      >
+                        <el-option label="文本" value="string"></el-option>
+                        <el-option label="数字" value="number"></el-option>
+                        <el-option label="日期时间" value="datetime"></el-option>
+                        <el-option label="布尔值" value="boolean"></el-option>
+                        <el-option label="文本域" value="textarea"></el-option>
+                        <el-option label="下拉选择" value="select"></el-option>
+                        <el-option label="单选" value="radio"></el-option>
+                        <el-option label="多选" value="checkbox"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </div>
+
+                <div class="config-section">
+                  <div class="config-section-title">展示与编辑</div>
+                  <div class="switch-matrix switch-matrix--field">
+                    <label class="switch-tile">
+                      <span>必填</span>
+                      <el-switch v-model="selectedFieldData.required"></el-switch>
+                    </label>
+                    <label class="switch-tile">
+                      <span>列表显示</span>
+                      <el-switch v-model="selectedFieldData.showInList"></el-switch>
+                    </label>
+                    <label class="switch-tile">
+                      <span>允许编辑</span>
+                      <el-switch v-model="selectedFieldData.editable"></el-switch>
+                    </label>
+                    <label class="switch-tile">
+                      <span>支持排序</span>
+                      <el-switch v-model="selectedFieldData.sortable"></el-switch>
+                    </label>
+                  </div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="列表列宽">
+                      <el-input-number
+                        v-model="selectedFieldData.columnWidth"
+                        :min="80"
+                        :max="600"
+                        :step="10"
+                        placeholder="自动"
+                      ></el-input-number>
+                    </el-form-item>
+                    <el-form-item label="固定列">
+                      <el-select v-model="selectedFieldData.fixed" placeholder="请选择固定列位置">
+                        <el-option label="不固定" value="none"></el-option>
+                        <el-option label="固定在左侧" value="left"></el-option>
+                        <el-option label="固定在右侧" value="right"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="默认值">
+                      <el-input v-model="selectedFieldData.defaultValue" placeholder="请输入字段默认值"></el-input>
+                    </el-form-item>
+                  </div>
+                </div>
+
+                <div v-if="isDateField(selectedFieldData)" class="config-section">
+                  <div class="config-section-title">日期设置</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="日期格式">
+                      <el-select v-model="selectedFieldData.dateFormat" placeholder="请选择日期格式">
+                        <el-option label="年" value="year"></el-option>
+                        <el-option label="年月" value="month"></el-option>
+                        <el-option label="年月日" value="date"></el-option>
+                        <el-option label="时间" value="datetime"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </div>
+
+                <div class="config-section">
+                  <div class="config-section-title">查询设置</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="查询方式">
+                      <el-select v-model="selectedFieldData.queryMode" placeholder="请选择查询方式">
+                        <el-option
+                          v-for="option in getQueryModeOptions(selectedFieldData)"
+                          :key="option.value"
+                          :label="option.label"
+                          :value="option.value"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item v-if="selectedFieldData.queryMode !== 'none'" label="查询宽度">
+                      <el-input-number
+                        v-model="selectedFieldData.queryWidth"
+                        :min="100"
+                        :max="600"
+                        :step="10"
+                        placeholder="150"
+                      ></el-input-number>
+                    </el-form-item>
+                  </div>
+                </div>
+
+                <div v-if="hasValidationConfig(selectedFieldData)" class="config-section">
+                  <div class="config-section-title">校验规则</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" label="最小长度">
+                      <el-input-number
+                        v-model="selectedFieldData.minLength"
+                        :min="0"
+                        :max="10000"
+                        placeholder="最小长度"
+                      ></el-input-number>
+                    </el-form-item>
+                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" label="最大长度">
+                      <el-input-number
+                        v-model="selectedFieldData.maxLength"
+                        :min="0"
+                        :max="10000"
+                        placeholder="最大长度"
+                      ></el-input-number>
+                    </el-form-item>
+                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" label="最小值">
+                      <el-input-number v-model="selectedFieldData.minValue" placeholder="最小值"></el-input-number>
+                    </el-form-item>
+                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" label="最大值">
+                      <el-input-number v-model="selectedFieldData.maxValue" placeholder="最大值"></el-input-number>
+                    </el-form-item>
+                    <el-form-item
+                      v-if="supportsPatternRule(selectedFieldData)"
+                      label="正则校验"
+                      class="form-grid-span-2"
+                    >
+                      <el-input v-model="selectedFieldData.pattern" placeholder="请输入正则表达式"></el-input>
+                    </el-form-item>
+                  </div>
+                </div>
+
+                <div v-if="supportsOptions(selectedFieldData)" class="config-section">
+                  <div class="config-section-head">
+                    <div class="config-section-title">选项配置</div>
+                    <el-button type="primary" size="small" icon="Plus" @click="addOption">添加选项</el-button>
+                  </div>
                   <div class="options-container">
-                    <div v-if="selectedFieldData.options && selectedFieldData.options.length > 0">
+                    <div v-if="selectedFieldData.options && selectedFieldData.options.length > 0" class="option-list">
                       <div v-for="(option, index) in selectedFieldData.options" :key="index" class="option-item">
-                        <el-input
-                          v-model="option.label"
-                          placeholder="选项标签"
-                          style="width: 40%; margin-right: 10px"
-                        ></el-input>
-                        <el-input
-                          v-model="option.value"
-                          placeholder="选项值"
-                          style="width: 40%; margin-right: 10px"
-                        ></el-input>
-                        <el-button type="danger" size="small" icon="Delete" @click="deleteOption(index)">
-                          删除
-                        </el-button>
+                        <el-input v-model="option.label" placeholder="选项标签"></el-input>
+                        <el-input v-model="option.value" placeholder="选项值"></el-input>
+                        <el-button text type="danger" icon="Delete" @click="deleteOption(index)">删除</el-button>
                       </div>
                     </div>
-                    <div class="add-option-container">
-                      <el-button type="primary" size="small" icon="Plus" @click="addOption">添加选项</el-button>
-                    </div>
+                    <div v-else class="empty-inline">还没有选项，添加后可用于下拉、单选或多选。</div>
                   </div>
-                </el-form-item>
-                <el-form-item label="是否必填">
-                  <el-switch v-model="selectedFieldData.required"></el-switch>
-                </el-form-item>
-                <el-form-item label="是否显示在列表">
-                  <el-switch v-model="selectedFieldData.showInList"></el-switch>
-                </el-form-item>
-                <el-form-item label="列宽">
-                  <el-input-number
-                    v-model="selectedFieldData.columnWidth"
-                    :min="80"
-                    :max="600"
-                    :step="10"
-                    placeholder="自动"
-                  ></el-input-number>
-                </el-form-item>
-                <el-form-item label="支持排序">
-                  <el-switch v-model="selectedFieldData.sortable"></el-switch>
-                </el-form-item>
-                <el-form-item label="固定列">
-                  <el-select v-model="selectedFieldData.fixed" placeholder="请选择固定列位置">
-                    <el-option label="不固定" value="none"></el-option>
-                    <el-option label="固定在左侧" value="left"></el-option>
-                    <el-option label="固定在右侧" value="right"></el-option>
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="查询方式">
-                  <el-select v-model="selectedFieldData.queryMode" placeholder="请选择查询方式">
-                    <el-option label="不参与查询" value="none"></el-option>
-                    <el-option label="精确查询" value="exact"></el-option>
-                    <el-option label="模糊查询" value="fuzzy"></el-option>
-                    <el-option label="范围查询" value="range"></el-option>
-                  </el-select>
-                </el-form-item>
-                <el-form-item v-if="selectedFieldData.queryMode !== 'none'" label="查询宽度">
-                  <el-input-number
-                    v-model="selectedFieldData.queryWidth"
-                    :min="100"
-                    :max="600"
-                    :step="10"
-                    placeholder="150"
-                  ></el-input-number>
-                </el-form-item>
-                <el-form-item label="是否可编辑">
-                  <el-switch v-model="selectedFieldData.editable"></el-switch>
-                </el-form-item>
-                <el-form-item label="长度范围">
-                  <div class="inline-control-row">
-                    <el-input-number
-                      v-model="selectedFieldData.minLength"
-                      :min="0"
-                      :max="10000"
-                      placeholder="最小长度"
-                    ></el-input-number>
-                    <el-input-number
-                      v-model="selectedFieldData.maxLength"
-                      :min="0"
-                      :max="10000"
-                      placeholder="最大长度"
-                    ></el-input-number>
-                  </div>
-                </el-form-item>
-                <el-form-item label="数值范围">
-                  <div class="inline-control-row">
-                    <el-input-number v-model="selectedFieldData.minValue" placeholder="最小值"></el-input-number>
-                    <el-input-number v-model="selectedFieldData.maxValue" placeholder="最大值"></el-input-number>
-                  </div>
-                </el-form-item>
-                <el-form-item label="正则校验">
-                  <el-input v-model="selectedFieldData.pattern" placeholder="请输入正则表达式"></el-input>
-                </el-form-item>
-                <el-form-item label="字段默认值">
-                  <el-input v-model="selectedFieldData.defaultValue" placeholder="请输入字段默认值"></el-input>
-                </el-form-item>
+                </div>
               </el-form>
-            </div>
-            <div v-else class="no-selection">请选择一个字段进行配置</div>
-          </el-card>
-        </div>
-
-        <!-- 右侧生成选项配置 -->
-        <div class="option-panel">
-          <el-card class="panel-card">
-            <template #header>
-              <div class="card-header">
-                <span>生成选项</span>
-              </div>
             </template>
-
-            <el-form :model="MicroAppForm" label-width="120px">
-              <el-form-item label="支持新增">
-                <el-switch v-model="MicroAppForm.SupportCreate"></el-switch>
-              </el-form-item>
-              <el-form-item label="支持修改">
-                <el-switch v-model="MicroAppForm.SupportUpdate"></el-switch>
-              </el-form-item>
-              <el-form-item label="支持删除">
-                <el-switch v-model="MicroAppForm.SupportDelete"></el-switch>
-              </el-form-item>
-              <el-form-item label="支持批量删除">
-                <el-switch v-model="MicroAppForm.SupportBatchDelete"></el-switch>
-              </el-form-item>
-              <el-form-item label="支持导入">
-                <el-switch v-model="MicroAppForm.SupportImport"></el-switch>
-              </el-form-item>
-              <el-form-item label="支持导出">
-                <el-switch v-model="MicroAppForm.SupportExport"></el-switch>
-              </el-form-item>
-              <el-form-item label="数据范围">
-                <el-select v-model="MicroAppForm.DataScope" placeholder="请选择数据范围">
-                  <el-option label="全部数据" value="all"></el-option>
-                  <el-option label="本人数据" value="self"></el-option>
-                  <el-option label="部门数据" value="department"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="表单列数">
-                <el-select v-model="MicroAppForm.FormColumns" placeholder="请选择每行列数">
-                  <el-option label="1 列" :value="1"></el-option>
-                  <el-option label="2 列" :value="2"></el-option>
-                  <el-option label="3 列" :value="3"></el-option>
-                  <el-option label="4 列" :value="4"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="搜索列数">
-                <el-select v-model="MicroAppForm.QueryColumns" placeholder="请选择每行搜索字段数">
-                  <el-option label="1 列" :value="1"></el-option>
-                  <el-option label="2 列" :value="2"></el-option>
-                  <el-option label="3 列" :value="3"></el-option>
-                  <el-option label="4 列" :value="4"></el-option>
-                </el-select>
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </div>
+            <div v-else class="no-selection">
+              <div class="no-selection-title">选择左侧字段开始配置</div>
+              <div class="no-selection-subtitle">字段支持拖拽排序，配置会影响生成页面的列表、表单和查询区域。</div>
+            </div>
+          </section>
+        </main>
       </div>
-      <template #footer>
-        <el-button @click="visualConfigVisible = false">取 消</el-button>
-        <el-button type="primary" @click="saveVisualConfig">保存配置</el-button>
-      </template>
     </el-dialog>
 
     <!-- 接口文档对话框 -->
@@ -478,10 +546,123 @@ export default {
       }
     }
   },
+  computed: {
+    queryConfigCount() {
+      return this.MicroAppForm.Fields.filter((field) => field.queryMode && field.queryMode !== 'none').length
+    },
+    listConfigCount() {
+      return this.MicroAppForm.Fields.filter((field) => field.showInList).length
+    }
+  },
   created() {
     this.getMicroApps()
   },
   methods: {
+    isTextField(field) {
+      return ['string', 'textarea'].includes(field?.fieldType)
+    },
+    isNumberField(field) {
+      return field?.fieldType === 'number'
+    },
+    isDateField(field) {
+      return field?.fieldType === 'datetime'
+    },
+    supportsOptions(field) {
+      return ['select', 'radio', 'checkbox'].includes(field?.fieldType)
+    },
+    supportsLengthRule(field) {
+      return this.isTextField(field)
+    },
+    supportsNumberRange(field) {
+      return this.isNumberField(field)
+    },
+    supportsPatternRule(field) {
+      return this.isTextField(field)
+    },
+    hasValidationConfig(field) {
+      return this.supportsLengthRule(field) || this.supportsNumberRange(field) || this.supportsPatternRule(field)
+    },
+    getFieldTypeLabel(fieldType) {
+      const typeMap = {
+        string: '文本',
+        number: '数字',
+        datetime: '日期',
+        boolean: '布尔',
+        textarea: '文本域',
+        select: '下拉',
+        radio: '单选',
+        checkbox: '多选'
+      }
+
+      return typeMap[fieldType] || '字段'
+    },
+    getFieldTypeTagType(fieldType) {
+      const tagMap = {
+        string: '',
+        textarea: '',
+        number: 'success',
+        datetime: 'warning',
+        boolean: 'info',
+        select: '',
+        radio: '',
+        checkbox: ''
+      }
+
+      return tagMap[fieldType] || ''
+    },
+    getQueryModeOptions(field) {
+      const options = [{ label: '不参与查询', value: 'none' }]
+
+      if (this.isTextField(field)) {
+        return options.concat([
+          { label: '精确查询', value: 'exact' },
+          { label: '模糊查询', value: 'fuzzy' }
+        ])
+      }
+
+      if (this.isNumberField(field) || this.isDateField(field)) {
+        return options.concat([
+          { label: '精确查询', value: 'exact' },
+          { label: '范围查询', value: 'range' }
+        ])
+      }
+
+      if (this.supportsOptions(field) || field?.fieldType === 'boolean') {
+        return options.concat([{ label: '精确查询', value: 'exact' }])
+      }
+
+      return options
+    },
+    normalizeFieldByType(field) {
+      if (!field) return
+
+      const allowedQueryModes = this.getQueryModeOptions(field).map((option) => option.value)
+      if (!allowedQueryModes.includes(field.queryMode)) {
+        field.queryMode = 'none'
+      }
+
+      if (!this.isDateField(field)) {
+        field.dateFormat = 'datetime'
+      }
+
+      if (!this.supportsOptions(field)) {
+        field.options = []
+      }
+
+      if (!this.supportsLengthRule(field)) {
+        field.minLength = null
+        field.maxLength = null
+      }
+
+      if (!this.supportsNumberRange(field)) {
+        field.minValue = null
+        field.maxValue = null
+      }
+
+      if (!this.supportsPatternRule(field)) {
+        field.pattern = ''
+      }
+    },
     normalizeFieldOptions(options) {
       let normalized = options
 
@@ -818,13 +999,7 @@ export default {
     handleFieldTypeChange() {
       // 使用setTimeout避免ResizeObserver循环
       setTimeout(() => {
-        // 如果切换到需要选项的类型，确保options数组存在
-        if (
-          this.selectedFieldData &&
-          (this.selectedFieldData.fieldType === 'select' ||
-            this.selectedFieldData.fieldType === 'radio' ||
-            this.selectedFieldData.fieldType === 'checkbox')
-        ) {
+        if (this.selectedFieldData && this.supportsOptions(this.selectedFieldData)) {
           if (!this.selectedFieldData.options) {
             this.selectedFieldData.options = []
           }
@@ -832,6 +1007,7 @@ export default {
         if (this.selectedFieldData && this.selectedFieldData.fieldType === 'datetime') {
           this.selectedFieldData.dateFormat = this.selectedFieldData.dateFormat || 'datetime'
         }
+        this.normalizeFieldByType(this.selectedFieldData)
       }, 0)
     },
     // 删除字段
@@ -1107,58 +1283,156 @@ export default {
 }
 
 /* 可视化配置容器 */
-.visual-config-container {
+:deep(.visual-config-dialog) {
   display: flex;
-  height: calc(100vh - 210px);
-  gap: 16px;
+  height: 100vh;
+  max-height: 100vh;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
 }
 
-/* 配置面板 */
-.config-panel {
-  width: 300px;
-  overflow-y: auto;
-  flex-shrink: 0;
+:deep(.visual-config-dialog .el-dialog__header) {
+  flex: 0 0 auto;
 }
 
-/* 属性面板 */
-.property-panel {
+:deep(.visual-config-dialog .el-dialog__body) {
+  display: flex;
   flex: 1;
-  overflow-y: auto;
-  min-width: 500px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px 18px 0;
+  background: #f6f8fb;
 }
 
-/* 选项面板 */
-.option-panel {
-  width: 350px;
-  overflow-y: auto;
+:deep(.visual-config-dialog .el-dialog__footer) {
+  display: none;
 }
 
-.panel-card {
-  margin-bottom: 16px;
-  height: fit-content;
+.visual-config-container {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 14px;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* 字段列表 */
-.field-list {
-  padding: 10px 0;
-}
-
-.field-list :deep(.el-tree-node__content) {
-  height: 40px;
-  margin: 2px 0;
+.field-sidebar,
+.workspace-panel {
+  border: 1px solid #dfe7f2;
   border-radius: 8px;
-  padding-right: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(31, 56, 88, 0.06);
 }
 
-.field-list :deep(.el-tree-node__content:hover),
-.field-list :deep(.el-tree-node.is-current > .el-tree-node__content) {
+.field-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.sidebar-head,
+.panel-head,
+.field-editor-head,
+.config-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.visual-config-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.visual-config-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.section-kicker {
+  margin-bottom: 3px;
+  color: #6b7c93;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.section-title {
+  color: #1f2d3d;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.field-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0 12px;
+}
+
+.metric-item {
+  position: relative;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e6edf7;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
+}
+
+.metric-item::before {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 5px;
+  height: 20px;
+  border-radius: 999px;
+  background: #2f6bff;
+  content: '';
+}
+
+.metric-value {
+  display: block;
+  color: #1f2d3d;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.metric-label {
+  display: block;
+  margin-top: 2px;
+  color: #8a98aa;
+  font-size: 12px;
+}
+
+.field-tree {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.field-tree :deep(.el-tree-node__content) {
+  height: 52px;
+  margin: 4px 0;
+  border-radius: 8px;
+  padding-right: 8px;
+}
+
+.field-tree :deep(.el-tree-node__content:hover),
+.field-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
   background-color: #eef4ff;
+}
+
+.field-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  box-shadow: inset 3px 0 0 #2f6bff;
 }
 
 .field-tree-node {
@@ -1167,20 +1441,56 @@ export default {
   justify-content: space-between;
   width: 100%;
   min-width: 0;
-  padding-right: 12px;
+  gap: 8px;
+  padding-right: 10px;
 }
 
 .field-tree-node__main {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field-tree-node__drag {
-  color: #909399;
+  color: #8a98aa;
   cursor: grab;
   flex-shrink: 0;
+}
+
+.field-tree-node__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-tree-node__label,
+.field-tree-node__meta {
+  max-width: 132px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-tree-node__label {
+  color: #1f2d3d;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.field-tree-node__meta {
+  color: #8a98aa;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.field-tree-node__side {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
 }
 
 .field-tree-node__delete {
@@ -1199,10 +1509,149 @@ export default {
   color: #f56c6c;
 }
 
-.field-tree-node__main span {
+.visual-workspace {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
   overflow: hidden;
+}
+
+.workspace-panel {
+  padding: 14px;
+}
+
+.app-settings-panel {
+  flex: 0 0 auto;
+}
+
+.field-editor-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.compact-form :deep(.el-form-item),
+.field-config-form :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.compact-form :deep(.el-form-item__label),
+.field-config-form :deep(.el-form-item__label) {
+  margin-bottom: 4px;
+  color: #5d6f85;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.compact-form :deep(.el-select),
+.compact-form :deep(.el-input-number),
+.field-config-form :deep(.el-select),
+.field-config-form :deep(.el-input),
+.field-config-form :deep(.el-input-number) {
+  width: 100%;
+}
+
+.switch-matrix {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(92px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.switch-matrix--field {
+  grid-template-columns: repeat(4, minmax(112px, 1fr));
+  margin: 0 0 12px;
+}
+
+.switch-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #e6edf7;
+  border-radius: 8px;
+  background: #fbfdff;
+  color: #344563;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.settings-grid,
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-grid {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  margin-top: 12px;
+}
+
+.form-grid--3 {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.form-grid-span-2 {
+  grid-column: span 2;
+}
+
+.field-editor-head {
+  position: sticky;
+  top: -14px;
+  z-index: 1;
+  margin: -14px -14px 0;
+  padding: 14px;
+  border-bottom: 1px solid #e6edf7;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.field-editor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2d3d;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.field-editor-meta {
+  max-width: 260px;
+  overflow: hidden;
+  color: #6b7c93;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.field-config-form {
+  padding-top: 14px;
+}
+
+.config-section {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.config-section:first-child {
+  padding-top: 0;
+}
+
+.config-section:last-child {
+  border-bottom: 0;
+}
+
+.config-section-title {
+  margin-bottom: 10px;
+  color: #1f2d3d;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
 }
 
 .inline-control-row {
@@ -1216,24 +1665,87 @@ export default {
   width: 100%;
 }
 
-/* 选项项样式 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .option-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
   align-items: center;
-  margin-bottom: 10px;
-  flex-wrap: nowrap;
+  gap: 8px;
 }
 
-/* 添加选项按钮容器样式 */
-.add-option-container {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
+.empty-inline {
+  padding: 12px;
+  border: 1px dashed #d9e3f0;
+  border-radius: 8px;
+  background: #fbfdff;
+  color: #8a98aa;
+  font-size: 13px;
+  line-height: 20px;
 }
 
-/* 确保添加按钮与选项行对齐 */
-.add-option-container .el-button {
-  margin-left: 0;
+.no-selection {
+  display: flex;
+  height: 100%;
+  min-height: 280px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px dashed #d9e3f0;
+  border-radius: 8px;
+  background: #fbfdff;
+  text-align: center;
+}
+
+.no-selection-title {
+  color: #1f2d3d;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.no-selection-subtitle {
+  max-width: 360px;
+  margin-top: 8px;
+  color: #8a98aa;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+@media (max-width: 1180px) {
+  .visual-config-container {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .switch-matrix,
+  .switch-matrix--field,
+  .settings-grid,
+  .form-grid--3 {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .visual-config-container {
+    grid-template-columns: 1fr;
+  }
+
+  .field-sidebar {
+    max-height: 280px;
+  }
+
+  .settings-grid,
+  .form-grid--3,
+  .option-item {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid-span-2 {
+    grid-column: auto;
+  }
 }
 
 /* API文档容器 */
