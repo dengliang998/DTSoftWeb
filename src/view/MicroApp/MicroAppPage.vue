@@ -165,7 +165,7 @@
               <!-- 序号列 -->
               <el-table-column type="index" label="序号" width="80" fixed="left"></el-table-column>
               <!-- 渲染所有有效的字段 -->
-              <template v-for="field in appConfig.fields" :key="field.fieldName">
+              <template v-for="field in orderedFields" :key="field.fieldName">
                 <el-table-column
                   v-if="field?.showInList && field?.fieldName"
                   :prop="field.fieldName"
@@ -231,115 +231,124 @@
     </div>
 
     <!-- 新增/编辑数据对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="50%" :top="'20vh'" :close-on-click-modal="false">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      :width="getFormDialogWidth()"
+      :top="'20vh'"
+      :close-on-click-modal="false"
+    >
       <div class="dialog-form-container">
         <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
           <!-- 表单字段 -->
-          <el-form-item
-            v-for="(field, index) in appConfig.fields"
-            :key="index"
-            :label="field.label || field.fieldName || `字段${index}`"
-            :prop="field.fieldName"
-            :rules="getFieldRules(field)"
-          >
-            <!-- 根据字段类型渲染不同的表单控件 -->
-            <el-input
-              v-if="field.fieldType === 'string'"
-              v-model="formData[field.fieldName]"
-              :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-input>
+          <el-row :gutter="16">
+            <el-col v-for="(field, index) in orderedFields" :key="index" :span="getFormFieldSpan()">
+              <el-form-item
+                :label="field.label || field.fieldName || `字段${index}`"
+                :prop="field.fieldName"
+                :rules="getFieldRules(field)"
+              >
+                <!-- 根据字段类型渲染不同的表单控件 -->
+                <el-input
+                  v-if="field.fieldType === 'string'"
+                  v-model="formData[field.fieldName]"
+                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                ></el-input>
 
-            <el-input-number
-              v-else-if="field.fieldType === 'number'"
-              v-model="formData[field.fieldName]"
-              :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-input-number>
+                <el-input-number
+                  v-else-if="field.fieldType === 'number'"
+                  v-model="formData[field.fieldName]"
+                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                  style="width: 100%"
+                ></el-input-number>
 
-            <el-date-picker
-              v-else-if="field.fieldType === 'datetime'"
-              v-model="formData[field.fieldName]"
-              :type="getDatePickerType(field)"
-              :value-format="getDateValueFormat(field)"
-              :format="getDateDisplayFormat(field)"
-              :placeholder="'选择' + (field.label || field.fieldName || `字段${index}`)"
-              style="width: 100%"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-date-picker>
+                <el-date-picker
+                  v-else-if="field.fieldType === 'datetime'"
+                  v-model="formData[field.fieldName]"
+                  :type="getDatePickerType(field)"
+                  :value-format="getDateValueFormat(field)"
+                  :format="getDateDisplayFormat(field)"
+                  :placeholder="'选择' + (field.label || field.fieldName || `字段${index}`)"
+                  style="width: 100%"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                ></el-date-picker>
 
-            <el-switch
-              v-else-if="field.fieldType === 'boolean'"
-              v-model="formData[field.fieldName]"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-switch>
+                <el-switch
+                  v-else-if="field.fieldType === 'boolean'"
+                  v-model="formData[field.fieldName]"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                ></el-switch>
 
-            <el-input
-              v-else-if="field.fieldType === 'textarea'"
-              v-model="formData[field.fieldName]"
-              type="textarea"
-              :rows="4"
-              :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-input>
+                <el-input
+                  v-else-if="field.fieldType === 'textarea'"
+                  v-model="formData[field.fieldName]"
+                  type="textarea"
+                  :rows="4"
+                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                ></el-input>
 
-            <el-select
-              v-else-if="field.fieldType === 'select'"
-              v-model="formData[field.fieldName]"
-              :placeholder="'请选择' + (field.label || field.fieldName || `字段${index}`)"
-              style="width: 100%"
-              :disabled="dialogType === 'edit' && !field.editable"
-            >
-              <!-- 根据配置动态生成选项 -->
-              <el-option
-                v-for="option in field.options || []"
-                :key="option.value"
-                :label="option.label"
-                :value="option.value"
-              ></el-option>
-              <!-- 默认选项 -->
-              <el-option v-if="!(field.options && field.options.length)" label="选项1" value="1"></el-option>
-              <el-option v-if="!(field.options && field.options.length)" label="选项2" value="2"></el-option>
-            </el-select>
+                <el-select
+                  v-else-if="field.fieldType === 'select'"
+                  v-model="formData[field.fieldName]"
+                  :placeholder="'请选择' + (field.label || field.fieldName || `字段${index}`)"
+                  style="width: 100%"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                >
+                  <!-- 根据配置动态生成选项 -->
+                  <el-option
+                    v-for="option in field.options || []"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  ></el-option>
+                  <!-- 默认选项 -->
+                  <el-option v-if="!(field.options && field.options.length)" label="选项1" value="1"></el-option>
+                  <el-option v-if="!(field.options && field.options.length)" label="选项2" value="2"></el-option>
+                </el-select>
 
-            <!-- 单选框组 -->
-            <el-radio-group
-              v-else-if="field.fieldType === 'radio'"
-              v-model="formData[field.fieldName]"
-              :disabled="dialogType === 'edit' && !field.editable"
-            >
-              <!-- 根据配置动态生成单选选项 -->
-              <el-radio v-for="option in field.options || []" :key="option.value" :label="option.value">
-                {{ option.label }}
-              </el-radio>
-              <!-- 默认选项 -->
-              <el-radio v-if="!(field.options && field.options.length)" label="1">选项1</el-radio>
-              <el-radio v-if="!(field.options && field.options.length)" label="2">选项2</el-radio>
-            </el-radio-group>
+                <!-- 单选框组 -->
+                <el-radio-group
+                  v-else-if="field.fieldType === 'radio'"
+                  v-model="formData[field.fieldName]"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                >
+                  <!-- 根据配置动态生成单选选项 -->
+                  <el-radio v-for="option in field.options || []" :key="option.value" :label="option.value">
+                    {{ option.label }}
+                  </el-radio>
+                  <!-- 默认选项 -->
+                  <el-radio v-if="!(field.options && field.options.length)" label="1">选项1</el-radio>
+                  <el-radio v-if="!(field.options && field.options.length)" label="2">选项2</el-radio>
+                </el-radio-group>
 
-            <!-- 多选框组 -->
-            <el-checkbox-group
-              v-else-if="field.fieldType === 'checkbox'"
-              v-model="formData[field.fieldName]"
-              :disabled="dialogType === 'edit' && !field.editable"
-            >
-              <!-- 根据配置动态生成多选选项 -->
-              <el-checkbox v-for="option in field.options || []" :key="option.value" :label="option.value">
-                {{ option.label }}
-              </el-checkbox>
-              <!-- 默认选项 -->
-              <el-checkbox v-if="!(field.options && field.options.length)" label="1">选项1</el-checkbox>
-              <el-checkbox v-if="!(field.options && field.options.length)" label="2">选项2</el-checkbox>
-            </el-checkbox-group>
+                <!-- 多选框组 -->
+                <el-checkbox-group
+                  v-else-if="field.fieldType === 'checkbox'"
+                  v-model="formData[field.fieldName]"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                >
+                  <!-- 根据配置动态生成多选选项 -->
+                  <el-checkbox v-for="option in field.options || []" :key="option.value" :label="option.value">
+                    {{ option.label }}
+                  </el-checkbox>
+                  <!-- 默认选项 -->
+                  <el-checkbox v-if="!(field.options && field.options.length)" label="1">选项1</el-checkbox>
+                  <el-checkbox v-if="!(field.options && field.options.length)" label="2">选项2</el-checkbox>
+                </el-checkbox-group>
 
-            <!-- 其他字段类型默认显示为文本输入框 -->
-            <el-input
-              v-else
-              v-model="formData[field.fieldName]"
-              :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
-              :disabled="dialogType === 'edit' && !field.editable"
-            ></el-input>
-          </el-form-item>
+                <!-- 其他字段类型默认显示为文本输入框 -->
+                <el-input
+                  v-else
+                  v-model="formData[field.fieldName]"
+                  :placeholder="'请输入' + (field.label || field.fieldName || `字段${index}`)"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                ></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </el-form>
       </div>
       <template #footer>
@@ -464,9 +473,12 @@ export default {
     }
   },
   computed: {
-    queryableFields() {
+    orderedFields() {
       const fields = Array.isArray(this.appConfig?.fields) ? this.appConfig.fields : []
-      return fields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
+      return this.normalizeFieldOrder(fields)
+    },
+    queryableFields() {
+      return this.orderedFields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
     }
   },
   watch: {
@@ -510,6 +522,35 @@ export default {
           label: option.Label || option.label || '',
           value: option.Value || option.value || ''
         }))
+    },
+    normalizeFormColumns(formColumns) {
+      const value = Number(formColumns)
+      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+    },
+    getFormFieldSpan() {
+      return 24 / this.normalizeFormColumns(this.appConfig?.formColumns)
+    },
+    getFormDialogWidth() {
+      const widthMap = {
+        1: '50%',
+        2: '65%',
+        3: '80%',
+        4: '90%'
+      }
+      return widthMap[this.normalizeFormColumns(this.appConfig?.formColumns)]
+    },
+    normalizeFieldOrder(fields) {
+      return Array.isArray(fields)
+        ? [...fields]
+            .map((field, index) => ({
+              ...field,
+              sortOrder:
+                field.sortOrder !== undefined && field.sortOrder !== null && field.sortOrder !== ''
+                  ? Number(field.sortOrder)
+                  : index + 1
+            }))
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+        : []
     },
     // 初始化微应用
     async initApp() {
@@ -583,48 +624,57 @@ export default {
                     ? config.supportExport
                     : false,
               dataScope: config.DataScope || config.dataScope || 'all',
+              formColumns: this.normalizeFormColumns(config.FormColumns || config.formColumns),
               fields: Array.isArray(config.Fields)
-                ? config.Fields.filter((field) => field && typeof field === 'object').map((field) => ({
-                    label: field.Label || field.label || '',
-                    fieldName: field.FieldName || field.fieldName || '',
-                    fieldType: field.FieldType || field.fieldType || 'string',
-                    required:
-                      field.Required !== undefined
-                        ? field.Required
-                        : field.required !== undefined
-                          ? field.required
-                          : false,
-                    showInList:
-                      field.ShowInList !== undefined
-                        ? field.ShowInList
-                        : field.showInList !== undefined
-                          ? field.showInList
-                          : true,
-                    editable:
-                      field.Editable !== undefined
-                        ? field.Editable
-                        : field.editable !== undefined
-                          ? field.editable
-                          : true,
-                    validation: field.Validation || field.validation || '',
-                    columnWidth: field.ColumnWidth || field.columnWidth || null,
-                    sortable:
-                      field.Sortable !== undefined
-                        ? field.Sortable
-                        : field.sortable !== undefined
-                          ? field.sortable
-                          : false,
-                    fixed: field.Fixed || field.fixed || 'none',
-                    queryMode: field.QueryMode || field.queryMode || 'none',
-                    dateFormat: field.DateFormat || field.dateFormat || 'datetime',
-                    minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
-                    maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
-                    minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
-                    maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
-                    pattern: field.Pattern || field.pattern || '',
-                    defaultValue: field.DefaultValue || field.defaultValue || '',
-                    options: this.normalizeFieldOptions(field.Options || field.options || [])
-                  }))
+                ? this.normalizeFieldOrder(
+                    config.Fields.filter((field) => field && typeof field === 'object').map((field, index) => ({
+                      label: field.Label || field.label || '',
+                      fieldName: field.FieldName || field.fieldName || '',
+                      fieldType: field.FieldType || field.fieldType || 'string',
+                      sortOrder:
+                        field.SortOrder !== undefined && field.SortOrder !== null
+                          ? field.SortOrder
+                          : field.sortOrder !== undefined && field.sortOrder !== null
+                            ? field.sortOrder
+                            : index + 1,
+                      required:
+                        field.Required !== undefined
+                          ? field.Required
+                          : field.required !== undefined
+                            ? field.required
+                            : false,
+                      showInList:
+                        field.ShowInList !== undefined
+                          ? field.ShowInList
+                          : field.showInList !== undefined
+                            ? field.showInList
+                            : true,
+                      editable:
+                        field.Editable !== undefined
+                          ? field.Editable
+                          : field.editable !== undefined
+                            ? field.editable
+                            : true,
+                      validation: field.Validation || field.validation || '',
+                      columnWidth: field.ColumnWidth || field.columnWidth || null,
+                      sortable:
+                        field.Sortable !== undefined
+                          ? field.Sortable
+                          : field.sortable !== undefined
+                            ? field.sortable
+                            : false,
+                      fixed: field.Fixed || field.fixed || 'none',
+                      queryMode: field.QueryMode || field.queryMode || 'none',
+                      dateFormat: field.DateFormat || field.dateFormat || 'datetime',
+                      minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
+                      maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
+                      minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
+                      maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
+                      pattern: field.Pattern || field.pattern || '',
+                      defaultValue: field.DefaultValue || field.defaultValue || '',
+                      options: this.normalizeFieldOptions(field.Options || field.options || [])
+                    }))
+                  )
                 : []
             }
 
@@ -651,7 +701,7 @@ export default {
     initFormData() {
       this.formData = {}
       // 为每个字段设置默认值，确保fields是数组
-      const fields = Array.isArray(this.appConfig.fields) ? this.appConfig.fields : []
+      const fields = this.orderedFields
       fields.forEach((field) => {
         // 多选字段默认值应为数组
         if (field.fieldType === 'checkbox') {
@@ -824,7 +874,7 @@ export default {
       this.formData = { ...row }
 
       // 确保多选字段的值是数组类型
-      const fields = Array.isArray(this.appConfig.fields) ? this.appConfig.fields : []
+      const fields = this.orderedFields
       fields.forEach((field) => {
         if (field.fieldType === 'checkbox') {
           const fieldValue = this.formData[field.fieldName]
@@ -934,7 +984,7 @@ export default {
           delete submitData.updated_by
 
           // 处理多选字段，将数组转换为逗号分隔的字符串
-          const fields = Array.isArray(this.appConfig.fields) ? this.appConfig.fields : []
+          const fields = this.orderedFields
           fields.forEach((field) => {
             if (field.fieldType === 'checkbox') {
               const fieldValue = submitData[field.fieldName]

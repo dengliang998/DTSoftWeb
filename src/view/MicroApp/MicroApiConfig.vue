@@ -119,18 +119,21 @@
                 :expand-on-click-node="false"
                 :current-node-key="selectedFieldKey"
                 :default-expanded-keys="expandedKeys"
+                draggable
+                :allow-drop="allowFieldDrop"
+                @node-drop="handleFieldDrop"
                 @node-click="selectField"
               >
                 <template #default="{ data }">
-                  <span>{{ data.label }}</span>
-                  <el-button
-                    type="text"
-                    size="small"
-                    style="margin-left: 10px"
-                    @click.stop="deleteField(data.fieldName)"
-                  >
-                    删除
-                  </el-button>
+                  <div class="field-tree-node">
+                    <span class="field-tree-node__main">
+                      <el-icon class="field-tree-node__drag"><Rank /></el-icon>
+                      <span>{{ data.label }}</span>
+                    </span>
+                    <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
+                      删除
+                    </button>
+                  </div>
                 </template>
               </el-tree>
             </div>
@@ -315,6 +318,14 @@
                   <el-option label="部门数据" value="department"></el-option>
                 </el-select>
               </el-form-item>
+              <el-form-item label="表单列数">
+                <el-select v-model="MicroAppForm.FormColumns" placeholder="请选择每行列数">
+                  <el-option label="1 列" :value="1"></el-option>
+                  <el-option label="2 列" :value="2"></el-option>
+                  <el-option label="3 列" :value="3"></el-option>
+                  <el-option label="4 列" :value="4"></el-option>
+                </el-select>
+              </el-form-item>
             </el-form>
           </el-card>
         </div>
@@ -421,6 +432,7 @@ export default {
         SupportImport: false,
         SupportExport: false,
         DataScope: 'all',
+        FormColumns: 1,
         Fields: []
       },
       // 表单验证规则
@@ -474,6 +486,23 @@ export default {
           value: option.Value || option.value || ''
         }))
     },
+    normalizeFormColumns(formColumns) {
+      const value = Number(formColumns)
+      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+    },
+    normalizeFieldOrder(fields) {
+      return Array.isArray(fields)
+        ? [...fields]
+            .map((field, index) => ({
+              ...field,
+              sortOrder:
+                field.sortOrder !== undefined && field.sortOrder !== null && field.sortOrder !== ''
+                  ? Number(field.sortOrder)
+                  : index + 1
+            }))
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+        : []
+    },
     normalizeFields(fields) {
       let normalized = fields || []
 
@@ -489,28 +518,43 @@ export default {
         return []
       }
 
-      return normalized.map((field) => ({
-        label: field.Label || field.label || '',
-        fieldName: field.FieldName || field.fieldName || '',
-        fieldType: field.FieldType || field.fieldType || 'string',
-        required: field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
-        showInList:
-          field.ShowInList !== undefined ? field.ShowInList : field.showInList !== undefined ? field.showInList : true,
-        editable: field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
-        validation: field.Validation || field.validation || '',
-        columnWidth: field.ColumnWidth || field.columnWidth || null,
-        sortable: field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
-        fixed: field.Fixed || field.fixed || 'none',
-        queryMode: field.QueryMode || field.queryMode || 'none',
-        dateFormat: field.DateFormat || field.dateFormat || 'datetime',
-        minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
-        maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
-        minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
-        maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
-        pattern: field.Pattern || field.pattern || '',
-        defaultValue: field.DefaultValue || field.defaultValue || '',
-        options: this.normalizeFieldOptions(field.Options || field.options || [])
-      }))
+      return this.normalizeFieldOrder(
+        normalized.map((field, index) => ({
+          label: field.Label || field.label || '',
+          fieldName: field.FieldName || field.fieldName || '',
+          fieldType: field.FieldType || field.fieldType || 'string',
+          sortOrder:
+            field.SortOrder !== undefined && field.SortOrder !== null
+              ? field.SortOrder
+              : field.sortOrder !== undefined && field.sortOrder !== null
+                ? field.sortOrder
+                : index + 1,
+          required:
+            field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
+          showInList:
+            field.ShowInList !== undefined
+              ? field.ShowInList
+              : field.showInList !== undefined
+                ? field.showInList
+                : true,
+          editable:
+            field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
+          validation: field.Validation || field.validation || '',
+          columnWidth: field.ColumnWidth || field.columnWidth || null,
+          sortable:
+            field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
+          fixed: field.Fixed || field.fixed || 'none',
+          queryMode: field.QueryMode || field.queryMode || 'none',
+          dateFormat: field.DateFormat || field.dateFormat || 'datetime',
+          minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
+          maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
+          minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
+          maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
+          pattern: field.Pattern || field.pattern || '',
+          defaultValue: field.DefaultValue || field.defaultValue || '',
+          options: this.normalizeFieldOptions(field.Options || field.options || [])
+        }))
+      )
     },
     // 获取微应用配置列表
     async getMicroApps() {
@@ -530,6 +574,7 @@ export default {
             ...item,
             MicroAppPath: item.MicroAppPath || item.ApiPrefix || item.ModelName || '',
             DataScope: item.DataScope || item.dataScope || 'all',
+            FormColumns: this.normalizeFormColumns(item.FormColumns || item.formColumns),
             configDesc: item.ConfigDesc || item.configDesc || ''
           }))
           this.total = res.total
@@ -567,6 +612,7 @@ export default {
         SupportImport: false,
         SupportExport: false,
         DataScope: 'all',
+        FormColumns: 1,
         Fields: []
       }
       this.dialogVisible = true
@@ -578,6 +624,7 @@ export default {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
+        FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         configDesc: row.ConfigDesc || row.configDesc || ''
       }
       this.dialogVisible = true
@@ -614,7 +661,8 @@ export default {
           const submitData = {
             ...this.MicroAppForm,
             ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc || '',
-            MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName
+            MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName,
+            FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns)
           }
           let res
           if (this.MicroAppForm.ItemId) {
@@ -648,6 +696,7 @@ export default {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
+        FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
@@ -676,6 +725,7 @@ export default {
         fixed: 'none',
         queryMode: 'none',
         dateFormat: 'datetime',
+        sortOrder: this.MicroAppForm.Fields.length + 1,
         minLength: null,
         maxLength: null,
         minValue: null,
@@ -713,6 +763,23 @@ export default {
       this.selectedFieldKey = data.fieldName
       this.selectedFieldData = data
     },
+    allowFieldDrop(draggingNode, dropNode, type) {
+      return type !== 'inner'
+    },
+    refreshFieldSortOrder() {
+      this.MicroAppForm.Fields = this.MicroAppForm.Fields.map((field, index) => ({
+        ...field,
+        sortOrder: index + 1
+      }))
+
+      if (this.selectedFieldKey) {
+        this.selectedFieldData =
+          this.MicroAppForm.Fields.find((field) => field.fieldName === this.selectedFieldKey) || null
+      }
+    },
+    handleFieldDrop() {
+      this.refreshFieldSortOrder()
+    },
     // 处理字段类型变化
     handleFieldTypeChange() {
       // 使用setTimeout避免ResizeObserver循环
@@ -742,6 +809,7 @@ export default {
           this.selectedFieldKey = ''
           this.selectedFieldData = null
         }
+        this.refreshFieldSortOrder()
       }
     },
     // 保存可视化配置
@@ -755,10 +823,12 @@ export default {
           MicroAppPath: this.MicroAppForm.MicroAppPath,
           ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc,
           DataScope: this.MicroAppForm.DataScope || 'all',
-          Fields: this.MicroAppForm.Fields.map((field) => ({
+          FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
+          Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => ({
             Label: field.label,
             FieldName: field.fieldName,
             FieldType: field.fieldType,
+            SortOrder: field.sortOrder,
             Required: field.required,
             ShowInList: field.showInList,
             Editable: field.editable,
@@ -806,6 +876,7 @@ export default {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
         DataScope: row.DataScope || row.dataScope || 'all',
+        FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields
       }
@@ -1039,6 +1110,62 @@ export default {
 /* 字段列表 */
 .field-list {
   padding: 10px 0;
+}
+
+.field-list :deep(.el-tree-node__content) {
+  height: 40px;
+  margin: 2px 0;
+  border-radius: 8px;
+  padding-right: 10px;
+}
+
+.field-list :deep(.el-tree-node__content:hover),
+.field-list :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background-color: #eef4ff;
+}
+
+.field-tree-node {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.field-tree-node__main {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+
+.field-tree-node__drag {
+  color: #909399;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.field-tree-node__delete {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f56c6c;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.field-tree-node__delete:hover,
+.field-tree-node__delete:focus {
+  color: #f56c6c;
+}
+
+.field-tree-node__main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inline-control-row {
