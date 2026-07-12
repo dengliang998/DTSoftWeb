@@ -26,3 +26,5 @@ export const previewOfficeFile = (fileId) => {
 }
 
 export const getFileDownloadUrl = (fileId) => `/api/File/Download?FileID=${encodeURIComponent(fileId)}`
+
+export const getFileUploadUrl = () => '/api/File/Save'

@@ -253,6 +253,7 @@
                         <el-option label="下拉选择" value="select"></el-option>
                         <el-option label="单选" value="radio"></el-option>
                         <el-option label="多选" value="checkbox"></el-option>
+                        <el-option label="附件上传" value="attachment"></el-option>
                       </el-select>
                     </el-form-item>
                   </div>
@@ -275,7 +276,10 @@
                     </label>
                     <label class="switch-tile">
                       <span>支持排序</span>
-                      <el-switch v-model="selectedFieldData.sortable"></el-switch>
+                      <el-switch
+                        v-model="selectedFieldData.sortable"
+                        :disabled="isAttachmentField(selectedFieldData)"
+                      ></el-switch>
                     </label>
                   </div>
                   <div class="form-grid form-grid--3">
@@ -295,7 +299,7 @@
                         <el-option label="固定在右侧" value="right"></el-option>
                       </el-select>
                     </el-form-item>
-                    <el-form-item label="默认值">
+                    <el-form-item v-if="!isAttachmentField(selectedFieldData)" label="默认值">
                       <el-input v-model="selectedFieldData.defaultValue" placeholder="请输入字段默认值"></el-input>
                     </el-form-item>
                   </div>
@@ -523,6 +527,9 @@ export default {
     isDateField(field) {
       return field?.fieldType === 'datetime'
     },
+    isAttachmentField(field) {
+      return field?.fieldType === 'attachment'
+    },
     supportsOptions(field) {
       return ['select', 'radio', 'checkbox'].includes(field?.fieldType)
     },
@@ -547,7 +554,8 @@ export default {
         textarea: '文本域',
         select: '下拉',
         radio: '单选',
-        checkbox: '多选'
+        checkbox: '多选',
+        attachment: '附件'
       }
 
       return typeMap[fieldType] || '字段'
@@ -561,7 +569,8 @@ export default {
         boolean: 'info',
         select: '',
         radio: '',
-        checkbox: ''
+        checkbox: '',
+        attachment: 'info'
       }
 
       return tagMap[fieldType] || ''
@@ -599,6 +608,11 @@ export default {
 
       if (!this.isDateField(field)) {
         field.dateFormat = 'datetime'
+      }
+
+      if (this.isAttachmentField(field)) {
+        field.defaultValue = ''
+        field.sortable = false
       }
 
       if (!this.supportsOptions(field)) {
@@ -991,29 +1005,32 @@ export default {
           DataScope: this.MicroAppForm.DataScope || 'all',
           FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
           QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
-          Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => ({
-            Label: field.label,
-            FieldName: field.fieldName,
-            FieldType: field.fieldType,
-            SortOrder: field.sortOrder,
-            Required: field.required,
-            ShowInList: field.showInList,
-            Editable: field.editable,
-            Validation: field.validation,
-            ColumnWidth: field.columnWidth,
-            Sortable: field.sortable,
-            Fixed: field.fixed || 'none',
-            QueryMode: field.queryMode || 'none',
-            QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,
-            DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
-            MinLength: field.minLength,
-            MaxLength: field.maxLength,
-            MinValue: field.minValue,
-            MaxValue: field.maxValue,
-            Pattern: field.pattern,
-            DefaultValue: field.defaultValue,
-            Options: this.normalizeFieldOptions(field.options)
-          }))
+          Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => {
+            this.normalizeFieldByType(field)
+            return {
+              Label: field.label,
+              FieldName: field.fieldName,
+              FieldType: field.fieldType,
+              SortOrder: field.sortOrder,
+              Required: field.required,
+              ShowInList: field.showInList,
+              Editable: field.editable,
+              Validation: field.validation,
+              ColumnWidth: field.columnWidth,
+              Sortable: field.sortable,
+              Fixed: field.fixed || 'none',
+              QueryMode: field.queryMode || 'none',
+              QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,
+              DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
+              MinLength: field.minLength,
+              MaxLength: field.maxLength,
+              MinValue: field.minValue,
+              MaxValue: field.maxValue,
+              Pattern: field.pattern,
+              DefaultValue: field.defaultValue,
+              Options: this.normalizeFieldOptions(field.options)
+            }
+          })
         }
 
         console.log('提交的数据:', submitData)

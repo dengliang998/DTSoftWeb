@@ -76,6 +76,50 @@
                   {{ opt.label }}
                 </el-checkbox>
               </el-checkbox-group>
+              <div v-else-if="field.fieldType === 'attachment'" class="attachment-field">
+                <el-upload
+                  class="attachment-upload"
+                  :action="uploadActionUrl"
+                  name="Files"
+                  multiple
+                  :headers="uploadHeaders"
+                  :show-file-list="false"
+                  :disabled="dialogType === 'edit' && !field.editable"
+                  :on-success="(response, file) => handleAttachmentUploadSuccess(response, file, field)"
+                  :on-error="handleAttachmentUploadError"
+                >
+                  <el-button
+                    type="primary"
+                    size="small"
+                    icon="Upload"
+                    :disabled="dialogType === 'edit' && !field.editable"
+                  >
+                    上传附件
+                  </el-button>
+                </el-upload>
+                <div v-if="getAttachmentList(field).length > 0" class="attachment-list">
+                  <div
+                    v-for="(attachment, attachmentIndex) in getAttachmentList(field)"
+                    :key="getAttachmentKey(attachment, attachmentIndex)"
+                    class="attachment-item"
+                  >
+                    <span class="attachment-name" :title="getAttachmentName(attachment)">
+                      {{ getAttachmentName(attachment) }}
+                    </span>
+                    <el-button
+                      v-if="!(dialogType === 'edit' && !field.editable)"
+                      class="attachment-remove-button"
+                      text
+                      type="danger"
+                      size="small"
+                      icon="Delete"
+                      title="移除附件"
+                      @click="removeAttachment(field, attachmentIndex)"
+                    ></el-button>
+                  </div>
+                </div>
+                <div v-else class="attachment-empty">暂无附件</div>
+              </div>
               <el-input
                 v-else
                 v-model="formData[field.fieldName]"
@@ -96,6 +140,7 @@
 </template>
 
 <script>
+import { getFileDownloadUrl, getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
 
 export default {
@@ -112,6 +157,12 @@ export default {
     formFieldSpan: { type: Number, default: 24 }
   },
   emits: ['update:modelValue', 'success'],
+  data() {
+    return {
+      uploadActionUrl: getFileUploadUrl(),
+      uploadHeaders: getUploadHeaders()
+    }
+  },
   computed: {
     dialogVisible: {
       get() {
@@ -125,6 +176,21 @@ export default {
   methods: {
     getFieldRules(field) {
       const rules = []
+      if (field.fieldType === 'attachment') {
+        if (field.required) {
+          rules.push({
+            validator: (rule, value, callback) => {
+              if (this.normalizeAttachmentValue(value).length === 0) {
+                callback(new Error(`${field.label || field.fieldName}不能为空`))
+                return
+              }
+              callback()
+            },
+            trigger: 'change'
+          })
+        }
+        return rules
+      }
       if (field.required) {
         rules.push({ required: true, message: `${field.label || field.fieldName}不能为空`, trigger: 'blur' })
       }
@@ -157,6 +223,84 @@ export default {
       }
       return rules
     },
+    normalizeAttachmentValue(value) {
+      let normalized = value
+      if (!normalized) return []
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          return []
+        }
+      }
+      if (!Array.isArray(normalized)) {
+        return []
+      }
+      return normalized.filter((item) => item && typeof item === 'object')
+    },
+    getAttachmentList(field) {
+      return this.normalizeAttachmentValue(this.formData[field.fieldName])
+    },
+    getAttachmentKey(attachment, index) {
+      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || index
+    },
+    getAttachmentFileId(attachment) {
+      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || ''
+    },
+    getAttachmentName(attachment) {
+      return (
+        attachment.FileName ||
+        attachment.fileName ||
+        attachment.name ||
+        this.getAttachmentFileId(attachment) ||
+        '未命名附件'
+      )
+    },
+    normalizeUploadedAttachment(item, file) {
+      return {
+        FileID: item.FileID || item.fileId || item.FileId || '',
+        FileName: item.FileName || item.fileName || file?.name || '未命名附件',
+        Ext: item.Ext || item.ext || '',
+        Size: item.Size || item.size || file?.size || 0
+      }
+    },
+    handleAttachmentUploadSuccess(response, file, field) {
+      if (!response?.success) {
+        this.$message.error(response?.Msg || response?.message || '附件上传失败')
+        return
+      }
+
+      const uploaded = Array.isArray(response.data) ? response.data : []
+      const items = uploaded.map((item) => this.normalizeUploadedAttachment(item, file)).filter((item) => item.FileID)
+      if (items.length === 0) {
+        this.$message.error('附件上传失败：未返回文件编号')
+        return
+      }
+
+      const current = this.getAttachmentList(field)
+      // eslint-disable-next-line vue/no-mutating-props
+      this.formData[field.fieldName] = current.concat(items)
+      this.$refs.formRef?.validateField(field.fieldName)
+      this.$message.success('附件上传成功')
+    },
+    handleAttachmentUploadError() {
+      this.$message.error('附件上传失败')
+    },
+    removeAttachment(field, index) {
+      const current = this.getAttachmentList(field)
+      current.splice(index, 1)
+      // eslint-disable-next-line vue/no-mutating-props
+      this.formData[field.fieldName] = current
+      this.$refs.formRef?.validateField(field.fieldName)
+    },
+    downloadAttachment(attachment) {
+      const fileId = this.getAttachmentFileId(attachment)
+      if (!fileId) {
+        this.$message.warning('无法获取文件编号')
+        return
+      }
+      window.location.href = getFileDownloadUrl(fileId)
+    },
     getDateFormatType(field) {
       return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
     },
@@ -187,6 +331,12 @@ export default {
           delete submitData.updated_time
 
           let res
+          this.orderedFields.forEach((field) => {
+            if (field.fieldType === 'attachment') {
+              submitData[field.fieldName] = JSON.stringify(this.normalizeAttachmentValue(submitData[field.fieldName]))
+            }
+          })
+
           if (this.dialogType === 'create') {
             res = await createMicroRuntimeData({ modelName: this.appConfig.modelName, data: submitData })
           } else {
@@ -229,5 +379,60 @@ export default {
 .dialog-form-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
+}
+
+.attachment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachment-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e6edf7;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.attachment-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #344563;
+  font-size: 13px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-remove-button {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #e5484d !important;
+}
+
+.attachment-remove-button:hover,
+.attachment-remove-button:focus {
+  background: #feecec !important;
+  color: #c73338 !important;
+}
+
+.attachment-empty {
+  color: #8a98aa;
+  font-size: 13px;
+  line-height: 20px;
 }
 </style>

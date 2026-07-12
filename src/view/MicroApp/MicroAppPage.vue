@@ -154,7 +154,37 @@
                   :sortable="field.sortable ? 'custom' : false"
                 >
                   <template #default="scope">
-                    {{ formatFieldValue(scope.row[field.fieldName], field) }}
+                    <div v-if="field.fieldType === 'attachment'" class="attachment-cell">
+                      <template v-if="getAttachmentList(scope.row[field.fieldName]).length > 0">
+                        <div
+                          v-for="(attachment, attachmentIndex) in getAttachmentList(scope.row[field.fieldName])"
+                          :key="getAttachmentKey(attachment, attachmentIndex)"
+                          class="attachment-cell-item"
+                        >
+                          <span class="attachment-type-badge">{{ getAttachmentExtLabel(attachment) }}</span>
+                          <button
+                            class="attachment-download-link"
+                            type="button"
+                            :title="getAttachmentName(attachment)"
+                            @click="downloadAttachment(attachment)"
+                          >
+                            {{ getAttachmentName(attachment) }}
+                          </button>
+                          <button
+                            v-if="isPreviewableAttachment(attachment)"
+                            class="attachment-preview-link"
+                            type="button"
+                            @click="previewAttachment(attachment)"
+                          >
+                            预览
+                          </button>
+                        </div>
+                      </template>
+                      <span v-else class="attachment-empty-cell">-</span>
+                    </div>
+                    <template v-else>
+                      {{ formatFieldValue(scope.row[field.fieldName], field) }}
+                    </template>
                   </template>
                 </el-table-column>
               </template>
@@ -225,10 +255,18 @@
 
     <!-- 导入对话框 -->
     <MicroAppImportDialog v-model="importDialogVisible" :app-config="appConfig" @success="onImportDialogSuccess" />
+    <VideoPreviewDialog v-model="attachmentVideoPreviewVisible" :video-url="attachmentVideoUrl" />
+    <el-image-viewer
+      v-if="attachmentImagePreviewVisible"
+      :url-list="attachmentImageUrlList"
+      @close="attachmentImagePreviewVisible = false"
+    ></el-image-viewer>
   </div>
 </template>
 
 <script>
+import { ElImageViewer } from 'element-plus'
+import { getFileDownloadUrl } from '@/api/file'
 import {
   batchDeleteMicroRuntimeData,
   createMicroRuntimeData,
@@ -241,11 +279,14 @@ import {
 } from '@/api/microApp'
 import MicroAppFormDialog from './components/MicroAppFormDialog.vue'
 import MicroAppImportDialog from './components/MicroAppImportDialog.vue'
+import VideoPreviewDialog from '../attachment/components/VideoPreviewDialog.vue'
 export default {
   name: 'MicroAppPage',
   components: {
+    ElImageViewer,
     MicroAppFormDialog,
-    MicroAppImportDialog
+    MicroAppImportDialog,
+    VideoPreviewDialog
   },
   data() {
     return {
@@ -288,7 +329,11 @@ export default {
       // 导入文件列表
       importFileList: [],
       // 导入加载状态
-      importLoading: false
+      importLoading: false,
+      attachmentImagePreviewVisible: false,
+      attachmentImageUrlList: [],
+      attachmentVideoPreviewVisible: false,
+      attachmentVideoUrl: ''
     }
   },
   computed: {
@@ -570,6 +615,8 @@ export default {
               ? field.defaultValue
               : []
             : []
+        } else if (field.fieldType === 'attachment') {
+          this.formData[field.fieldName] = this.normalizeAttachmentValue(field.defaultValue)
         } else {
           this.formData[field.fieldName] = field.defaultValue || ''
         }
@@ -750,6 +797,8 @@ export default {
             // 如果值为空，设置为空数组
             this.formData[field.fieldName] = []
           }
+        } else if (field.fieldType === 'attachment') {
+          this.formData[field.fieldName] = this.normalizeAttachmentValue(this.formData[field.fieldName])
         }
       })
 
@@ -991,6 +1040,11 @@ export default {
       if (value === null || value === undefined || value === '') {
         return ''
       }
+      if (field?.fieldType === 'attachment') {
+        return this.normalizeAttachmentValue(value)
+          .map((attachment) => this.getAttachmentName(attachment))
+          .join('、')
+      }
       if (field?.fieldType !== 'datetime') {
         return Array.isArray(value) ? value.join(',') : value
       }
@@ -1018,6 +1072,93 @@ export default {
         default:
           return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
       }
+    },
+    normalizeAttachmentValue(value) {
+      let normalized = value
+      if (!normalized) return []
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          return []
+        }
+      }
+      if (!Array.isArray(normalized)) {
+        return normalized && typeof normalized === 'object' ? [normalized] : []
+      }
+      return normalized.filter((item) => item && typeof item === 'object')
+    },
+    getAttachmentList(value) {
+      return this.normalizeAttachmentValue(value)
+    },
+    getAttachmentKey(attachment, index) {
+      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || index
+    },
+    getAttachmentFileId(attachment) {
+      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || ''
+    },
+    getAttachmentName(attachment) {
+      return (
+        attachment.FileName ||
+        attachment.fileName ||
+        attachment.name ||
+        this.getAttachmentFileId(attachment) ||
+        '未命名附件'
+      )
+    },
+    getAttachmentExt(attachment) {
+      const ext = attachment.Ext || attachment.ext || ''
+      if (ext) return String(ext).toLowerCase()
+
+      const name = this.getAttachmentName(attachment)
+      const dotIndex = name.lastIndexOf('.')
+      return dotIndex > -1 ? name.slice(dotIndex).toLowerCase() : ''
+    },
+    getAttachmentExtLabel(attachment) {
+      const ext = this.getAttachmentExt(attachment).replace(/^\./, '')
+      return ext ? ext.toUpperCase() : 'FILE'
+    },
+    isImageAttachment(attachment) {
+      return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].includes(this.getAttachmentExt(attachment))
+    },
+    isVideoAttachment(attachment) {
+      return ['.mp4', '.mov', '.webm', '.ogg'].includes(this.getAttachmentExt(attachment))
+    },
+    isPreviewableAttachment(attachment) {
+      return this.isImageAttachment(attachment) || this.isVideoAttachment(attachment)
+    },
+    getAttachmentUrl(attachment) {
+      const fileId = this.getAttachmentFileId(attachment)
+      return fileId ? getFileDownloadUrl(fileId) : ''
+    },
+    previewAttachment(attachment) {
+      const url = this.getAttachmentUrl(attachment)
+      if (!url) {
+        this.$message.warning('无法获取文件编号')
+        return
+      }
+
+      if (this.isImageAttachment(attachment)) {
+        this.attachmentImageUrlList = [url]
+        this.attachmentImagePreviewVisible = true
+        return
+      }
+
+      if (this.isVideoAttachment(attachment)) {
+        this.attachmentVideoUrl = url
+        this.attachmentVideoPreviewVisible = true
+        return
+      }
+
+      this.downloadAttachment(attachment)
+    },
+    downloadAttachment(attachment) {
+      const url = this.getAttachmentUrl(attachment)
+      if (!url) {
+        this.$message.warning('无法获取文件编号')
+        return
+      }
+      window.location.href = url
     },
     // 导出Excel数据
     async exportData() {
@@ -1240,6 +1381,82 @@ export default {
   align-items: center;
   flex-wrap: nowrap;
   gap: 5px;
+}
+
+.attachment-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
+.attachment-cell-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 4px 8px 4px 6px;
+  border: 1px solid #e3e9f4;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.attachment-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eef4ff;
+  color: #3156a6;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-download-link,
+.attachment-preview-link {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1f2d3d;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+}
+
+.attachment-download-link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-download-link:hover,
+.attachment-download-link:focus,
+.attachment-preview-link:hover,
+.attachment-preview-link:focus {
+  color: #2f6bff;
+  text-decoration: underline;
+}
+
+.attachment-preview-link {
+  flex-shrink: 0;
+  color: #2f6bff;
+  font-weight: 600;
+}
+
+.attachment-empty-cell {
+  color: #8a98aa;
 }
 
 /* 表格样式优化 */
