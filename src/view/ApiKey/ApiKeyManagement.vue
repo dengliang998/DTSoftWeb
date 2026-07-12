@@ -72,7 +72,7 @@
     <ApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
 
     <!-- 修改密钥对话框 -->
-    <ApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyListData" />
+    <ApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyList" />
 
     <!-- 显示SecretKey对话框 -->
     <ApiKeySecretDialog v-model="secretKeyDialogVisible" :data="secretKeyData" />

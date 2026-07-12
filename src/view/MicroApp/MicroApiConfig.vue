@@ -583,18 +583,13 @@ export default {
     },
     getFieldTypeTagType(fieldType) {
       const tagMap = {
-        string: '',
-        textarea: '',
         number: 'success',
         datetime: 'warning',
         boolean: 'info',
-        select: '',
-        radio: '',
-        checkbox: '',
         attachment: 'info'
       }
 
-      return tagMap[fieldType] || ''
+      return tagMap[fieldType]
     },
     getQueryModeOptions(field) {
       const options = [{ label: '不参与查询', value: 'none' }]

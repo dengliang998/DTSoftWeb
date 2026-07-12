@@ -274,7 +274,6 @@ import {
   exportMicroRuntimeData,
   getMicroAppConfigs,
   getMicroRuntimeList,
-  importMicroRuntimeData,
   updateMicroRuntimeData
 } from '@/api/microApp'
 import MicroAppFormDialog from './components/MicroAppFormDialog.vue'
@@ -420,6 +419,14 @@ export default {
     normalizeQueryWidth(queryWidth) {
       const value = Number(queryWidth)
       return Number.isInteger(value) && value >= 100 && value <= 600 ? value : 150
+    },
+    normalizeNumberFormValue(value) {
+      if (value === '' || value === null || value === undefined) {
+        return null
+      }
+
+      const numericValue = Number(value)
+      return Number.isFinite(numericValue) ? numericValue : null
     },
     getQueryControlStyle(field) {
       const width = this.normalizeQueryWidth(field?.queryWidth)
@@ -617,6 +624,8 @@ export default {
             : []
         } else if (field.fieldType === 'attachment') {
           this.formData[field.fieldName] = this.normalizeAttachmentValue(field.defaultValue)
+        } else if (field.fieldType === 'number') {
+          this.formData[field.fieldName] = this.normalizeNumberFormValue(field.defaultValue)
         } else {
           this.formData[field.fieldName] = field.defaultValue || ''
         }
@@ -799,6 +808,8 @@ export default {
           }
         } else if (field.fieldType === 'attachment') {
           this.formData[field.fieldName] = this.normalizeAttachmentValue(this.formData[field.fieldName])
+        } else if (field.fieldType === 'number') {
+          this.formData[field.fieldName] = this.normalizeNumberFormValue(this.formData[field.fieldName])
         }
       })
 
