@@ -385,7 +385,17 @@
                       <div v-for="(option, index) in selectedFieldData.options" :key="index" class="option-item">
                         <el-input v-model="option.label" placeholder="选项标签"></el-input>
                         <el-input v-model="option.value" placeholder="选项值"></el-input>
-                        <el-button text type="danger" icon="Delete" @click="deleteOption(index)">删除</el-button>
+                        <el-tooltip content="删除选项" placement="top">
+                          <el-button
+                            class="option-delete-button"
+                            type="danger"
+                            size="small"
+                            icon="Delete"
+                            @click="deleteOption(index)"
+                          >
+                            删除
+                          </el-button>
+                        </el-tooltip>
                       </div>
                     </div>
                     <div v-else class="empty-inline">还没有选项，添加后可用于下拉、单选或多选。</div>
@@ -1624,6 +1634,29 @@ export default {
   gap: 8px;
 }
 
+.option-delete-button {
+  width: 72px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: #e5484d !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+}
+
+.option-delete-button:hover,
+.option-delete-button:focus {
+  background: #c73338 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.option-delete-button :deep(.el-icon),
+.option-delete-button :deep(span) {
+  color: #ffffff !important;
+}
+
 .empty-inline {
   padding: 12px;
   border: 1px dashed #d9e3f0;
@@ -1687,6 +1720,10 @@ export default {
   .form-grid--3,
   .option-item {
     grid-template-columns: 1fr;
+  }
+
+  .option-delete-button {
+    justify-self: end;
   }
 
   .form-grid-span-2 {
