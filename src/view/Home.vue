@@ -155,7 +155,7 @@
 
 <script>
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
-import ModifyPwdDialog from './components/ModifyPwdDialog.vue'
+import ModifyPwdDialog from '@/components/ModifyPwdDialog.vue'
 import { getMenu } from '@/api/menu'
 import { getUserAccount } from '@/core/session'
 import {
