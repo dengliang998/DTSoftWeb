@@ -344,6 +344,21 @@
                   </div>
                 </div>
 
+                <div v-if="supportsColumnLength(selectedFieldData)" class="config-section">
+                  <div class="config-section-title">数据库长度</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="字段长度">
+                      <el-input-number
+                        v-model="selectedFieldData.columnLength"
+                        :min="1"
+                        :max="2000"
+                        :step="10"
+                        :placeholder="getDefaultColumnLength(selectedFieldData)"
+                      ></el-input-number>
+                    </el-form-item>
+                  </div>
+                </div>
+
                 <div v-if="hasValidationConfig(selectedFieldData)" class="config-section">
                   <div class="config-section-title">校验规则</div>
                   <div class="form-grid form-grid--3">
@@ -533,6 +548,12 @@ export default {
     supportsOptions(field) {
       return ['select', 'radio', 'checkbox'].includes(field?.fieldType)
     },
+    supportsColumnLength(field) {
+      return ['string', 'select', 'radio', 'checkbox'].includes(field?.fieldType)
+    },
+    getDefaultColumnLength(field) {
+      return field?.fieldType === 'select' ? 200 : 500
+    },
     supportsLengthRule(field) {
       return this.isTextField(field)
     },
@@ -615,6 +636,14 @@ export default {
         field.sortable = false
       }
 
+      if (this.supportsColumnLength(field)) {
+        const defaultLength = this.getDefaultColumnLength(field)
+        const parsedLength = Number(field.columnLength)
+        field.columnLength = Number.isInteger(parsedLength) && parsedLength > 0 ? parsedLength : defaultLength
+      } else {
+        field.columnLength = null
+      }
+
       if (!this.supportsOptions(field)) {
         field.options = []
       }
@@ -691,7 +720,7 @@ export default {
         return []
       }
 
-      return this.normalizeFieldOrder(
+      const normalizedFields = this.normalizeFieldOrder(
         normalized.map((field, index) => ({
           label: field.Label || field.label || '',
           fieldName: field.FieldName || field.fieldName || '',
@@ -714,6 +743,12 @@ export default {
             field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
           validation: field.Validation || field.validation || '',
           columnWidth: field.ColumnWidth || field.columnWidth || null,
+          columnLength:
+            field.ColumnLength !== undefined
+              ? field.ColumnLength
+              : field.columnLength !== undefined
+                ? field.columnLength
+                : null,
           sortable:
             field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
           fixed: field.Fixed || field.fixed || 'none',
@@ -734,6 +769,9 @@ export default {
           options: this.normalizeFieldOptions(field.Options || field.options || [])
         }))
       )
+
+      normalizedFields.forEach((field) => this.normalizeFieldByType(field))
+      return normalizedFields
     },
     // 获取微应用配置列表
     async getMicroApps() {
@@ -917,6 +955,7 @@ export default {
         maxValue: null,
         pattern: '',
         defaultValue: '',
+        columnLength: 500,
         options: []
       }
       this.MicroAppForm.Fields.push(newField)
@@ -1017,6 +1056,7 @@ export default {
               Editable: field.editable,
               Validation: field.validation,
               ColumnWidth: field.columnWidth,
+              ColumnLength: field.columnLength,
               Sortable: field.sortable,
               Fixed: field.fixed || 'none',
               QueryMode: field.queryMode || 'none',
