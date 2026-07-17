@@ -24,13 +24,25 @@
 
         <div v-loading="typeLoading" class="type-list">
           <button
-            v-for="type in dictionaryTypes"
+            v-for="(type, index) in dictionaryTypes"
             :key="type.ItemId"
             type="button"
             class="type-item"
-            :class="{ active: selectedType && selectedType.ItemId === type.ItemId }"
-            @click="selectType(type)"
+            :class="{
+              active: selectedType && selectedType.ItemId === type.ItemId,
+              dragging: typeDraggingId === type.ItemId,
+              'drag-over': typeDragOverIndex === index
+            }"
+            draggable="true"
+            @click="handleTypeClick(type)"
+            @dragstart="onTypeDragStart($event, index)"
+            @dragover="onTypeDragOver($event, index)"
+            @drop="onTypeDrop(index)"
+            @dragend="onTypeDragEnd"
           >
+            <span class="type-drag-handle" title="拖拽排序" @click.stop>
+              <el-icon><Rank /></el-icon>
+            </span>
             <span class="type-name">{{ type.DictName }}</span>
             <span class="type-code">{{ type.DictCode }}</span>
             <span class="type-count">{{ type.ItemCount || 0 }} 项</span>
@@ -71,7 +83,21 @@
           </el-input>
         </div>
 
-        <el-table v-loading="itemLoading" :data="dictionaryItems" border stripe class="table-wrapper">
+        <el-table
+          ref="itemTable"
+          v-loading="itemLoading"
+          :data="dictionaryItems"
+          border
+          stripe
+          row-key="ItemId"
+          :row-class-name="itemRowClassName"
+          class="table-wrapper"
+        >
+          <el-table-column label="" width="48" align="center">
+            <template #default>
+              <el-icon class="item-drag-handle" title="拖拽排序"><Rank /></el-icon>
+            </template>
+          </el-table-column>
           <el-table-column label="#" type="index" width="64"></el-table-column>
           <el-table-column label="标签" prop="ItemLabel" min-width="150" show-overflow-tooltip></el-table-column>
           <el-table-column label="值" prop="ItemValue" min-width="160" show-overflow-tooltip></el-table-column>
@@ -177,9 +203,11 @@ import {
   getDictionaryItems,
   getDictionaryTypes,
   saveDictionaryItem,
-  saveDictionaryType
+  saveDictionaryType,
+  sortDictionaryItems,
+  sortDictionaryTypes
 } from '@/api/dictionary'
-import { Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { Delete, Edit, Plus, Rank, Refresh, Search } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 const createTypeForm = () => ({
@@ -204,6 +232,9 @@ const createItemForm = () => ({
 
 export default {
   name: 'Dictionaries',
+  components: {
+    Rank
+  },
   data() {
     return {
       Plus: markRaw(Plus),
@@ -227,11 +258,23 @@ export default {
       typeDialogVisible: false,
       itemDialogVisible: false,
       typeForm: createTypeForm(),
-      itemForm: createItemForm()
+      itemForm: createItemForm(),
+      typeDragIndex: null,
+      typeDraggingId: null,
+      typeDragOverIndex: null,
+      suppressTypeClick: false,
+      itemDragIndex: null
     }
   },
   created() {
+    this.itemRowDragCleanups = []
     this.loadTypes()
+  },
+  mounted() {
+    this.$nextTick(() => this.bindItemRowDragEvents())
+  },
+  beforeUnmount() {
+    this.cleanupItemRowDragEvents()
   },
   methods: {
     async refreshAll() {
@@ -269,6 +312,10 @@ export default {
       this.itemQuery.Keyword = ''
       this.loadItems()
     },
+    handleTypeClick(type) {
+      if (this.suppressTypeClick) return
+      this.selectType(type)
+    },
     async loadItems() {
       if (!this.selectedType) {
         this.dictionaryItems = []
@@ -283,6 +330,7 @@ export default {
         })
         if (res.success) {
           this.dictionaryItems = res.data || []
+          this.$nextTick(() => this.bindItemRowDragEvents())
         } else {
           this.$message.error(res.Msg || '字典项获取失败')
         }
@@ -398,6 +446,174 @@ export default {
       } else {
         this.$message.error(res.Msg || '删除失败')
       }
+    },
+    itemRowClassName() {
+      return 'dictionary-item-row'
+    },
+    onTypeDragStart(event, index) {
+      this.typeDragIndex = index
+      this.typeDraggingId = this.dictionaryTypes[index]?.ItemId || null
+      this.suppressTypeClick = true
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.setData('text/plain', String(this.typeDraggingId || ''))
+      }
+    },
+    onTypeDragOver(event, index) {
+      event.preventDefault()
+      this.typeDragOverIndex = index
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'move'
+      }
+    },
+    async onTypeDrop(targetIndex) {
+      const sourceIndex = this.typeDragIndex
+      if (sourceIndex === null || sourceIndex === targetIndex) {
+        this.onTypeDragEnd()
+        return
+      }
+
+      const previousTypes = [...this.dictionaryTypes]
+      const selectedTypeId = this.selectedType?.ItemId
+      this.dictionaryTypes = this.reorderWithSort(this.dictionaryTypes, sourceIndex, targetIndex)
+      this.selectedType = selectedTypeId
+        ? this.dictionaryTypes.find((type) => type.ItemId === selectedTypeId) || null
+        : this.selectedType
+
+      try {
+        const { data: res } = await sortDictionaryTypes({
+          Items: this.dictionaryTypes.map((type) => ({
+            ItemId: type.ItemId,
+            Sort: type.Sort
+          }))
+        })
+        if (!res.success) throw new Error(res.Msg || '排序保存失败')
+        this.$message.success('排序已保存')
+      } catch (error) {
+        this.dictionaryTypes = previousTypes
+        this.selectedType = selectedTypeId
+          ? this.dictionaryTypes.find((type) => type.ItemId === selectedTypeId) || null
+          : this.selectedType
+        this.$message.error('排序保存失败：' + (error?.message || error))
+        await this.loadTypes()
+      } finally {
+        this.onTypeDragEnd()
+      }
+    },
+    onTypeDragEnd() {
+      this.typeDragIndex = null
+      this.typeDraggingId = null
+      this.typeDragOverIndex = null
+      window.setTimeout(() => {
+        this.suppressTypeClick = false
+      }, 0)
+    },
+    reorderWithSort(list, sourceIndex, targetIndex) {
+      const nextList = [...list]
+      const [movedItem] = nextList.splice(sourceIndex, 1)
+      nextList.splice(targetIndex, 0, movedItem)
+      return nextList.map((item, index) => ({
+        ...item,
+        Sort: index + 1
+      }))
+    },
+    cleanupItemRowDragEvents() {
+      if (!this.itemRowDragCleanups) return
+      this.itemRowDragCleanups.forEach((cleanup) => cleanup())
+      this.itemRowDragCleanups = []
+    },
+    bindItemRowDragEvents() {
+      this.cleanupItemRowDragEvents()
+      const tableElement = this.$refs.itemTable?.$el
+      if (!tableElement || !this.dictionaryItems.length) return
+
+      const rows = tableElement.querySelectorAll('.el-table__body-wrapper tbody tr.dictionary-item-row')
+      rows.forEach((row, index) => {
+        const item = this.dictionaryItems[index]
+        if (!item) return
+
+        row.setAttribute('draggable', 'true')
+        row.dataset.itemId = String(item.ItemId)
+
+        const onDragStart = (event) => {
+          this.itemDragIndex = this.dictionaryItems.findIndex((entry) => String(entry.ItemId) === row.dataset.itemId)
+          row.classList.add('dragging')
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move'
+            event.dataTransfer.setData('text/plain', row.dataset.itemId || '')
+          }
+        }
+        const onDragOver = (event) => {
+          event.preventDefault()
+          row.classList.add('drag-over')
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move'
+          }
+        }
+        const onDragLeave = () => {
+          row.classList.remove('drag-over')
+        }
+        const onDrop = async (event) => {
+          event.preventDefault()
+          row.classList.remove('drag-over')
+          const targetIndex = this.dictionaryItems.findIndex((entry) => String(entry.ItemId) === row.dataset.itemId)
+          await this.onItemDrop(targetIndex)
+        }
+        const onDragEnd = () => {
+          row.classList.remove('dragging')
+          this.clearItemDragState()
+        }
+
+        row.addEventListener('dragstart', onDragStart)
+        row.addEventListener('dragover', onDragOver)
+        row.addEventListener('dragleave', onDragLeave)
+        row.addEventListener('drop', onDrop)
+        row.addEventListener('dragend', onDragEnd)
+        this.itemRowDragCleanups.push(() => {
+          row.removeEventListener('dragstart', onDragStart)
+          row.removeEventListener('dragover', onDragOver)
+          row.removeEventListener('dragleave', onDragLeave)
+          row.removeEventListener('drop', onDrop)
+          row.removeEventListener('dragend', onDragEnd)
+        })
+      })
+    },
+    async onItemDrop(targetIndex) {
+      const sourceIndex = this.itemDragIndex
+      if (sourceIndex === null || targetIndex < 0 || sourceIndex === targetIndex) {
+        this.clearItemDragState()
+        return
+      }
+
+      const previousItems = [...this.dictionaryItems]
+      this.dictionaryItems = this.reorderWithSort(this.dictionaryItems, sourceIndex, targetIndex)
+      this.$nextTick(() => this.bindItemRowDragEvents())
+
+      try {
+        const { data: res } = await sortDictionaryItems({
+          DictCode: this.selectedType.DictCode,
+          Items: this.dictionaryItems.map((item) => ({
+            ItemId: item.ItemId,
+            Sort: item.Sort
+          }))
+        })
+        if (!res.success) throw new Error(res.Msg || '排序保存失败')
+        this.$message.success('排序已保存')
+      } catch (error) {
+        this.dictionaryItems = previousItems
+        this.$message.error('排序保存失败：' + (error?.message || error))
+        await this.loadItems()
+      } finally {
+        this.clearItemDragState()
+      }
+    },
+    clearItemDragState() {
+      this.itemDragIndex = null
+      const tableElement = this.$refs.itemTable?.$el
+      if (!tableElement) return
+      tableElement.querySelectorAll('.dictionary-item-row.drag-over, .dictionary-item-row.dragging').forEach((row) => {
+        row.classList.remove('drag-over', 'dragging')
+      })
     }
   }
 }
@@ -471,7 +687,7 @@ export default {
 .type-item {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   gap: 4px 8px;
   padding: 10px 12px;
   border: 1px solid #e5e7eb;
@@ -488,7 +704,30 @@ export default {
   background: #f0f7ff;
 }
 
+.type-item.dragging {
+  opacity: 0.55;
+}
+
+.type-item.drag-over {
+  border-color: #409eff;
+  box-shadow: inset 0 0 0 1px #409eff;
+}
+
+.type-drag-handle {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #9ca3af;
+  cursor: grab;
+  line-height: 1;
+}
+
+.type-drag-handle:active {
+  cursor: grabbing;
+}
+
 .type-name {
+  grid-column: 2;
   color: #111827;
   font-weight: 600;
   overflow: hidden;
@@ -497,7 +736,7 @@ export default {
 }
 
 .type-code {
-  grid-column: 1;
+  grid-column: 2;
   color: #6b7280;
   font-size: 12px;
   overflow: hidden;
@@ -506,11 +745,32 @@ export default {
 }
 
 .type-count {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1 / span 2;
   align-self: center;
   color: #059669;
   font-size: 12px;
+}
+
+.item-drag-handle {
+  color: #9ca3af;
+  cursor: grab;
+}
+
+.item-drag-handle:active {
+  cursor: grabbing;
+}
+
+.item-panel :deep(.dictionary-item-row.dragging) {
+  opacity: 0.55;
+}
+
+.item-panel :deep(.dictionary-item-row.drag-over > td) {
+  background-color: #f0f7ff !important;
+}
+
+.item-panel :deep(.dictionary-item-row[draggable='true']) {
+  cursor: default;
 }
 
 @media (max-width: 960px) {
