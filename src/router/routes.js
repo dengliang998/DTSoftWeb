@@ -8,6 +8,7 @@ const AttachmentList = () => import('../view/attachment/attachmentlist.vue')
 const Menus = () => import('../view/Common/Menus.vue')
 const SystemSettings = () => import('../view/Common/SystemSettings.vue')
 const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
+const Dictionaries = () => import('../view/Common/Dictionaries.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
 const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
 const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
@@ -56,6 +57,12 @@ export const routes = [
         name: 'OnlineUsers',
         component: OnlineUsers,
         meta: withCache('OnlineUsers')
+      },
+      {
+        path: '/common/dictionaries',
+        name: 'Dictionaries',
+        component: Dictionaries,
+        meta: withCache('Dictionaries')
       },
       {
         path: '/MicroApp/MicroApiConfig',

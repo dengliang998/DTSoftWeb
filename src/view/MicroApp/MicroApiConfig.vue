@@ -397,10 +397,45 @@
                 <div v-if="supportsOptions(selectedFieldData)" class="config-section">
                   <div class="config-section-head">
                     <div class="config-section-title">选项配置</div>
-                    <el-button type="primary" size="small" icon="Plus" @click="addOption">添加选项</el-button>
+                    <el-button
+                      v-if="selectedFieldData.optionSource !== 'dictionary'"
+                      type="primary"
+                      size="small"
+                      icon="Plus"
+                      @click="addOption"
+                    >
+                      添加选项
+                    </el-button>
+                  </div>
+                  <div class="option-source-row">
+                    <el-radio-group v-model="selectedFieldData.optionSource" @change="handleOptionSourceChange">
+                      <el-radio label="manual">手动选项</el-radio>
+                      <el-radio label="dictionary">数据字典</el-radio>
+                    </el-radio-group>
+                    <el-select
+                      v-if="selectedFieldData.optionSource === 'dictionary'"
+                      v-model="selectedFieldData.dictCode"
+                      class="dict-code-select"
+                      clearable
+                      filterable
+                      placeholder="请选择字典"
+                    >
+                      <el-option
+                        v-for="dict in dictionaryTypes"
+                        :key="dict.DictCode"
+                        :label="`${dict.DictName}（${dict.DictCode}）`"
+                        :value="dict.DictCode"
+                      ></el-option>
+                    </el-select>
                   </div>
                   <div class="options-container">
-                    <div v-if="selectedFieldData.options && selectedFieldData.options.length > 0" class="option-list">
+                    <div v-if="selectedFieldData.optionSource === 'dictionary'" class="empty-inline">
+                      运行时会按字典编码加载启用的字典项。
+                    </div>
+                    <div
+                      v-else-if="selectedFieldData.options && selectedFieldData.options.length > 0"
+                      class="option-list"
+                    >
                       <div v-for="(option, index) in selectedFieldData.options" :key="index" class="option-item">
                         <el-input v-model="option.label" placeholder="选项标签"></el-input>
                         <el-input v-model="option.value" placeholder="选项值"></el-input>
@@ -438,6 +473,7 @@
 
 <script>
 import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
+import { getDictionaryTypes } from '@/api/dictionary'
 import MicroAppConfigDialog from './components/MicroAppConfigDialog.vue'
 import ApiDocDialog from './components/ApiDocDialog.vue'
 
@@ -475,6 +511,7 @@ export default {
       expandedKeys: [],
       // 选中的字段数据
       selectedFieldData: null,
+      dictionaryTypes: [],
       // 生成的API列表
       generatedApis: [],
       // 微应用配置表单
@@ -531,8 +568,19 @@ export default {
   },
   created() {
     this.getMicroApps()
+    this.loadDictionaryTypes()
   },
   methods: {
+    async loadDictionaryTypes() {
+      try {
+        const { data: res } = await getDictionaryTypes({ Enabled: true })
+        if (res.success) {
+          this.dictionaryTypes = res.data || []
+        }
+      } catch (error) {
+        console.error('加载字典分类失败：', error)
+      }
+    },
     isTextField(field) {
       return ['string', 'textarea'].includes(field?.fieldType)
     },
@@ -641,6 +689,13 @@ export default {
 
       if (!this.supportsOptions(field)) {
         field.options = []
+        field.optionSource = 'manual'
+        field.dictCode = ''
+      } else {
+        field.optionSource = field.optionSource === 'dictionary' ? 'dictionary' : 'manual'
+        if (field.optionSource !== 'dictionary') {
+          field.dictCode = ''
+        }
       }
 
       if (!this.supportsLengthRule(field)) {
@@ -761,6 +816,8 @@ export default {
           maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
           pattern: field.Pattern || field.pattern || '',
           defaultValue: field.DefaultValue || field.defaultValue || '',
+          optionSource: field.OptionSource || field.optionSource || 'manual',
+          dictCode: field.DictCode || field.dictCode || '',
           options: this.normalizeFieldOptions(field.Options || field.options || [])
         }))
       )
@@ -951,6 +1008,8 @@ export default {
         pattern: '',
         defaultValue: '',
         columnLength: 500,
+        optionSource: 'manual',
+        dictCode: '',
         options: []
       }
       this.MicroAppForm.Fields.push(newField)
@@ -975,6 +1034,15 @@ export default {
         setTimeout(() => {
           this.selectedFieldData.options.splice(index, 1)
         }, 0)
+      }
+    },
+    handleOptionSourceChange() {
+      if (!this.selectedFieldData) return
+      if (this.selectedFieldData.optionSource === 'dictionary') {
+        this.selectedFieldData.options = []
+      } else {
+        this.selectedFieldData.dictCode = ''
+        this.selectedFieldData.options = this.selectedFieldData.options || []
       }
     },
     // 选择字段
@@ -1011,6 +1079,10 @@ export default {
         if (this.selectedFieldData && this.selectedFieldData.fieldType === 'datetime') {
           this.selectedFieldData.dateFormat = this.selectedFieldData.dateFormat || 'datetime'
         }
+        if (this.selectedFieldData && !this.supportsOptions(this.selectedFieldData)) {
+          this.selectedFieldData.optionSource = 'manual'
+          this.selectedFieldData.dictCode = ''
+        }
         this.normalizeFieldByType(this.selectedFieldData)
       }, 0)
     },
@@ -1029,6 +1101,14 @@ export default {
     // 保存可视化配置
     async saveVisualConfig() {
       try {
+        const invalidDictField = this.MicroAppForm.Fields.find(
+          (field) => this.supportsOptions(field) && field.optionSource === 'dictionary' && !field.dictCode
+        )
+        if (invalidDictField) {
+          this.$message.error(`${invalidDictField.label || invalidDictField.fieldName} 未选择数据字典`)
+          return
+        }
+
         // 将小驼峰命名转换为大驼峰命名，以适配后台接口
         const submitData = {
           ...this.MicroAppForm,
@@ -1063,6 +1143,8 @@ export default {
               MaxValue: field.maxValue,
               Pattern: field.pattern,
               DefaultValue: field.defaultValue,
+              OptionSource: field.optionSource || 'manual',
+              DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
               Options: this.normalizeFieldOptions(field.options)
             }
           })
@@ -1707,6 +1789,19 @@ export default {
 .option-delete-button :deep(.el-icon),
 .option-delete-button :deep(span) {
   color: #ffffff !important;
+}
+
+.option-source-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.dict-code-select {
+  width: 320px;
+  max-width: 100%;
 }
 
 .empty-inline {

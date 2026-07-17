@@ -1088,6 +1088,8 @@ body {
 .apikey-container,
 .crud-config-container,
 .dynamic-app-container,
+.online-users-container,
+.dictionary-page,
 .log-container {
   min-height: 100% !important;
   padding: 0 !important;

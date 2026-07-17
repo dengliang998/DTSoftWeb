@@ -121,7 +121,7 @@ export default {
 
 <style lang="less" scoped>
 .online-users-container {
-  padding: 16px;
+  height: 100%;
 }
 
 .online-users-card {

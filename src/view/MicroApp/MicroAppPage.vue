@@ -267,6 +267,7 @@
 <script>
 import { ElImageViewer } from 'element-plus'
 import { getFileDownloadUrl } from '@/api/file'
+import { getDictionaryItemsByCode } from '@/api/dictionary'
 import {
   batchDeleteMicroRuntimeData,
   createMicroRuntimeData,
@@ -395,6 +396,27 @@ export default {
           label: option.Label || option.label || '',
           value: option.Value || option.value || ''
         }))
+    },
+    async loadDictionaryOptionsForFields(fields) {
+      const dictionaryFields = (fields || []).filter((field) => field?.optionSource === 'dictionary' && field?.dictCode)
+      if (dictionaryFields.length === 0) return
+
+      const dictCodes = [...new Set(dictionaryFields.map((field) => field.dictCode))]
+      const optionMap = {}
+      await Promise.all(
+        dictCodes.map(async (dictCode) => {
+          try {
+            const { data: res } = await getDictionaryItemsByCode(dictCode)
+            optionMap[dictCode] = res?.success ? this.normalizeFieldOptions(res.data || []) : []
+          } catch (error) {
+            optionMap[dictCode] = []
+          }
+        })
+      )
+
+      dictionaryFields.forEach((field) => {
+        field.options = optionMap[field.dictCode] || []
+      })
     },
     normalizeFormColumns(formColumns) {
       const value = Number(formColumns)
@@ -584,11 +606,15 @@ export default {
                       maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
                       pattern: field.Pattern || field.pattern || '',
                       defaultValue: field.DefaultValue || field.defaultValue || '',
+                      optionSource: field.OptionSource || field.optionSource || 'manual',
+                      dictCode: field.DictCode || field.dictCode || '',
                       options: this.normalizeFieldOptions(field.Options || field.options || [])
                     }))
                   )
                 : []
             }
+
+            await this.loadDictionaryOptionsForFields(this.appConfig.fields)
 
             // 初始化表单数据
             this.initFormData()
@@ -1055,6 +1081,20 @@ export default {
         return this.normalizeAttachmentValue(value)
           .map((attachment) => this.getAttachmentName(attachment))
           .join('、')
+      }
+      if (['select', 'radio', 'checkbox'].includes(field?.fieldType)) {
+        const values = Array.isArray(value)
+          ? value
+          : String(value)
+              .split(',')
+              .map((item) => item.trim())
+        const labels = values
+          .filter((item) => item !== '')
+          .map((item) => {
+            const option = (field.options || []).find((opt) => String(opt.value) === String(item))
+            return option?.label || item
+          })
+        return field.fieldType === 'checkbox' ? labels.join('、') : labels[0] || ''
       }
       if (field?.fieldType !== 'datetime') {
         return Array.isArray(value) ? value.join(',') : value
