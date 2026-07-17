@@ -7,6 +7,7 @@ const LogAction = () => import('../view/Log/LogAction.vue')
 const AttachmentList = () => import('../view/attachment/attachmentlist.vue')
 const Menus = () => import('../view/Common/Menus.vue')
 const SystemSettings = () => import('../view/Common/SystemSettings.vue')
+const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
 const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
 const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
@@ -49,6 +50,12 @@ export const routes = [
         name: 'SystemSettings',
         component: SystemSettings,
         meta: withCache('SystemSettings')
+      },
+      {
+        path: '/common/onlineusers',
+        name: 'OnlineUsers',
+        component: OnlineUsers,
+        meta: withCache('OnlineUsers')
       },
       {
         path: '/MicroApp/MicroApiConfig',

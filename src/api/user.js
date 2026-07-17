@@ -30,6 +30,8 @@ export const getUserList = ({ keyword = '', pageNum = 1, pageSize = 10, ouId } =
   return http.post('/api/User/GetUserList', params)
 }
 
+export const getOnlineUsers = () => http.post('/api/User/GetOnlineUsers')
+
 export const createUser = (params) => http.post('/api/User/CreateUser', params)
 
 export const modifyUserInfo = (params) => http.post('/api/User/ModifyUserInfo', params)
