@@ -1410,27 +1410,41 @@ export default {
   width: 100%;
   height: 32px;
   max-height: 32px;
+  box-sizing: border-box;
   grid-template-columns: minmax(0, 1fr) 40px;
   align-items: center;
+  border: 1px solid #d7deea;
+  border-radius: 4px;
+  background: #ffffff;
   overflow: hidden;
   line-height: 32px;
 }
 
+.lookup-field:hover {
+  border-color: #9fb0c8;
+}
+
+.lookup-field:focus-within {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.12);
+}
+
 .lookup-field :deep(.el-input) {
-  height: 32px;
-  max-height: 32px;
-  line-height: 32px;
+  height: 30px;
+  max-height: 30px;
+  line-height: 30px;
 }
 
 .lookup-field :deep(.el-input__wrapper) {
-  height: 32px !important;
-  min-height: 32px !important;
-  border-radius: 4px 0 0 4px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .lookup-field :deep(.el-input__inner) {
-  height: 32px;
-  line-height: 32px;
+  height: 30px;
+  line-height: 30px;
 }
 
 .lookup-field__button {
@@ -1440,18 +1454,18 @@ export default {
   justify-content: center !important;
   width: 40px !important;
   min-width: 40px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
   box-sizing: border-box;
   margin: 0;
   padding: 0 !important;
   border: 0;
-  border-radius: 0 4px 4px 0 !important;
+  border-radius: 0 !important;
   background: #1677ff;
   color: #ffffff;
   cursor: pointer;
-  line-height: 32px !important;
+  line-height: 30px !important;
 }
 
 .lookup-field__button:hover,

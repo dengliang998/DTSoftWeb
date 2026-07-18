@@ -137,7 +137,8 @@
                     {{ getFieldTypeLabel(data.fieldType) }}
                   </el-tag>
                   <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
-                    删除
+                    <el-icon><Delete /></el-icon>
+                    <span>删除</span>
                   </button>
                 </span>
               </div>
@@ -160,13 +161,14 @@
             >
               <div class="subtable-config-card__head">
                 <span>{{ subTable.label || '未命名子表' }}</span>
-                <el-button
-                  text
-                  type="danger"
-                  size="small"
-                  icon="Delete"
+                <button
+                  class="subtable-icon-button"
+                  type="button"
+                  title="删除子表"
                   @click="deleteSubTable(subTableIndex)"
-                ></el-button>
+                >
+                  <el-icon><Delete /></el-icon>
+                </button>
               </div>
               <div class="subtable-config-grid">
                 <el-input v-model="subTable.label" size="small" placeholder="子表名称"></el-input>
@@ -230,11 +232,13 @@
                     <el-input v-model="column.field" size="small" placeholder="返回字段"></el-input>
                     <el-input v-model="column.label" size="small" placeholder="列标题"></el-input>
                     <el-button
+                      class="subtable-lookup-delete-button"
                       size="small"
                       type="danger"
-                      icon="Delete"
                       @click="removeSubTableLookupColumn(subTable, columnIndex)"
-                    ></el-button>
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
                   </div>
                   <el-button size="small" icon="Plus" @click="addSubTableLookupColumn(subTable)">显示列</el-button>
                   <div class="subtable-lookup-title">字段回填映射</div>
@@ -253,11 +257,13 @@
                       ></el-option>
                     </el-select>
                     <el-button
+                      class="subtable-lookup-delete-button"
                       size="small"
                       type="danger"
-                      icon="Delete"
                       @click="removeSubTableLookupMapping(subTable, mappingIndex)"
-                    ></el-button>
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
                   </div>
                   <el-button size="small" icon="Plus" @click="addSubTableLookupMapping(subTable)">回填映射</el-button>
                 </div>
@@ -296,7 +302,8 @@
                         type="button"
                         @click.stop="deleteSubTableField(subTable, data.fieldName)"
                       >
-                        删除
+                        <el-icon><Delete /></el-icon>
+                        <span>删除</span>
                       </button>
                     </span>
                   </div>
@@ -776,12 +783,14 @@
 import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
 import { getDictionaryTypes } from '@/api/dictionary'
 import { getEsbDataSources } from '@/api/esb'
+import { Delete } from '@element-plus/icons-vue'
 import MicroAppConfigDialog from './components/MicroAppConfigDialog.vue'
 import ApiDocDialog from './components/ApiDocDialog.vue'
 
 export default {
   name: 'MicroApp',
   components: {
+    Delete,
     MicroAppConfigDialog,
     ApiDocDialog
   },
@@ -2308,6 +2317,9 @@ export default {
 
 .field-tree-node__delete {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -2315,6 +2327,10 @@ export default {
   cursor: pointer;
   font-size: 12px;
   line-height: 1;
+}
+
+.field-tree-node__delete .el-icon {
+  font-size: 13px;
 }
 
 .field-tree-node__delete:hover,
@@ -2352,6 +2368,51 @@ export default {
   color: #344563;
   font-size: 13px;
   font-weight: 600;
+}
+
+.subtable-icon-button,
+.subtable-lookup-delete-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  box-sizing: border-box;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #f35b64 !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  line-height: 32px !important;
+}
+
+.subtable-icon-button:hover,
+.subtable-icon-button:focus,
+.subtable-lookup-delete-button:hover,
+.subtable-lookup-delete-button:focus {
+  background: #df3f49 !important;
+  color: #ffffff !important;
+  outline: none;
+}
+
+.subtable-icon-button .el-icon,
+.subtable-lookup-delete-button :deep(.el-icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: #ffffff !important;
+  font-size: 16px;
+  line-height: 16px;
+}
+
+.subtable-icon-button .el-icon svg,
+.subtable-lookup-delete-button :deep(.el-icon svg) {
+  width: 1em;
+  height: 1em;
 }
 
 .subtable-config-grid {
