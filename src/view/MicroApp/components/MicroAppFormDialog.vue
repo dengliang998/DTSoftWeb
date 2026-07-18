@@ -484,6 +484,20 @@ import { Search } from '@element-plus/icons-vue'
 import { getFileDownloadUrl, getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
+import {
+  getAttachmentFileId,
+  getAttachmentKey,
+  getAttachmentName,
+  getDateDisplayFormat,
+  getDatePickerType,
+  getDateValueFormat,
+  getRowValue,
+  normalizeAttachmentValue,
+  normalizeFieldOrder,
+  normalizeLookupColumns,
+  normalizeLookupMappings,
+  parseJsonObject
+} from '../utils/microAppField'
 
 export default {
   name: 'MicroAppFormDialog',
@@ -630,17 +644,7 @@ export default {
       })
     },
     normalizeFieldOrder(fields) {
-      return Array.isArray(fields)
-        ? [...fields]
-            .map((field, index) => ({
-              ...field,
-              sortOrder:
-                field.sortOrder !== undefined && field.sortOrder !== null && field.sortOrder !== ''
-                  ? Number(field.sortOrder)
-                  : index + 1
-            }))
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-        : []
+      return normalizeFieldOrder(fields)
     },
     getFieldRules(field) {
       const rules = []
@@ -692,37 +696,19 @@ export default {
       return rules
     },
     normalizeAttachmentValue(value) {
-      let normalized = value
-      if (!normalized) return []
-      if (typeof normalized === 'string') {
-        try {
-          normalized = JSON.parse(normalized)
-        } catch (error) {
-          return []
-        }
-      }
-      if (!Array.isArray(normalized)) {
-        return []
-      }
-      return normalized.filter((item) => item && typeof item === 'object')
+      return normalizeAttachmentValue(value)
     },
     getAttachmentList(field) {
       return this.normalizeAttachmentValue(this.formData[field.fieldName])
     },
     getAttachmentKey(attachment, index) {
-      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || index
+      return getAttachmentKey(attachment, index)
     },
     getAttachmentFileId(attachment) {
-      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || ''
+      return getAttachmentFileId(attachment)
     },
     getAttachmentName(attachment) {
-      return (
-        attachment.FileName ||
-        attachment.fileName ||
-        attachment.name ||
-        this.getAttachmentFileId(attachment) ||
-        '未命名附件'
-      )
+      return getAttachmentName(attachment)
     },
     normalizeUploadedAttachment(item, file) {
       return {
@@ -770,41 +756,16 @@ export default {
       window.location.href = getFileDownloadUrl(fileId)
     },
     parseLookupParams(value) {
-      if (!value) return {}
-      if (typeof value === 'object') return value
-      try {
-        const parsed = JSON.parse(value)
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-      } catch (error) {
-        return {}
-      }
+      return parseJsonObject(value)
     },
     normalizeLookupColumns(columns) {
-      if (!Array.isArray(columns)) return []
-      return columns
-        .filter((column) => column && typeof column === 'object')
-        .map((column) => ({
-          field: column.field || column.Field || '',
-          label: column.label || column.Label || '',
-          width: column.width || column.Width || null
-        }))
-        .filter((column) => column.field && column.label)
+      return normalizeLookupColumns(columns, { dropIncomplete: true })
     },
     normalizeLookupMappings(mappings) {
-      if (!Array.isArray(mappings)) return []
-      return mappings
-        .filter((mapping) => mapping && typeof mapping === 'object')
-        .map((mapping) => ({
-          sourceField: mapping.sourceField || mapping.SourceField || '',
-          targetField: mapping.targetField || mapping.TargetField || ''
-        }))
-        .filter((mapping) => mapping.sourceField && mapping.targetField)
+      return normalizeLookupMappings(mappings, { dropIncomplete: true })
     },
     getRowValue(row, fieldName) {
-      if (!row || !fieldName) return undefined
-      if (Object.prototype.hasOwnProperty.call(row, fieldName)) return row[fieldName]
-      const matchedKey = Object.keys(row).find((key) => key.toLowerCase() === fieldName.toLowerCase())
-      return matchedKey ? row[matchedKey] : undefined
+      return getRowValue(row, fieldName)
     },
     getActiveLookupConfig() {
       return this.lookupDialogMode === 'subTable' ? this.activeLookupSubTable : this.activeLookupField
@@ -931,20 +892,14 @@ export default {
       this.lookupDialogVisible = false
       this.lookupSelectedRows = []
     },
-    getDateFormatType(field) {
-      return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
-    },
     getDatePickerType(field) {
-      const t = this.getDateFormatType(field)
-      return t === 'datetime' ? 'datetime' : t
+      return getDatePickerType(field)
     },
     getDateValueFormat(field) {
-      const map = { year: 'YYYY', month: 'YYYY-MM', date: 'YYYY-MM-DD', datetime: 'YYYY-MM-DD HH:mm:ss' }
-      return map[this.getDateFormatType(field)]
+      return getDateValueFormat(field)
     },
     getDateDisplayFormat(field) {
-      const map = { year: 'YYYY', month: 'YYYY-MM', date: 'YYYY-MM-DD', datetime: 'YYYY-MM-DD HH:mm:ss' }
-      return map[this.getDateFormatType(field)]
+      return getDateDisplayFormat(field)
     },
     ensureSubTablesModel() {
       if (!this.formData.__subTables || typeof this.formData.__subTables !== 'object') {

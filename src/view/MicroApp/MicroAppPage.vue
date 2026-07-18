@@ -356,6 +356,31 @@ import {
 import MicroAppFormDialog from './components/MicroAppFormDialog.vue'
 import MicroAppImportDialog from './components/MicroAppImportDialog.vue'
 import VideoPreviewDialog from '../attachment/components/VideoPreviewDialog.vue'
+import {
+  getAttachmentExt,
+  getAttachmentExtLabel,
+  getAttachmentFileId,
+  getAttachmentKey,
+  getAttachmentName,
+  getDateDisplayFormat,
+  getDateFormatType,
+  getDatePickerType,
+  getDateRangePickerType,
+  getDateValueFormat,
+  isImageAttachment,
+  isPreviewableAttachment,
+  isVideoAttachment,
+  normalizeAttachmentValue,
+  normalizeDateValueForSubmit,
+  normalizeFieldOptions,
+  normalizeFieldOrder,
+  normalizeFormColumns,
+  normalizeLookupColumns,
+  normalizeLookupMappings,
+  normalizeQueryColumns,
+  normalizeQueryWidth,
+  parseJsonObject
+} from './utils/microAppField'
 export default {
   name: 'MicroAppPage',
   components: {
@@ -553,69 +578,13 @@ export default {
       }
     },
     normalizeFieldOptions(options) {
-      let normalized = options
-
-      if (typeof normalized === 'string') {
-        try {
-          normalized = JSON.parse(normalized)
-        } catch (error) {
-          normalized = []
-        }
-      }
-
-      if (!Array.isArray(normalized)) {
-        return []
-      }
-
-      return normalized
-        .filter((option) => option && typeof option === 'object')
-        .map((option) => ({
-          label: option.Label || option.label || '',
-          value: option.Value || option.value || ''
-        }))
+      return normalizeFieldOptions(options)
     },
     normalizeLookupColumns(columns) {
-      let normalized = columns
-
-      if (typeof normalized === 'string') {
-        try {
-          normalized = JSON.parse(normalized)
-        } catch (error) {
-          normalized = []
-        }
-      }
-
-      if (!Array.isArray(normalized)) return []
-
-      return normalized
-        .filter((column) => column && typeof column === 'object')
-        .map((column) => ({
-          field: column.Field || column.field || '',
-          label: column.Label || column.label || '',
-          width: column.Width !== undefined && column.Width !== null ? column.Width : column.width || null
-        }))
-        .filter((column) => column.field && column.label)
+      return normalizeLookupColumns(columns, { dropIncomplete: true })
     },
     normalizeLookupMappings(mappings) {
-      let normalized = mappings
-
-      if (typeof normalized === 'string') {
-        try {
-          normalized = JSON.parse(normalized)
-        } catch (error) {
-          normalized = []
-        }
-      }
-
-      if (!Array.isArray(normalized)) return []
-
-      return normalized
-        .filter((mapping) => mapping && typeof mapping === 'object')
-        .map((mapping) => ({
-          sourceField: mapping.SourceField || mapping.sourceField || '',
-          targetField: mapping.TargetField || mapping.targetField || ''
-        }))
-        .filter((mapping) => mapping.sourceField && mapping.targetField)
+      return normalizeLookupMappings(mappings, { dropIncomplete: true })
     },
     async loadDictionaryOptionsForFields(fields) {
       const dictionaryFields = (fields || []).filter((field) => field?.optionSource === 'dictionary' && field?.dictCode)
@@ -639,14 +608,7 @@ export default {
       })
     },
     parseEsbParams(value) {
-      if (!value) return {}
-      if (typeof value === 'object') return value
-      try {
-        const parsed = JSON.parse(value)
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-      } catch (error) {
-        return {}
-      }
+      return parseJsonObject(value)
     },
     async loadEsbOptionsForFields(fields) {
       const esbFields = (fields || []).filter((field) => field?.optionSource === 'esb' && field?.esbDataSourceCode)
@@ -671,12 +633,10 @@ export default {
       )
     },
     normalizeFormColumns(formColumns) {
-      const value = Number(formColumns)
-      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+      return normalizeFormColumns(formColumns)
     },
     normalizeQueryColumns(queryColumns) {
-      const value = Number(queryColumns)
-      return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
+      return normalizeQueryColumns(queryColumns)
     },
     getFormFieldSpan() {
       return 24 / this.normalizeFormColumns(this.appConfig?.formColumns)
@@ -691,8 +651,7 @@ export default {
       return widthMap[this.normalizeFormColumns(this.appConfig?.formColumns)]
     },
     normalizeQueryWidth(queryWidth) {
-      const value = Number(queryWidth)
-      return Number.isInteger(value) && value >= 100 && value <= 600 ? value : 150
+      return normalizeQueryWidth(queryWidth)
     },
     normalizeNumberFormValue(value) {
       if (value === '' || value === null || value === undefined) {
@@ -719,17 +678,7 @@ export default {
       }
     },
     normalizeFieldOrder(fields) {
-      return Array.isArray(fields)
-        ? [...fields]
-            .map((field, index) => ({
-              ...field,
-              sortOrder:
-                field.sortOrder !== undefined && field.sortOrder !== null && field.sortOrder !== ''
-                  ? Number(field.sortOrder)
-                  : index + 1
-            }))
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-        : []
+      return normalizeFieldOrder(fields)
     },
     normalizeConfigFields(fields) {
       return Array.isArray(fields)
@@ -1369,59 +1318,22 @@ export default {
       return fixed === 'left' || fixed === 'right' ? fixed : false
     },
     getDateFormatType(field) {
-      return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
+      return getDateFormatType(field)
     },
     getDatePickerType(field) {
-      const formatType = this.getDateFormatType(field)
-      return formatType === 'datetime' ? 'datetime' : formatType
+      return getDatePickerType(field)
     },
     getDateRangePickerType(field) {
-      const formatType = this.getDateFormatType(field)
-      return formatType === 'datetime' ? 'datetimerange' : `${formatType}range`
+      return getDateRangePickerType(field)
     },
     getDateValueFormat(field) {
-      const formatType = this.getDateFormatType(field)
-      const formatMap = {
-        year: 'YYYY',
-        month: 'YYYY-MM',
-        date: 'YYYY-MM-DD',
-        datetime: 'YYYY-MM-DD HH:mm:ss'
-      }
-      return formatMap[formatType]
+      return getDateValueFormat(field)
     },
     getDateDisplayFormat(field) {
-      const formatType = this.getDateFormatType(field)
-      const formatMap = {
-        year: 'YYYY',
-        month: 'YYYY-MM',
-        date: 'YYYY-MM-DD',
-        datetime: 'YYYY-MM-DD HH:mm:ss'
-      }
-      return formatMap[formatType]
+      return getDateDisplayFormat(field)
     },
     normalizeDateValueForSubmit(value, field, boundary = '') {
-      if (!value) {
-        return ''
-      }
-
-      const text = String(value)
-      switch (this.getDateFormatType(field)) {
-        case 'year':
-          return boundary === 'end' ? `${text}-12-31 23:59:59` : `${text}-01-01 00:00:00`
-        case 'month':
-          if (boundary === 'end') {
-            const [year, month] = text.split('-').map(Number)
-            if (year && month) {
-              const lastDay = new Date(year, month, 0).getDate()
-              return `${text}-${String(lastDay).padStart(2, '0')} 23:59:59`
-            }
-          }
-          return `${text}-01 00:00:00`
-        case 'date':
-          return boundary === 'end' ? `${text} 23:59:59` : `${text} 00:00:00`
-        default:
-          return text
-      }
+      return normalizeDateValueForSubmit(value, field, boundary)
     },
     formatFieldValue(value, field) {
       if (value === null || value === undefined || value === '') {
@@ -1475,58 +1387,34 @@ export default {
       }
     },
     normalizeAttachmentValue(value) {
-      let normalized = value
-      if (!normalized) return []
-      if (typeof normalized === 'string') {
-        try {
-          normalized = JSON.parse(normalized)
-        } catch (error) {
-          return []
-        }
-      }
-      if (!Array.isArray(normalized)) {
-        return normalized && typeof normalized === 'object' ? [normalized] : []
-      }
-      return normalized.filter((item) => item && typeof item === 'object')
+      return normalizeAttachmentValue(value, { wrapObject: true })
     },
     getAttachmentList(value) {
       return this.normalizeAttachmentValue(value)
     },
     getAttachmentKey(attachment, index) {
-      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || index
+      return getAttachmentKey(attachment, index)
     },
     getAttachmentFileId(attachment) {
-      return attachment.FileID || attachment.fileId || attachment.FileId || attachment.id || ''
+      return getAttachmentFileId(attachment)
     },
     getAttachmentName(attachment) {
-      return (
-        attachment.FileName ||
-        attachment.fileName ||
-        attachment.name ||
-        this.getAttachmentFileId(attachment) ||
-        '未命名附件'
-      )
+      return getAttachmentName(attachment)
     },
     getAttachmentExt(attachment) {
-      const ext = attachment.Ext || attachment.ext || ''
-      if (ext) return String(ext).toLowerCase()
-
-      const name = this.getAttachmentName(attachment)
-      const dotIndex = name.lastIndexOf('.')
-      return dotIndex > -1 ? name.slice(dotIndex).toLowerCase() : ''
+      return getAttachmentExt(attachment)
     },
     getAttachmentExtLabel(attachment) {
-      const ext = this.getAttachmentExt(attachment).replace(/^\./, '')
-      return ext ? ext.toUpperCase() : 'FILE'
+      return getAttachmentExtLabel(attachment)
     },
     isImageAttachment(attachment) {
-      return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].includes(this.getAttachmentExt(attachment))
+      return isImageAttachment(attachment)
     },
     isVideoAttachment(attachment) {
-      return ['.mp4', '.mov', '.webm', '.ogg'].includes(this.getAttachmentExt(attachment))
+      return isVideoAttachment(attachment)
     },
     isPreviewableAttachment(attachment) {
-      return this.isImageAttachment(attachment) || this.isVideoAttachment(attachment)
+      return isPreviewableAttachment(attachment)
     },
     getAttachmentUrl(attachment) {
       const fileId = this.getAttachmentFileId(attachment)
@@ -2022,50 +1910,8 @@ export default {
   padding-bottom: 10px;
 }
 
-/* 对话框表单容器样式 */
-.dialog-form-container {
-  max-height: 40vh;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
 /* 防止对话框打开时页面滚动 */
 :deep(.el-overlay) {
   overflow: hidden;
-}
-
-/* 滚动条样式优化 */
-.dialog-form-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dialog-form-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.dialog-form-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.dialog-form-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 导入说明样式 */
-.import-tips {
-  color: #606266;
-  font-size: 13px;
-  line-height: 1.8;
-  padding: 10px 15px;
-  background: #f5f7fa;
-  border-radius: 4px;
-  border-left: 3px solid #409eff;
-}
-
-.import-tips p {
-  margin: 0;
-  padding: 2px 0;
 }
 </style>
