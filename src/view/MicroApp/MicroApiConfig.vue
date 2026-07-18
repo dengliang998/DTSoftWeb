@@ -90,7 +90,7 @@
           <div class="sidebar-head">
             <div>
               <div class="section-kicker">字段模型</div>
-              <div class="section-title">模型字段配置</div>
+              <div class="section-title">主表字段配置</div>
             </div>
             <el-button type="primary" size="small" icon="Plus" @click="addField">新增</el-button>
           </div>
@@ -143,6 +143,167 @@
               </div>
             </template>
           </el-tree>
+
+          <div class="subtable-sidebar">
+            <div class="sidebar-head sidebar-head--subtable">
+              <div>
+                <div class="section-kicker">明细模型</div>
+                <div class="section-title">子表配置</div>
+              </div>
+              <el-button type="primary" size="small" icon="Plus" @click="addSubTable">新增</el-button>
+            </div>
+            <div v-if="MicroAppForm.SubTables.length === 0" class="empty-inline">暂无子表</div>
+            <div
+              v-for="(subTable, subTableIndex) in MicroAppForm.SubTables"
+              :key="subTable.tableName || subTableIndex"
+              class="subtable-config-card"
+            >
+              <div class="subtable-config-card__head">
+                <span>{{ subTable.label || '未命名子表' }}</span>
+                <el-button
+                  text
+                  type="danger"
+                  size="small"
+                  icon="Delete"
+                  @click="deleteSubTable(subTableIndex)"
+                ></el-button>
+              </div>
+              <div class="subtable-config-grid">
+                <el-input v-model="subTable.label" size="small" placeholder="子表名称"></el-input>
+                <el-input v-model="subTable.tableName" size="small" placeholder="sub_table"></el-input>
+                <el-input-number
+                  v-model="subTable.minRows"
+                  size="small"
+                  :min="0"
+                  :max="1000"
+                  placeholder="最小行"
+                ></el-input-number>
+                <el-input-number
+                  v-model="subTable.maxRows"
+                  size="small"
+                  :min="0"
+                  :max="5000"
+                  placeholder="最大行"
+                ></el-input-number>
+              </div>
+              <div class="subtable-lookup-config">
+                <label class="subtable-lookup-switch">
+                  <span>开窗带入</span>
+                  <el-switch v-model="subTable.enableLookup"></el-switch>
+                </label>
+                <div v-if="subTable.enableLookup" class="subtable-lookup-body">
+                  <el-select
+                    v-model="subTable.lookupDataSourceCode"
+                    size="small"
+                    clearable
+                    filterable
+                    placeholder="选择 ESB 数据源"
+                  >
+                    <el-option
+                      v-for="source in esbDataSources"
+                      :key="source.Code || source.code"
+                      :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                      :value="source.Code || source.code"
+                    ></el-option>
+                  </el-select>
+                  <el-input-number
+                    v-model="subTable.lookupPageSize"
+                    size="small"
+                    :min="5"
+                    :max="200"
+                    :step="5"
+                    placeholder="分页"
+                  ></el-input-number>
+                  <el-input
+                    v-model="subTable.lookupParams"
+                    size="small"
+                    type="textarea"
+                    :rows="2"
+                    placeholder='静态参数 JSON，例如 {"status":1}'
+                  ></el-input>
+                  <div class="subtable-lookup-title">弹窗显示列</div>
+                  <div
+                    v-for="(column, columnIndex) in subTable.lookupColumns"
+                    :key="columnIndex"
+                    class="subtable-lookup-row subtable-lookup-row--columns"
+                  >
+                    <el-input v-model="column.field" size="small" placeholder="返回字段"></el-input>
+                    <el-input v-model="column.label" size="small" placeholder="列标题"></el-input>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      icon="Delete"
+                      @click="removeSubTableLookupColumn(subTable, columnIndex)"
+                    ></el-button>
+                  </div>
+                  <el-button size="small" icon="Plus" @click="addSubTableLookupColumn(subTable)">显示列</el-button>
+                  <div class="subtable-lookup-title">字段回填映射</div>
+                  <div
+                    v-for="(mapping, mappingIndex) in subTable.lookupMappings"
+                    :key="mappingIndex"
+                    class="subtable-lookup-row"
+                  >
+                    <el-input v-model="mapping.sourceField" size="small" placeholder="返回字段"></el-input>
+                    <el-select v-model="mapping.targetField" size="small" filterable placeholder="明细字段">
+                      <el-option
+                        v-for="field in subTable.fields"
+                        :key="field.fieldName"
+                        :label="`${field.label || field.fieldName}（${field.fieldName}）`"
+                        :value="field.fieldName"
+                      ></el-option>
+                    </el-select>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      icon="Delete"
+                      @click="removeSubTableLookupMapping(subTable, mappingIndex)"
+                    ></el-button>
+                  </div>
+                  <el-button size="small" icon="Plus" @click="addSubTableLookupMapping(subTable)">回填映射</el-button>
+                </div>
+              </div>
+              <div class="subtable-field-actions">
+                <span>{{ subTable.fields.length }} 个字段</span>
+                <el-button size="small" icon="Plus" @click="addSubTableField(subTable)">字段</el-button>
+              </div>
+              <el-tree
+                class="field-tree subtable-field-tree"
+                :data="subTable.fields"
+                :props="{ label: 'label', children: 'children' }"
+                node-key="fieldName"
+                :expand-on-click-node="false"
+                :current-node-key="selectedFieldKey"
+                draggable
+                :allow-drop="allowFieldDrop"
+                @node-drop="() => handleSubTableFieldDrop(subTable)"
+                @node-click="(data) => selectSubTableField(subTable, data)"
+              >
+                <template #default="{ data }">
+                  <div class="field-tree-node">
+                    <span class="field-tree-node__main">
+                      <el-icon class="field-tree-node__drag"><Rank /></el-icon>
+                      <span class="field-tree-node__text">
+                        <span class="field-tree-node__label">{{ data.label || '未命名字段' }}</span>
+                        <span class="field-tree-node__meta">{{ data.fieldName || 'field_name' }}</span>
+                      </span>
+                    </span>
+                    <span class="field-tree-node__side">
+                      <el-tag size="small" effect="plain" :type="getFieldTypeTagType(data.fieldType)">
+                        {{ getFieldTypeLabel(data.fieldType) }}
+                      </el-tag>
+                      <button
+                        class="field-tree-node__delete"
+                        type="button"
+                        @click.stop="deleteSubTableField(subTable, data.fieldName)"
+                      >
+                        删除
+                      </button>
+                    </span>
+                  </div>
+                </template>
+              </el-tree>
+            </div>
+          </div>
         </aside>
 
         <main class="visual-workspace">
@@ -183,6 +344,10 @@
                 <label class="switch-tile">
                   <span>导出</span>
                   <el-switch v-model="MicroAppForm.SupportExport"></el-switch>
+                </label>
+                <label class="switch-tile">
+                  <span>列表子表</span>
+                  <el-switch v-model="MicroAppForm.ShowSubTablesInList"></el-switch>
                 </label>
               </div>
 
@@ -253,7 +418,7 @@
                         <el-option label="下拉选择" value="select"></el-option>
                         <el-option label="单选" value="radio"></el-option>
                         <el-option label="多选" value="checkbox"></el-option>
-                        <el-option label="开窗查询" value="lookup"></el-option>
+                        <el-option v-if="selectedFieldScope === 'main'" label="开窗查询" value="lookup"></el-option>
                         <el-option label="附件上传" value="attachment"></el-option>
                       </el-select>
                     </el-form-item>
@@ -395,7 +560,7 @@
                   </div>
                 </div>
 
-                <div v-if="isLookupField(selectedFieldData)" class="config-section">
+                <div v-if="selectedFieldScope === 'main' && isLookupField(selectedFieldData)" class="config-section">
                   <div class="config-section-title">开窗查询</div>
                   <div class="form-grid form-grid--3">
                     <el-form-item label="ESB 数据源">
@@ -644,6 +809,8 @@ export default {
       activeApiTab: 'api-list',
       // 选中的字段 key
       selectedFieldKey: '',
+      selectedFieldScope: 'main',
+      selectedSubTableName: '',
       // 展开的节点 keys
       expandedKeys: [],
       // 选中的字段数据
@@ -671,10 +838,12 @@ export default {
         SupportBatchDelete: false,
         SupportImport: false,
         SupportExport: false,
+        ShowSubTablesInList: true,
         DataScope: 'all',
         FormColumns: 1,
         QueryColumns: 1,
-        Fields: []
+        Fields: [],
+        SubTables: []
       },
       // 表单验证规则
       rules: {
@@ -709,6 +878,10 @@ export default {
       return this.MicroAppForm.Fields.filter((field) => field.showInList).length
     },
     lookupTargetFieldOptions() {
+      if (this.selectedFieldScope === 'sub') {
+        const subTable = this.MicroAppForm.SubTables.find((item) => item.tableName === this.selectedSubTableName)
+        return (subTable?.fields || []).filter((field) => field.fieldName)
+      }
       return this.MicroAppForm.Fields.filter((field) => field.fieldName)
     }
   },
@@ -972,6 +1145,15 @@ export default {
       const value = Number(queryColumns)
       return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1
     },
+    normalizeShowSubTablesInList(config) {
+      if (config?.ShowSubTablesInList !== undefined && config.ShowSubTablesInList !== null) {
+        return Boolean(config.ShowSubTablesInList)
+      }
+      if (config?.showSubTablesInList !== undefined && config.showSubTablesInList !== null) {
+        return Boolean(config.showSubTablesInList)
+      }
+      return true
+    },
     normalizeFieldOrder(fields) {
       return Array.isArray(fields)
         ? [...fields]
@@ -1063,6 +1245,59 @@ export default {
       normalizedFields.forEach((field) => this.normalizeFieldByType(field))
       return normalizedFields
     },
+    normalizeSubTables(subTables) {
+      let normalized = subTables || []
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) {
+        return []
+      }
+
+      return normalized
+        .filter((subTable) => subTable && typeof subTable === 'object')
+        .map((subTable, index) => ({
+          label: subTable.Label || subTable.label || '',
+          tableName: subTable.TableName || subTable.tableName || '',
+          minRows:
+            subTable.MinRows !== undefined && subTable.MinRows !== null
+              ? Number(subTable.MinRows)
+              : subTable.minRows !== undefined && subTable.minRows !== null
+                ? Number(subTable.minRows)
+                : 0,
+          maxRows:
+            subTable.MaxRows !== undefined && subTable.MaxRows !== null
+              ? Number(subTable.MaxRows)
+              : subTable.maxRows !== undefined && subTable.maxRows !== null
+                ? Number(subTable.maxRows)
+                : null,
+          sortOrder:
+            subTable.SortOrder !== undefined && subTable.SortOrder !== null
+              ? Number(subTable.SortOrder)
+              : subTable.sortOrder !== undefined && subTable.sortOrder !== null
+                ? Number(subTable.sortOrder)
+                : index + 1,
+          enableLookup:
+            subTable.EnableLookup !== undefined
+              ? Boolean(subTable.EnableLookup)
+              : subTable.enableLookup !== undefined
+                ? Boolean(subTable.enableLookup)
+                : false,
+          lookupDataSourceCode: subTable.LookupDataSourceCode || subTable.lookupDataSourceCode || '',
+          lookupParams: subTable.LookupParams || subTable.lookupParams || '',
+          lookupPageSize: subTable.LookupPageSize || subTable.lookupPageSize || 10,
+          lookupColumns: this.normalizeLookupColumns(subTable.LookupColumns || subTable.lookupColumns || []),
+          lookupMappings: this.normalizeLookupMappings(subTable.LookupMappings || subTable.lookupMappings || []),
+          fields: this.normalizeFields(subTable.Fields || subTable.fields || [])
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+    },
     // 获取微应用配置列表
     async getMicroApps() {
       try {
@@ -1083,6 +1318,8 @@ export default {
             DataScope: item.DataScope || item.dataScope || 'all',
             FormColumns: this.normalizeFormColumns(item.FormColumns || item.formColumns),
             QueryColumns: this.normalizeQueryColumns(item.QueryColumns || item.queryColumns),
+            ShowSubTablesInList: this.normalizeShowSubTablesInList(item),
+            SubTables: this.normalizeSubTables(item.SubTables || item.subTables || []),
             configDesc: item.ConfigDesc || item.configDesc || ''
           }))
           this.total = res.total
@@ -1119,10 +1356,12 @@ export default {
         SupportBatchDelete: false,
         SupportImport: false,
         SupportExport: false,
+        ShowSubTablesInList: true,
         DataScope: 'all',
         FormColumns: 1,
         QueryColumns: 1,
-        Fields: []
+        Fields: [],
+        SubTables: []
       }
       this.dialogVisible = true
     },
@@ -1135,6 +1374,8 @@ export default {
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
+        ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
+        SubTables: this.normalizeSubTables(row.SubTables || row.subTables || []),
         configDesc: row.ConfigDesc || row.configDesc || ''
       }
       this.dialogVisible = true
@@ -1173,7 +1414,8 @@ export default {
             ConfigDesc: this.MicroAppForm.configDesc || this.MicroAppForm.ConfigDesc || '',
             MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName,
             FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
-            QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns)
+            QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
+            ShowSubTablesInList: this.MicroAppForm.ShowSubTablesInList !== false
           }
           let res
           if (this.MicroAppForm.ItemId) {
@@ -1195,13 +1437,8 @@ export default {
     },
     // 可视化配置
     visualConfig(row) {
-      console.log('原始行数据:', row)
-      console.log('Fields 数据类型:', typeof row.Fields)
-      console.log('Fields 数据:', row.Fields)
-
       const fields = this.normalizeFields(row.Fields)
-
-      console.log('转换后的 Fields:', fields)
+      const subTables = this.normalizeSubTables(row.SubTables || row.subTables || [])
 
       this.MicroAppForm = {
         ...row,
@@ -1209,22 +1446,24 @@ export default {
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
+        ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
         configDesc: row.ConfigDesc || row.configDesc || '',
-        Fields: fields
+        Fields: fields,
+        SubTables: subTables
       }
-
-      console.log('MicroAppForm.Fields:', this.MicroAppForm.Fields)
 
       // 初始化展开的节点
       this.expandedKeys = []
       // 重置选中状态
       this.selectedFieldKey = ''
+      this.selectedFieldScope = 'main'
+      this.selectedSubTableName = ''
       this.selectedFieldData = null
       this.visualConfigVisible = true
     },
     // 添加字段
-    addField() {
-      const newField = {
+    createNewField(sortOrder) {
+      return {
         label: '新字段',
         fieldName: 'new_field',
         fieldType: 'string',
@@ -1238,7 +1477,7 @@ export default {
         queryMode: 'none',
         queryWidth: 150,
         dateFormat: 'datetime',
-        sortOrder: this.MicroAppForm.Fields.length + 1,
+        sortOrder,
         minLength: null,
         maxLength: null,
         minValue: null,
@@ -1258,7 +1497,62 @@ export default {
         lookupMappings: [],
         options: []
       }
+    },
+    addField() {
+      const newField = this.createNewField(this.MicroAppForm.Fields.length + 1)
       this.MicroAppForm.Fields.push(newField)
+      this.selectField(newField)
+    },
+    addSubTable() {
+      const index = this.MicroAppForm.SubTables.length + 1
+      const subTable = {
+        label: `子表${index}`,
+        tableName: `sub_table_${index}`,
+        minRows: 0,
+        maxRows: null,
+        sortOrder: index,
+        enableLookup: false,
+        lookupDataSourceCode: '',
+        lookupParams: '',
+        lookupPageSize: 10,
+        lookupColumns: [],
+        lookupMappings: [],
+        fields: []
+      }
+      this.MicroAppForm.SubTables.push(subTable)
+    },
+    deleteSubTable(index) {
+      const subTable = this.MicroAppForm.SubTables[index]
+      this.MicroAppForm.SubTables.splice(index, 1)
+      if (subTable && this.selectedFieldScope === 'sub' && this.selectedSubTableName === subTable.tableName) {
+        this.selectedFieldKey = ''
+        this.selectedFieldScope = 'main'
+        this.selectedSubTableName = ''
+        this.selectedFieldData = null
+      }
+    },
+    addSubTableField(subTable) {
+      if (!subTable.fields) subTable.fields = []
+      const newField = this.createNewField(subTable.fields.length + 1)
+      subTable.fields.push(newField)
+      this.selectSubTableField(subTable, newField)
+    },
+    deleteSubTableField(subTable, fieldName) {
+      const index = subTable.fields.findIndex((item) => item.fieldName === fieldName)
+      if (index > -1) {
+        subTable.fields.splice(index, 1)
+        if (
+          this.selectedFieldScope === 'sub' &&
+          this.selectedSubTableName === subTable.tableName &&
+          this.selectedFieldData?.fieldName === fieldName
+        ) {
+          this.selectedFieldKey = ''
+          this.selectedFieldScope = 'main'
+          this.selectedSubTableName = ''
+          this.selectedFieldData = null
+        }
+        this.refreshSubTableFieldSortOrder(subTable)
+      }
     },
     // 添加选项
     addOption() {
@@ -1358,9 +1652,31 @@ export default {
     removeLookupMapping(index) {
       this.selectedFieldData.lookupMappings.splice(index, 1)
     },
+    addSubTableLookupColumn(subTable) {
+      if (!subTable.lookupColumns) subTable.lookupColumns = []
+      subTable.lookupColumns.push({ field: '', label: '', width: null })
+    },
+    removeSubTableLookupColumn(subTable, index) {
+      subTable.lookupColumns.splice(index, 1)
+    },
+    addSubTableLookupMapping(subTable) {
+      if (!subTable.lookupMappings) subTable.lookupMappings = []
+      subTable.lookupMappings.push({ sourceField: '', targetField: '' })
+    },
+    removeSubTableLookupMapping(subTable, index) {
+      subTable.lookupMappings.splice(index, 1)
+    },
     // 选择字段
     selectField(data) {
       this.selectedFieldKey = data.fieldName
+      this.selectedFieldScope = 'main'
+      this.selectedSubTableName = ''
+      this.selectedFieldData = data
+    },
+    selectSubTableField(subTable, data) {
+      this.selectedFieldKey = data.fieldName
+      this.selectedFieldScope = 'sub'
+      this.selectedSubTableName = subTable.tableName
       this.selectedFieldData = data
     },
     allowFieldDrop(draggingNode, dropNode, type) {
@@ -1372,13 +1688,30 @@ export default {
         sortOrder: index + 1
       }))
 
-      if (this.selectedFieldKey) {
+      if (this.selectedFieldScope === 'main' && this.selectedFieldKey) {
         this.selectedFieldData =
           this.MicroAppForm.Fields.find((field) => field.fieldName === this.selectedFieldKey) || null
       }
     },
     handleFieldDrop() {
       this.refreshFieldSortOrder()
+    },
+    refreshSubTableFieldSortOrder(subTable) {
+      subTable.fields = (subTable.fields || []).map((field, index) => ({
+        ...field,
+        sortOrder: index + 1
+      }))
+
+      if (
+        this.selectedFieldScope === 'sub' &&
+        this.selectedSubTableName === subTable.tableName &&
+        this.selectedFieldKey
+      ) {
+        this.selectedFieldData = subTable.fields.find((field) => field.fieldName === this.selectedFieldKey) || null
+      }
+    },
+    handleSubTableFieldDrop(subTable) {
+      this.refreshSubTableFieldSortOrder(subTable)
     },
     // 处理字段类型变化
     handleFieldTypeChange() {
@@ -1411,10 +1744,65 @@ export default {
         this.refreshFieldSortOrder()
       }
     },
+    toFieldSubmitData(field) {
+      this.normalizeFieldByType(field)
+      return {
+        Label: field.label,
+        FieldName: field.fieldName,
+        FieldType: field.fieldType,
+        SortOrder: field.sortOrder,
+        Required: field.required,
+        ShowInList: field.showInList,
+        Editable: field.editable,
+        Validation: field.validation,
+        ColumnWidth: field.columnWidth,
+        ColumnLength: field.columnLength,
+        Sortable: field.sortable,
+        Fixed: field.fixed || 'none',
+        QueryMode: field.queryMode || 'none',
+        QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,
+        DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
+        MinLength: field.minLength,
+        MaxLength: field.maxLength,
+        MinValue: field.minValue,
+        MaxValue: field.maxValue,
+        Pattern: field.pattern,
+        DefaultValue: field.defaultValue,
+        OptionSource: field.optionSource || 'manual',
+        DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
+        EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
+        EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
+        LookupDataSourceCode: field.fieldType === 'lookup' ? field.lookupDataSourceCode || '' : '',
+        LookupParams: field.fieldType === 'lookup' ? field.lookupParams || '' : '',
+        LookupValueField: field.fieldType === 'lookup' ? field.lookupValueField || '' : '',
+        LookupPageSize: field.fieldType === 'lookup' ? this.normalizeLookupPageSize(field.lookupPageSize) : null,
+        LookupColumns:
+          field.fieldType === 'lookup'
+            ? this.normalizeLookupColumns(field.lookupColumns).filter((column) => column.field && column.label)
+            : [],
+        LookupMappings:
+          field.fieldType === 'lookup'
+            ? this.normalizeLookupMappings(field.lookupMappings).filter(
+                (mapping) => mapping.sourceField && mapping.targetField
+              )
+            : [],
+        Options: this.normalizeFieldOptions(field.options)
+      }
+    },
     // 保存可视化配置
     async saveVisualConfig() {
       try {
-        const invalidDictField = this.MicroAppForm.Fields.find(
+        const normalizedSubTables = this.normalizeSubTables(this.MicroAppForm.SubTables)
+        const allFields = this.MicroAppForm.Fields.concat(normalizedSubTables.flatMap((subTable) => subTable.fields))
+        const invalidSubTable = normalizedSubTables.find(
+          (subTable) => !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(subTable.tableName || '')
+        )
+        if (invalidSubTable) {
+          this.$message.error(`${invalidSubTable.label || '子表'} 的子表标识不正确`)
+          return
+        }
+
+        const invalidDictField = allFields.find(
           (field) => this.supportsOptions(field) && field.optionSource === 'dictionary' && !field.dictCode
         )
         if (invalidDictField) {
@@ -1422,7 +1810,7 @@ export default {
           return
         }
 
-        const invalidEsbField = this.MicroAppForm.Fields.find(
+        const invalidEsbField = allFields.find(
           (field) => this.supportsOptions(field) && field.optionSource === 'esb' && !field.esbDataSourceCode
         )
         if (invalidEsbField) {
@@ -1430,7 +1818,7 @@ export default {
           return
         }
 
-        const invalidLookupField = this.MicroAppForm.Fields.find(
+        const invalidLookupField = allFields.find(
           (field) =>
             this.isLookupField(field) &&
             (!field.lookupDataSourceCode ||
@@ -1439,6 +1827,21 @@ export default {
         )
         if (invalidLookupField) {
           this.$message.error(`${invalidLookupField.label || invalidLookupField.fieldName} 的开窗查询配置不完整`)
+          return
+        }
+
+        const invalidLookupSubTable = normalizedSubTables.find(
+          (subTable) =>
+            subTable.enableLookup &&
+            (!subTable.lookupDataSourceCode ||
+              this.normalizeLookupColumns(subTable.lookupColumns).filter((column) => column.field && column.label)
+                .length === 0 ||
+              this.normalizeLookupMappings(subTable.lookupMappings).filter(
+                (mapping) => mapping.sourceField && mapping.targetField
+              ).length === 0)
+        )
+        if (invalidLookupSubTable) {
+          this.$message.error(`${invalidLookupSubTable.label || invalidLookupSubTable.tableName} 的开窗带入配置不完整`)
           return
         }
 
@@ -1452,54 +1855,29 @@ export default {
           DataScope: this.MicroAppForm.DataScope || 'all',
           FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
           QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
-          Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => {
-            this.normalizeFieldByType(field)
-            return {
-              Label: field.label,
-              FieldName: field.fieldName,
-              FieldType: field.fieldType,
-              SortOrder: field.sortOrder,
-              Required: field.required,
-              ShowInList: field.showInList,
-              Editable: field.editable,
-              Validation: field.validation,
-              ColumnWidth: field.columnWidth,
-              ColumnLength: field.columnLength,
-              Sortable: field.sortable,
-              Fixed: field.fixed || 'none',
-              QueryMode: field.queryMode || 'none',
-              QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,
-              DateFormat: field.fieldType === 'datetime' ? field.dateFormat || 'datetime' : null,
-              MinLength: field.minLength,
-              MaxLength: field.maxLength,
-              MinValue: field.minValue,
-              MaxValue: field.maxValue,
-              Pattern: field.pattern,
-              DefaultValue: field.defaultValue,
-              OptionSource: field.optionSource || 'manual',
-              DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
-              EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
-              EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
-              LookupDataSourceCode: field.fieldType === 'lookup' ? field.lookupDataSourceCode || '' : '',
-              LookupParams: field.fieldType === 'lookup' ? field.lookupParams || '' : '',
-              LookupValueField: field.fieldType === 'lookup' ? field.lookupValueField || '' : '',
-              LookupPageSize: field.fieldType === 'lookup' ? this.normalizeLookupPageSize(field.lookupPageSize) : null,
-              LookupColumns:
-                field.fieldType === 'lookup'
-                  ? this.normalizeLookupColumns(field.lookupColumns).filter((column) => column.field && column.label)
-                  : [],
-              LookupMappings:
-                field.fieldType === 'lookup'
-                  ? this.normalizeLookupMappings(field.lookupMappings).filter(
-                      (mapping) => mapping.sourceField && mapping.targetField
-                    )
-                  : [],
-              Options: this.normalizeFieldOptions(field.options)
-            }
-          })
+          ShowSubTablesInList: this.MicroAppForm.ShowSubTablesInList !== false,
+          Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => this.toFieldSubmitData(field)),
+          SubTables: normalizedSubTables.map((subTable, index) => ({
+            Label: subTable.label,
+            TableName: subTable.tableName,
+            MinRows: Number(subTable.minRows) || 0,
+            MaxRows: Number(subTable.maxRows) || null,
+            SortOrder: subTable.sortOrder || index + 1,
+            EnableLookup: Boolean(subTable.enableLookup),
+            LookupDataSourceCode: subTable.enableLookup ? subTable.lookupDataSourceCode || '' : '',
+            LookupParams: subTable.enableLookup ? subTable.lookupParams || '' : '',
+            LookupPageSize: subTable.enableLookup ? this.normalizeLookupPageSize(subTable.lookupPageSize) : null,
+            LookupColumns: subTable.enableLookup
+              ? this.normalizeLookupColumns(subTable.lookupColumns).filter((column) => column.field && column.label)
+              : [],
+            LookupMappings: subTable.enableLookup
+              ? this.normalizeLookupMappings(subTable.lookupMappings).filter(
+                  (mapping) => mapping.sourceField && mapping.targetField
+                )
+              : [],
+            Fields: this.normalizeFieldOrder(subTable.fields).map((field) => this.toFieldSubmitData(field))
+          }))
         }
-
-        console.log('提交的数据:', submitData)
 
         const res = await updateMicroAppConfig(submitData)
         if (res.data.success) {
@@ -1515,13 +1893,8 @@ export default {
     },
     // 生成接口文档
     generateApiDoc(row) {
-      console.log('生成接口文档 - 原始行数据:', row)
-      console.log('生成接口文档 - Fields 数据类型:', typeof row.Fields)
-      console.log('生成接口文档 - Fields 数据:', row.Fields)
-
       const fields = this.normalizeFields(row.Fields)
-
-      console.log('转换后的 Fields:', fields)
+      const subTables = this.normalizeSubTables(row.SubTables || row.subTables || [])
 
       this.MicroAppForm = {
         ...row,
@@ -1529,11 +1902,11 @@ export default {
         DataScope: row.DataScope || row.dataScope || 'all',
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
+        ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
         configDesc: row.ConfigDesc || row.configDesc || '',
-        Fields: fields
+        Fields: fields,
+        SubTables: subTables
       }
-
-      console.log('MicroAppForm.Fields:', this.MicroAppForm.Fields)
 
       this.generateApis()
       this.apiDocVisible = true
@@ -1772,7 +2145,7 @@ export default {
   min-width: 0;
   min-height: 0;
   padding: 14px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .sidebar-head,
@@ -1853,8 +2226,9 @@ export default {
 }
 
 .field-tree {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -1946,6 +2320,49 @@ export default {
 .field-tree-node__delete:hover,
 .field-tree-node__delete:focus {
   color: #f56c6c;
+}
+
+.subtable-sidebar {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e6edf7;
+}
+
+.sidebar-head--subtable {
+  margin-bottom: 12px;
+}
+
+.subtable-config-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #e6edf7;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.subtable-config-card__head,
+.subtable-field-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #344563;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subtable-config-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.subtable-field-tree {
+  max-height: 220px;
+  overflow-y: auto;
 }
 
 .visual-workspace {
@@ -2191,6 +2608,47 @@ export default {
 
 .lookup-config-row--columns {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 120px 40px;
+}
+
+.subtable-lookup-config {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
+}
+
+.subtable-lookup-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #344563;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.subtable-lookup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.subtable-lookup-title {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.subtable-lookup-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+  gap: 6px;
+  align-items: center;
+}
+
+.subtable-lookup-row--columns {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
 }
 
 .empty-inline {

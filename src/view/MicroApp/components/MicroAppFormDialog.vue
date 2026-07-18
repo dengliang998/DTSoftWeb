@@ -2,9 +2,11 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
+    class="micro-app-form-dialog"
+    custom-class="micro-app-form-dialog"
     :title="title"
     :width="formDialogWidth"
-    :top="'20vh'"
+    :top="'8vh'"
     :close-on-click-modal="false"
   >
     <div class="dialog-form-container">
@@ -143,6 +145,160 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <div v-if="orderedSubTables.length > 0" class="subtable-form-sections">
+          <div class="subtable-group-heading">
+            <span class="subtable-group-title">关联子表</span>
+            <span class="subtable-group-count">{{ orderedSubTables.length }} 个子表</span>
+          </div>
+          <section v-for="subTable in orderedSubTables" :key="subTable.tableName" class="subtable-panel">
+            <div class="subtable-panel-header">
+              <div class="subtable-title-area">
+                <span class="subtable-title-marker"></span>
+                <div>
+                  <div class="subtable-title">{{ subTable.label || subTable.tableName }}</div>
+                  <div class="subtable-meta">
+                    {{ getSubTableRows(subTable).length }} 行
+                    <template v-if="subTable.maxRows">/ 最多 {{ subTable.maxRows }} 行</template>
+                  </div>
+                </div>
+              </div>
+              <div class="subtable-actions">
+                <el-button
+                  v-if="subTable.enableLookup"
+                  size="small"
+                  icon="Search"
+                  :disabled="isSubTableMaxReached(subTable)"
+                  @click="openSubTableLookupDialog(subTable)"
+                >
+                  选择数据
+                </el-button>
+                <el-button
+                  type="primary"
+                  size="small"
+                  icon="Plus"
+                  :disabled="isSubTableMaxReached(subTable)"
+                  @click="addSubTableRow(subTable)"
+                >
+                  新增行
+                </el-button>
+              </div>
+            </div>
+            <div class="subtable-editor-wrap">
+              <el-table :data="getSubTableRows(subTable)" border stripe class="subtable-editor" max-height="320">
+                <el-table-column type="index" label="序号" width="64"></el-table-column>
+                <el-table-column
+                  v-for="field in normalizeFieldOrder(subTable.fields)"
+                  :key="field.fieldName"
+                  :label="field.label || field.fieldName"
+                  :min-width="field.fieldType === 'textarea' ? 240 : 180"
+                >
+                  <template #default="{ row, $index }">
+                    <el-form-item
+                      class="subtable-form-item"
+                      :prop="`__subTables.${subTable.tableName}.${$index}.${field.fieldName}`"
+                      :rules="getFieldRules(field)"
+                    >
+                      <el-input
+                        v-if="field.fieldType === 'string'"
+                        v-model="row[field.fieldName]"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-input>
+                      <el-input-number
+                        v-else-if="field.fieldType === 'number'"
+                        v-model="row[field.fieldName]"
+                        style="width: 100%"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-input-number>
+                      <el-date-picker
+                        v-else-if="field.fieldType === 'datetime'"
+                        v-model="row[field.fieldName]"
+                        :type="getDatePickerType(field)"
+                        :value-format="getDateValueFormat(field)"
+                        :format="getDateDisplayFormat(field)"
+                        style="width: 100%"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-date-picker>
+                      <el-switch
+                        v-else-if="field.fieldType === 'boolean'"
+                        v-model="row[field.fieldName]"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-switch>
+                      <el-input
+                        v-else-if="field.fieldType === 'textarea'"
+                        v-model="row[field.fieldName]"
+                        type="textarea"
+                        :rows="2"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-input>
+                      <el-select
+                        v-else-if="field.fieldType === 'select'"
+                        v-model="row[field.fieldName]"
+                        style="width: 100%"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      >
+                        <el-option
+                          v-for="opt in field.options || []"
+                          :key="opt.value"
+                          :label="opt.label"
+                          :value="opt.value"
+                        ></el-option>
+                      </el-select>
+                      <el-radio-group
+                        v-else-if="field.fieldType === 'radio'"
+                        v-model="row[field.fieldName]"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      >
+                        <el-radio v-for="opt in field.options || []" :key="opt.value" :label="opt.value">
+                          {{ opt.label }}
+                        </el-radio>
+                      </el-radio-group>
+                      <el-checkbox-group
+                        v-else-if="field.fieldType === 'checkbox'"
+                        v-model="row[field.fieldName]"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      >
+                        <el-checkbox v-for="opt in field.options || []" :key="opt.value" :label="opt.value">
+                          {{ opt.label }}
+                        </el-checkbox>
+                      </el-checkbox-group>
+                      <el-input
+                        v-else
+                        v-model="row[field.fieldName]"
+                        :disabled="dialogType === 'edit' && !field.editable"
+                      ></el-input>
+                    </el-form-item>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="80" fixed="right" align="center">
+                  <template #default="{ $index }">
+                    <el-button
+                      class="subtable-delete-button"
+                      type="danger"
+                      size="small"
+                      icon="Delete"
+                      title="删除行"
+                      @click="removeSubTableRow(subTable, $index)"
+                    ></el-button>
+                  </template>
+                </el-table-column>
+                <template #empty>
+                  <div class="subtable-empty">
+                    <div class="subtable-empty-title">暂无明细</div>
+                    <el-button
+                      type="primary"
+                      size="small"
+                      icon="Plus"
+                      :disabled="isSubTableMaxReached(subTable)"
+                      @click="addSubTableRow(subTable)"
+                    >
+                      新增第一行
+                    </el-button>
+                  </div>
+                </template>
+              </el-table>
+            </div>
+          </section>
+        </div>
       </el-form>
     </div>
     <template #footer>
@@ -160,7 +316,16 @@
     append-to-body
     :close-on-click-modal="false"
   >
-    <el-table v-loading="lookupLoading" :data="lookupRows" border stripe height="360" @row-dblclick="selectLookupRow">
+    <el-table
+      v-loading="lookupLoading"
+      :data="lookupRows"
+      border
+      stripe
+      height="360"
+      @selection-change="handleLookupSelectionChange"
+      @row-dblclick="handleLookupRowDoubleClick"
+    >
+      <el-table-column v-if="lookupDialogMode === 'subTable'" type="selection" width="48"></el-table-column>
       <el-table-column
         v-for="column in activeLookupColumns"
         :key="column.field"
@@ -169,7 +334,7 @@
         :width="column.width || undefined"
         show-overflow-tooltip
       ></el-table-column>
-      <el-table-column label="操作" width="80" fixed="right">
+      <el-table-column v-if="lookupDialogMode === 'field'" label="操作" width="80" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="selectLookupRow(row)">选择</el-button>
         </template>
@@ -184,6 +349,14 @@
         @current-change="handleLookupPageChange"
       ></el-pagination>
     </div>
+    <template v-if="lookupDialogMode === 'subTable'" #footer>
+      <span class="dialog-footer">
+        <el-button @click="lookupDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="lookupSelectedRows.length === 0" @click="confirmSubTableLookupRows">
+          确定选择
+        </el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 
@@ -212,7 +385,10 @@ export default {
       uploadHeaders: getUploadHeaders(),
       lookupDialogVisible: false,
       lookupLoading: false,
+      lookupDialogMode: 'field',
       activeLookupField: null,
+      activeLookupSubTable: null,
+      lookupSelectedRows: [],
       lookupRows: [],
       lookupTotal: 0,
       lookupQuery: {
@@ -231,19 +407,41 @@ export default {
       }
     },
     lookupDialogTitle() {
+      if (this.lookupDialogMode === 'subTable') {
+        return this.activeLookupSubTable
+          ? `选择${this.activeLookupSubTable.label || this.activeLookupSubTable.tableName}`
+          : '选择数据'
+      }
       return this.activeLookupField
         ? `选择${this.activeLookupField.label || this.activeLookupField.fieldName}`
         : '开窗查询'
     },
     activeLookupColumns() {
-      const configured = this.normalizeLookupColumns(this.activeLookupField?.lookupColumns)
+      const configured = this.normalizeLookupColumns(this.getActiveLookupConfig()?.lookupColumns)
       if (configured.length > 0) return configured
 
       const firstRow = this.lookupRows[0] || {}
       return Object.keys(firstRow).map((key) => ({ field: key, label: key, width: null }))
+    },
+    orderedSubTables() {
+      const subTables = Array.isArray(this.appConfig?.subTables) ? this.appConfig.subTables : []
+      return [...subTables].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
     }
   },
   methods: {
+    normalizeFieldOrder(fields) {
+      return Array.isArray(fields)
+        ? [...fields]
+            .map((field, index) => ({
+              ...field,
+              sortOrder:
+                field.sortOrder !== undefined && field.sortOrder !== null && field.sortOrder !== ''
+                  ? Number(field.sortOrder)
+                  : index + 1
+            }))
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+        : []
+    },
     getFieldRules(field) {
       const rules = []
       if (field.fieldType === 'attachment') {
@@ -408,13 +606,19 @@ export default {
       const matchedKey = Object.keys(row).find((key) => key.toLowerCase() === fieldName.toLowerCase())
       return matchedKey ? row[matchedKey] : undefined
     },
+    getActiveLookupConfig() {
+      return this.lookupDialogMode === 'subTable' ? this.activeLookupSubTable : this.activeLookupField
+    },
     async openLookupDialog(field) {
       if (!field.lookupDataSourceCode) {
         this.$message.warning('请先配置开窗查询数据源')
         return
       }
 
+      this.lookupDialogMode = 'field'
       this.activeLookupField = field
+      this.activeLookupSubTable = null
+      this.lookupSelectedRows = []
       this.lookupQuery = {
         pageNum: 1,
         pageSize: Number(field.lookupPageSize) || 10
@@ -422,20 +626,36 @@ export default {
       this.lookupDialogVisible = true
       await this.loadLookupData()
     },
+    async openSubTableLookupDialog(subTable) {
+      if (!subTable.lookupDataSourceCode) {
+        this.$message.warning('请先配置子表开窗查询数据源')
+        return
+      }
+
+      this.lookupDialogMode = 'subTable'
+      this.activeLookupField = null
+      this.activeLookupSubTable = subTable
+      this.lookupSelectedRows = []
+      this.lookupQuery = {
+        pageNum: 1,
+        pageSize: Number(subTable.lookupPageSize) || 10
+      }
+      this.lookupDialogVisible = true
+      await this.loadLookupData()
+    },
     async loadLookupData() {
-      if (!this.activeLookupField) return
+      const lookupConfig = this.getActiveLookupConfig()
+      if (!lookupConfig) return
 
       this.lookupLoading = true
       try {
         const { data: res } = await executeEsbDataSource({
-          code: this.activeLookupField.lookupDataSourceCode,
-          parameters: this.parseLookupParams(this.activeLookupField.lookupParams),
+          code: lookupConfig.lookupDataSourceCode,
+          parameters: this.parseLookupParams(lookupConfig.lookupParams),
           pageNum: this.lookupQuery.pageNum,
           pageSize: this.lookupQuery.pageSize
         })
-        const payload = res?.data || {}
-        this.lookupRows = Array.isArray(payload.List || payload.list) ? payload.List || payload.list : []
-        this.lookupTotal = payload.Total || payload.total || this.lookupRows.length
+        this.applyLookupPayload(res?.data)
       } catch (error) {
         this.lookupRows = []
         this.lookupTotal = 0
@@ -444,9 +664,27 @@ export default {
         this.lookupLoading = false
       }
     },
+    applyLookupPayload(payload) {
+      if (Array.isArray(payload)) {
+        this.lookupRows = payload
+        this.lookupTotal = payload.length
+        return
+      }
+
+      const data = payload || {}
+      this.lookupRows = Array.isArray(data.List || data.list) ? data.List || data.list : []
+      this.lookupTotal = data.Total || data.total || this.lookupRows.length
+    },
     handleLookupPageChange(page) {
       this.lookupQuery.pageNum = page
       this.loadLookupData()
+    },
+    handleLookupSelectionChange(rows) {
+      this.lookupSelectedRows = rows || []
+    },
+    handleLookupRowDoubleClick(row) {
+      if (this.lookupDialogMode === 'subTable') return
+      this.selectLookupRow(row)
     },
     selectLookupRow(row) {
       if (!this.activeLookupField) return
@@ -466,6 +704,33 @@ export default {
       this.$refs.formRef?.validateField(this.activeLookupField.fieldName)
       this.lookupDialogVisible = false
     },
+    confirmSubTableLookupRows() {
+      if (!this.activeLookupSubTable || this.lookupSelectedRows.length === 0) return
+
+      const rows = this.getSubTableRows(this.activeLookupSubTable)
+      const maxRows = Number(this.activeLookupSubTable.maxRows) || 0
+      const availableCount = maxRows > 0 ? Math.max(maxRows - rows.length, 0) : this.lookupSelectedRows.length
+      if (availableCount <= 0) {
+        this.$message.warning('已达到子表最大行数')
+        return
+      }
+
+      const selectedRows = this.lookupSelectedRows.slice(0, availableCount)
+      const mappings = this.normalizeLookupMappings(this.activeLookupSubTable.lookupMappings)
+      selectedRows.forEach((selectedRow) => {
+        const newRow = this.createSubTableRow(this.activeLookupSubTable)
+        mappings.forEach((mapping) => {
+          newRow[mapping.targetField] = this.getRowValue(selectedRow, mapping.sourceField) ?? ''
+        })
+        rows.push(newRow)
+      })
+
+      if (selectedRows.length < this.lookupSelectedRows.length) {
+        this.$message.warning(`已按最大行数限制新增 ${selectedRows.length} 行`)
+      }
+      this.lookupDialogVisible = false
+      this.lookupSelectedRows = []
+    },
     getDateFormatType(field) {
       return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
     },
@@ -480,6 +745,77 @@ export default {
     getDateDisplayFormat(field) {
       const map = { year: 'YYYY', month: 'YYYY-MM', date: 'YYYY-MM-DD', datetime: 'YYYY-MM-DD HH:mm:ss' }
       return map[this.getDateFormatType(field)]
+    },
+    ensureSubTablesModel() {
+      if (!this.formData.__subTables || typeof this.formData.__subTables !== 'object') {
+        // eslint-disable-next-line vue/no-mutating-props
+        this.formData.__subTables = {}
+      }
+      this.orderedSubTables.forEach((subTable) => {
+        if (!Array.isArray(this.formData.__subTables[subTable.tableName])) {
+          // eslint-disable-next-line vue/no-mutating-props
+          this.formData.__subTables[subTable.tableName] = []
+        }
+      })
+    },
+    getSubTableRows(subTable) {
+      this.ensureSubTablesModel()
+      return this.formData.__subTables[subTable.tableName]
+    },
+    isSubTableMaxReached(subTable) {
+      return subTable.maxRows && this.getSubTableRows(subTable).length >= Number(subTable.maxRows)
+    },
+    createSubTableRow(subTable) {
+      const row = {}
+      this.normalizeFieldOrder(subTable.fields).forEach((field) => {
+        if (field.fieldType === 'checkbox') {
+          row[field.fieldName] = []
+        } else if (field.fieldType === 'number') {
+          row[field.fieldName] = field.defaultValue ? Number(field.defaultValue) : null
+        } else if (field.fieldType === 'boolean') {
+          row[field.fieldName] = Boolean(field.defaultValue)
+        } else {
+          row[field.fieldName] = field.defaultValue || ''
+        }
+      })
+      return row
+    },
+    addSubTableRow(subTable) {
+      if (this.isSubTableMaxReached(subTable)) return
+      this.getSubTableRows(subTable).push(this.createSubTableRow(subTable))
+    },
+    removeSubTableRow(subTable, index) {
+      this.getSubTableRows(subTable).splice(index, 1)
+    },
+    buildSubTableSubmitData() {
+      this.ensureSubTablesModel()
+      const result = {}
+      this.orderedSubTables.forEach((subTable) => {
+        result[subTable.tableName] = this.getSubTableRows(subTable).map((row) => {
+          const submitRow = { ...row }
+          delete submitRow.ItemId
+          delete submitRow.itemId
+          delete submitRow.ParentId
+          delete submitRow.parentId
+          delete submitRow.row_no
+          delete submitRow.created_time
+          delete submitRow.updated_time
+          delete submitRow.created_by
+          delete submitRow.updated_by
+
+          this.normalizeFieldOrder(subTable.fields).forEach((field) => {
+            if (field.fieldType === 'checkbox' && Array.isArray(submitRow[field.fieldName])) {
+              submitRow[field.fieldName] = submitRow[field.fieldName].join(',')
+            } else if (field.fieldType === 'datetime') {
+              submitRow[field.fieldName] = submitRow[field.fieldName] || ''
+            } else if (field.fieldType === 'attachment') {
+              submitRow[field.fieldName] = JSON.stringify(this.normalizeAttachmentValue(submitRow[field.fieldName]))
+            }
+          })
+          return submitRow
+        })
+      })
+      return result
     },
     submitForm() {
       this.$refs.formRef.validate(async (valid) => {
@@ -501,6 +837,7 @@ export default {
               submitData[field.fieldName] = JSON.stringify(this.normalizeAttachmentValue(submitData[field.fieldName]))
             }
           })
+          submitData.__subTables = this.buildSubTableSubmitData()
 
           if (this.dialogType === 'create') {
             res = await createMicroRuntimeData({ modelName: this.appConfig.modelName, data: submitData })
@@ -529,10 +866,29 @@ export default {
 </script>
 
 <style scoped>
+:deep(.micro-app-form-dialog) {
+  display: flex;
+  max-height: 84vh;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+:deep(.micro-app-form-dialog .el-dialog__body) {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+:deep(.micro-app-form-dialog .el-dialog__footer) {
+  flex: 0 0 auto;
+  border-top: 1px solid #e7edf6;
+}
+
 .dialog-form-container {
-  max-height: 40vh;
+  max-height: calc(84vh - 132px);
   overflow-y: auto;
   padding-right: 10px;
+  padding-bottom: 16px;
 }
 .dialog-form-container::-webkit-scrollbar {
   width: 6px;
@@ -550,6 +906,135 @@ export default {
   display: flex;
   justify-content: flex-end;
   padding-top: 12px;
+}
+
+.subtable-form-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e7edf6;
+}
+
+.subtable-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subtable-group-title {
+  color: #182235;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.subtable-group-count {
+  color: #7b8798;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.subtable-panel {
+  overflow: hidden;
+  border: 1px solid #dce5f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.subtable-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e7edf6;
+  background: #f7faff;
+}
+
+.subtable-title-area {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.subtable-title-marker {
+  width: 4px;
+  height: 30px;
+  flex: 0 0 4px;
+  border-radius: 4px;
+  background: #1683ff;
+}
+
+.subtable-title {
+  overflow: hidden;
+  color: #26344d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtable-meta {
+  color: #7b8798;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.subtable-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.subtable-editor-wrap {
+  overflow-x: auto;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.subtable-editor {
+  width: 100%;
+}
+
+.subtable-editor :deep(.el-table__header th) {
+  background: #f1f5fb;
+  color: #26344d;
+  font-weight: 700;
+}
+
+.subtable-editor :deep(.el-table__cell) {
+  padding: 8px 0;
+}
+
+.subtable-empty {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: #8a98aa;
+  font-size: 13px;
+}
+
+.subtable-empty-title {
+  color: #7b8798;
+  font-size: 13px;
+}
+
+.subtable-form-item {
+  margin-bottom: 0;
+}
+
+.subtable-delete-button {
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
 }
 
 .attachment-field {

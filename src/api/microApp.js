@@ -12,6 +12,8 @@ const getRuntimePath = (modelName, suffix = '') => `/api/${modelName}${suffix}`
 
 export const getMicroRuntimeList = ({ modelName, params }) => http.get(getRuntimePath(modelName), { params })
 
+export const getMicroRuntimeDetail = ({ modelName, id }) => http.get(getRuntimePath(modelName, `/${id}`))
+
 export const createMicroRuntimeData = ({ modelName, data }) => http.post(getRuntimePath(modelName), data)
 
 export const updateMicroRuntimeData = ({ modelName, id, data }) => http.put(getRuntimePath(modelName, `/${id}`), data)

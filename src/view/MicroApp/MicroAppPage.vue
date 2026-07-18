@@ -127,13 +127,16 @@
             <el-table
               :data="appData.list"
               :row-style="{ height: '40px' }"
+              :row-class-name="getTableRowClassName"
               :cell-style="{ padding: '0px' }"
               border
               stripe
+              highlight-current-row
               class="table-wrapper"
               height="100%"
               @selection-change="handleSelectionChange"
               @sort-change="handleSortChange"
+              @row-click="handleRuntimeRowClick"
             >
               <el-table-column
                 v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
@@ -214,17 +217,87 @@
               </el-table-column>
             </el-table>
           </div>
-
-          <!-- 分页 -->
           <el-pagination
+            class="main-pagination"
             layout="total, sizes, prev, pager, next, jumper"
             :total="appData.total"
             :page-size="pagination.pageSize"
             :current-page="pagination.currentPage"
-            style="margin-top: 15px"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
           ></el-pagination>
+          <div v-if="showSubTablesInList && orderedSubTables.length > 0" class="related-data-panel">
+            <div class="related-data-header">
+              <div class="related-title-area">
+                <span class="related-title-marker"></span>
+                <div>
+                  <div class="related-title">关联数据</div>
+                  <div class="related-subtitle">
+                    {{ activeRuntimeRowId ? '当前主表记录的子表明细' : '选择一条主表记录查看子表明细' }}
+                  </div>
+                </div>
+              </div>
+              <el-button
+                v-if="activeRuntimeRowId"
+                size="small"
+                :loading="relatedDataLoading"
+                @click="loadRelatedData(activeRuntimeRowId)"
+              >
+                <el-icon class="button-leading-icon"><Refresh /></el-icon>
+                刷新
+              </el-button>
+            </div>
+            <div v-if="!activeRuntimeRowId" class="related-empty-state">请选择上方列表中的一条数据</div>
+            <div v-else v-loading="relatedDataLoading" class="related-content">
+              <el-tabs v-model="activeSubTableName" class="related-tabs">
+                <el-tab-pane v-for="subTable in orderedSubTables" :key="subTable.tableName" :name="subTable.tableName">
+                  <template #label>
+                    <span class="related-tab-label">
+                      {{ subTable.label || subTable.tableName }}
+                      <em>{{ getRelatedSubTableRows(subTable).length }}</em>
+                    </span>
+                  </template>
+                  <el-table
+                    :data="getRelatedSubTablePageRows(subTable)"
+                    border
+                    stripe
+                    size="small"
+                    class="related-subtable"
+                    max-height="220"
+                  >
+                    <el-table-column type="index" label="序号" width="64"></el-table-column>
+                    <el-table-column
+                      v-for="field in normalizeFieldOrder(subTable.fields).filter((item) => item.showInList !== false)"
+                      :key="field.fieldName"
+                      :prop="field.fieldName"
+                      :label="field.label || field.fieldName"
+                      :min-width="field.columnWidth || 140"
+                      show-overflow-tooltip
+                    >
+                      <template #default="{ row }">
+                        {{ formatFieldValue(row[field.fieldName], field) }}
+                      </template>
+                    </el-table-column>
+                    <template #empty>
+                      <div class="related-table-empty">暂无关联数据</div>
+                    </template>
+                  </el-table>
+                  <div class="related-pagination">
+                    <el-pagination
+                      layout="total, sizes, prev, pager, next"
+                      :total="getRelatedSubTableRows(subTable).length"
+                      :page-size="getRelatedPagination(subTable).pageSize"
+                      :current-page="getRelatedPagination(subTable).currentPage"
+                      :page-sizes="[5, 10, 20, 50]"
+                      small
+                      @size-change="(size) => handleRelatedPageSizeChange(subTable, size)"
+                      @current-change="(page) => handleRelatedPageChange(subTable, page)"
+                    ></el-pagination>
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </div>
         </el-card>
       </div>
     </div>
@@ -266,6 +339,7 @@
 
 <script>
 import { ElImageViewer } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import { getFileDownloadUrl } from '@/api/file'
 import { getDictionaryItemsByCode } from '@/api/dictionary'
 import { executeEsbDataSource } from '@/api/esb'
@@ -275,6 +349,7 @@ import {
   deleteMicroRuntimeData,
   exportMicroRuntimeData,
   getMicroAppConfigs,
+  getMicroRuntimeDetail,
   getMicroRuntimeList,
   updateMicroRuntimeData
 } from '@/api/microApp'
@@ -285,6 +360,7 @@ export default {
   name: 'MicroAppPage',
   components: {
     ElImageViewer,
+    Refresh,
     MicroAppFormDialog,
     MicroAppImportDialog,
     VideoPreviewDialog
@@ -334,13 +410,25 @@ export default {
       attachmentImagePreviewVisible: false,
       attachmentImageUrlList: [],
       attachmentVideoPreviewVisible: false,
-      attachmentVideoUrl: ''
+      attachmentVideoUrl: '',
+      activeRuntimeRowId: '',
+      activeRuntimeDetail: null,
+      activeSubTableName: '',
+      relatedDataLoading: false,
+      relatedPagination: {}
     }
   },
   computed: {
     orderedFields() {
       const fields = Array.isArray(this.appConfig?.fields) ? this.appConfig.fields : []
       return this.normalizeFieldOrder(fields)
+    },
+    orderedSubTables() {
+      const subTables = Array.isArray(this.appConfig?.subTables) ? this.appConfig.subTables : []
+      return [...subTables].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    },
+    showSubTablesInList() {
+      return this.appConfig?.showSubTablesInList !== false
     },
     queryableFields() {
       return this.orderedFields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
@@ -375,6 +463,98 @@ export default {
   methods: {
     getRowPrimaryKey(row) {
       return row?.ItemId || row?.itemId || row?.id || row?.Id || row?.ID || row?.idField
+    },
+    getTableRowClassName({ row }) {
+      if (!this.showSubTablesInList) return ''
+      const rowId = this.getRowPrimaryKey(row)
+      return rowId && String(rowId) === String(this.activeRuntimeRowId) ? 'is-related-active' : ''
+    },
+    getRelatedSubTableRows(subTable) {
+      const rawSubTables = this.activeRuntimeDetail?.__subTables || this.activeRuntimeDetail?.SubTables || {}
+      const rows = rawSubTables[subTable.tableName]
+      return Array.isArray(rows) ? rows : []
+    },
+    getRelatedPagination(subTable) {
+      const tableName = subTable.tableName
+      if (!this.relatedPagination[tableName]) {
+        this.relatedPagination[tableName] = {
+          currentPage: 1,
+          pageSize: 5
+        }
+      }
+      return this.relatedPagination[tableName]
+    },
+    getRelatedSubTablePageRows(subTable) {
+      const rows = this.getRelatedSubTableRows(subTable)
+      const pager = this.getRelatedPagination(subTable)
+      const totalPages = Math.max(Math.ceil(rows.length / pager.pageSize), 1)
+      if (pager.currentPage > totalPages) {
+        pager.currentPage = totalPages
+      }
+      const start = (pager.currentPage - 1) * pager.pageSize
+      return rows.slice(start, start + pager.pageSize)
+    },
+    handleRelatedPageSizeChange(subTable, pageSize) {
+      const pager = this.getRelatedPagination(subTable)
+      pager.pageSize = pageSize
+      pager.currentPage = 1
+    },
+    handleRelatedPageChange(subTable, page) {
+      this.getRelatedPagination(subTable).currentPage = page
+    },
+    resetRelatedPagination() {
+      this.orderedSubTables.forEach((subTable) => {
+        const pager = this.getRelatedPagination(subTable)
+        pager.currentPage = 1
+      })
+    },
+    async handleRuntimeRowClick(row, column, event) {
+      if (event?.target?.closest?.('.operation-buttons')) return
+      if (!this.showSubTablesInList) return
+      if (this.orderedSubTables.length === 0) return
+
+      const id = this.getRowPrimaryKey(row)
+      if (!id) {
+        this.$message.warning('无法获取当前行数据ID')
+        return
+      }
+
+      if (!this.activeSubTableName) {
+        this.activeSubTableName = this.orderedSubTables[0]?.tableName || ''
+      }
+
+      if (String(id) === String(this.activeRuntimeRowId) && this.activeRuntimeDetail) return
+      this.activeRuntimeRowId = id
+      await this.loadRelatedData(id)
+    },
+    async loadRelatedData(id) {
+      if (!id) return
+
+      this.relatedDataLoading = true
+      try {
+        const { data: res } = await getMicroRuntimeDetail({
+          modelName: this.appConfig.modelName,
+          id
+        })
+        if (res?.success && res.data) {
+          this.activeRuntimeDetail = res.data
+          this.resetRelatedPagination()
+          if (
+            !this.activeSubTableName ||
+            !this.orderedSubTables.some((item) => item.tableName === this.activeSubTableName)
+          ) {
+            this.activeSubTableName = this.orderedSubTables[0]?.tableName || ''
+          }
+        } else {
+          this.activeRuntimeDetail = null
+          this.$message.error('获取关联数据失败：' + (res?.msg || '未知错误'))
+        }
+      } catch (error) {
+        this.activeRuntimeDetail = null
+        this.$message.error('获取关联数据失败：' + (error.message || '网络错误'))
+      } finally {
+        this.relatedDataLoading = false
+      }
     },
     normalizeFieldOptions(options) {
       let normalized = options
@@ -555,6 +735,110 @@ export default {
             .sort((a, b) => a.sortOrder - b.sortOrder)
         : []
     },
+    normalizeConfigFields(fields) {
+      return Array.isArray(fields)
+        ? this.normalizeFieldOrder(
+            fields
+              .filter((field) => field && typeof field === 'object')
+              .map((field, index) => ({
+                label: field.Label || field.label || '',
+                fieldName: field.FieldName || field.fieldName || '',
+                fieldType: field.FieldType || field.fieldType || 'string',
+                sortOrder:
+                  field.SortOrder !== undefined && field.SortOrder !== null
+                    ? field.SortOrder
+                    : field.sortOrder !== undefined && field.sortOrder !== null
+                      ? field.sortOrder
+                      : index + 1,
+                required:
+                  field.Required !== undefined ? field.Required : field.required !== undefined ? field.required : false,
+                showInList:
+                  field.ShowInList !== undefined
+                    ? field.ShowInList
+                    : field.showInList !== undefined
+                      ? field.showInList
+                      : true,
+                editable:
+                  field.Editable !== undefined ? field.Editable : field.editable !== undefined ? field.editable : true,
+                validation: field.Validation || field.validation || '',
+                columnWidth: field.ColumnWidth || field.columnWidth || null,
+                columnLength:
+                  field.ColumnLength !== undefined
+                    ? field.ColumnLength
+                    : field.columnLength !== undefined
+                      ? field.columnLength
+                      : null,
+                sortable:
+                  field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
+                fixed: field.Fixed || field.fixed || 'none',
+                queryMode: field.QueryMode || field.queryMode || 'none',
+                queryWidth:
+                  field.QueryWidth !== undefined && field.QueryWidth !== null
+                    ? field.QueryWidth
+                    : field.queryWidth !== undefined && field.queryWidth !== null
+                      ? field.queryWidth
+                      : 150,
+                dateFormat: field.DateFormat || field.dateFormat || 'datetime',
+                minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
+                maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
+                minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
+                maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
+                pattern: field.Pattern || field.pattern || '',
+                defaultValue: field.DefaultValue || field.defaultValue || '',
+                optionSource: field.OptionSource || field.optionSource || 'manual',
+                dictCode: field.DictCode || field.dictCode || '',
+                esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
+                esbParams: field.EsbParams || field.esbParams || '',
+                lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
+                lookupParams: field.LookupParams || field.lookupParams || '',
+                lookupValueField: field.LookupValueField || field.lookupValueField || '',
+                lookupPageSize: field.LookupPageSize || field.lookupPageSize || 10,
+                lookupColumns: this.normalizeLookupColumns(field.LookupColumns || field.lookupColumns || []),
+                lookupMappings: this.normalizeLookupMappings(field.LookupMappings || field.lookupMappings || []),
+                options: this.normalizeFieldOptions(field.Options || field.options || [])
+              }))
+          )
+        : []
+    },
+    normalizeSubTables(subTables) {
+      const normalized = Array.isArray(subTables) ? subTables : []
+      return normalized
+        .filter((subTable) => subTable && typeof subTable === 'object')
+        .map((subTable, index) => ({
+          label: subTable.Label || subTable.label || '',
+          tableName: subTable.TableName || subTable.tableName || '',
+          minRows:
+            subTable.MinRows !== undefined && subTable.MinRows !== null
+              ? Number(subTable.MinRows)
+              : subTable.minRows !== undefined && subTable.minRows !== null
+                ? Number(subTable.minRows)
+                : 0,
+          maxRows:
+            subTable.MaxRows !== undefined && subTable.MaxRows !== null
+              ? Number(subTable.MaxRows)
+              : subTable.maxRows !== undefined && subTable.maxRows !== null
+                ? Number(subTable.maxRows)
+                : null,
+          sortOrder:
+            subTable.SortOrder !== undefined && subTable.SortOrder !== null
+              ? Number(subTable.SortOrder)
+              : subTable.sortOrder !== undefined && subTable.sortOrder !== null
+                ? Number(subTable.sortOrder)
+                : index + 1,
+          enableLookup:
+            subTable.EnableLookup !== undefined
+              ? Boolean(subTable.EnableLookup)
+              : subTable.enableLookup !== undefined
+                ? Boolean(subTable.enableLookup)
+                : false,
+          lookupDataSourceCode: subTable.LookupDataSourceCode || subTable.lookupDataSourceCode || '',
+          lookupParams: subTable.LookupParams || subTable.lookupParams || '',
+          lookupPageSize: subTable.LookupPageSize || subTable.lookupPageSize || 10,
+          lookupColumns: this.normalizeLookupColumns(subTable.LookupColumns || subTable.lookupColumns || []),
+          lookupMappings: this.normalizeLookupMappings(subTable.LookupMappings || subTable.lookupMappings || []),
+          fields: this.normalizeConfigFields(subTable.Fields || subTable.fields || [])
+        }))
+    },
     // 初始化微应用
     async initApp() {
       this.loading = true
@@ -626,80 +910,28 @@ export default {
                   : config.supportExport !== undefined
                     ? config.supportExport
                     : false,
+              showSubTablesInList:
+                config.ShowSubTablesInList !== undefined
+                  ? config.ShowSubTablesInList
+                  : config.showSubTablesInList !== undefined
+                    ? config.showSubTablesInList
+                    : true,
               dataScope: config.DataScope || config.dataScope || 'all',
               formColumns: this.normalizeFormColumns(config.FormColumns || config.formColumns),
               queryColumns: this.normalizeQueryColumns(config.QueryColumns || config.queryColumns),
-              fields: Array.isArray(config.Fields)
-                ? this.normalizeFieldOrder(
-                    config.Fields.filter((field) => field && typeof field === 'object').map((field, index) => ({
-                      label: field.Label || field.label || '',
-                      fieldName: field.FieldName || field.fieldName || '',
-                      fieldType: field.FieldType || field.fieldType || 'string',
-                      sortOrder:
-                        field.SortOrder !== undefined && field.SortOrder !== null
-                          ? field.SortOrder
-                          : field.sortOrder !== undefined && field.sortOrder !== null
-                            ? field.sortOrder
-                            : index + 1,
-                      required:
-                        field.Required !== undefined
-                          ? field.Required
-                          : field.required !== undefined
-                            ? field.required
-                            : false,
-                      showInList:
-                        field.ShowInList !== undefined
-                          ? field.ShowInList
-                          : field.showInList !== undefined
-                            ? field.showInList
-                            : true,
-                      editable:
-                        field.Editable !== undefined
-                          ? field.Editable
-                          : field.editable !== undefined
-                            ? field.editable
-                            : true,
-                      validation: field.Validation || field.validation || '',
-                      columnWidth: field.ColumnWidth || field.columnWidth || null,
-                      sortable:
-                        field.Sortable !== undefined
-                          ? field.Sortable
-                          : field.sortable !== undefined
-                            ? field.sortable
-                            : false,
-                      fixed: field.Fixed || field.fixed || 'none',
-                      queryMode: field.QueryMode || field.queryMode || 'none',
-                      queryWidth:
-                        field.QueryWidth !== undefined && field.QueryWidth !== null
-                          ? field.QueryWidth
-                          : field.queryWidth !== undefined && field.queryWidth !== null
-                            ? field.queryWidth
-                            : 150,
-                      dateFormat: field.DateFormat || field.dateFormat || 'datetime',
-                      minLength: field.MinLength !== undefined ? field.MinLength : field.minLength || null,
-                      maxLength: field.MaxLength !== undefined ? field.MaxLength : field.maxLength || null,
-                      minValue: field.MinValue !== undefined ? field.MinValue : field.minValue || null,
-                      maxValue: field.MaxValue !== undefined ? field.MaxValue : field.maxValue || null,
-                      pattern: field.Pattern || field.pattern || '',
-                      defaultValue: field.DefaultValue || field.defaultValue || '',
-                      optionSource: field.OptionSource || field.optionSource || 'manual',
-                      dictCode: field.DictCode || field.dictCode || '',
-                      esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
-                      esbParams: field.EsbParams || field.esbParams || '',
-                      lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
-                      lookupParams: field.LookupParams || field.lookupParams || '',
-                      lookupValueField: field.LookupValueField || field.lookupValueField || '',
-                      lookupPageSize: field.LookupPageSize || field.lookupPageSize || 10,
-                      lookupColumns: this.normalizeLookupColumns(field.LookupColumns || field.lookupColumns || []),
-                      lookupMappings: this.normalizeLookupMappings(field.LookupMappings || field.lookupMappings || []),
-                      options: this.normalizeFieldOptions(field.Options || field.options || [])
-                    }))
-                  )
-                : []
+              fields: this.normalizeConfigFields(config.Fields || config.fields || []),
+              subTables: this.normalizeSubTables(config.SubTables || config.subTables || [])
             }
 
-            await this.loadDictionaryOptionsForFields(this.appConfig.fields)
-            await this.loadEsbOptionsForFields(this.appConfig.fields)
+            const allOptionFields = this.appConfig.fields.concat(
+              this.appConfig.subTables.flatMap((subTable) => subTable.fields)
+            )
+            await this.loadDictionaryOptionsForFields(allOptionFields)
+            await this.loadEsbOptionsForFields(allOptionFields)
+            this.activeRuntimeRowId = ''
+            this.activeRuntimeDetail = null
+            this.relatedPagination = {}
+            this.activeSubTableName = this.orderedSubTables[0]?.tableName || ''
 
             // 初始化表单数据
             this.initFormData()
@@ -740,6 +972,10 @@ export default {
         } else {
           this.formData[field.fieldName] = field.defaultValue || ''
         }
+      })
+      this.formData.__subTables = {}
+      this.orderedSubTables.forEach((subTable) => {
+        this.formData.__subTables[subTable.tableName] = []
       })
     },
 
@@ -879,6 +1115,14 @@ export default {
         })
         if (res.success) {
           this.appData = res.data || { list: [], total: 0 }
+          const currentList = Array.isArray(this.appData.list) ? this.appData.list : []
+          if (
+            this.activeRuntimeRowId &&
+            !currentList.some((row) => String(this.getRowPrimaryKey(row)) === String(this.activeRuntimeRowId))
+          ) {
+            this.activeRuntimeRowId = ''
+            this.activeRuntimeDetail = null
+          }
         } else {
           this.$message.error('获取数据失败：' + (res.msg || '未知错误'))
         }
@@ -894,34 +1138,59 @@ export default {
       this.initFormData()
       this.dialogVisible = true
     },
-    // 打开编辑对话框
-    openEditDialog(row) {
-      this.dialogType = 'edit'
-      this.dialogTitle = '编辑' + this.appConfig.configName
-      this.formData = { ...row }
-
-      // 确保多选字段的值是数组类型
-      const fields = this.orderedFields
+    normalizeFormRowValues(row, fields) {
       fields.forEach((field) => {
         if (field.fieldType === 'checkbox') {
-          const fieldValue = this.formData[field.fieldName]
+          const fieldValue = row[field.fieldName]
           if (fieldValue !== undefined && fieldValue !== null) {
-            // 如果是字符串类型，尝试按逗号分隔转换为数组
             if (typeof fieldValue === 'string') {
-              this.formData[field.fieldName] = fieldValue.split(',').map((item) => item.trim())
+              row[field.fieldName] = fieldValue.split(',').map((item) => item.trim())
             } else if (!Array.isArray(fieldValue)) {
-              // 如果不是数组，转换为数组
-              this.formData[field.fieldName] = [fieldValue]
+              row[field.fieldName] = [fieldValue]
             }
           } else {
-            // 如果值为空，设置为空数组
-            this.formData[field.fieldName] = []
+            row[field.fieldName] = []
           }
         } else if (field.fieldType === 'attachment') {
-          this.formData[field.fieldName] = this.normalizeAttachmentValue(this.formData[field.fieldName])
+          row[field.fieldName] = this.normalizeAttachmentValue(row[field.fieldName])
         } else if (field.fieldType === 'number') {
-          this.formData[field.fieldName] = this.normalizeNumberFormValue(this.formData[field.fieldName])
+          row[field.fieldName] = this.normalizeNumberFormValue(row[field.fieldName])
         }
+      })
+    },
+    // 打开编辑对话框
+    async openEditDialog(row) {
+      this.dialogType = 'edit'
+      this.dialogTitle = '编辑' + this.appConfig.configName
+      const id = this.getRowPrimaryKey(row)
+      let detailRow = { ...row }
+      if (id) {
+        try {
+          const { data: res } = await getMicroRuntimeDetail({
+            modelName: this.appConfig.modelName,
+            id
+          })
+          if (res?.success && res.data) {
+            detailRow = res.data
+          }
+        } catch (error) {
+          this.$message.error('获取详情失败：' + (error.message || '网络错误'))
+        }
+      }
+
+      this.formData = { ...detailRow }
+
+      // 确保多选字段的值是数组类型
+      this.normalizeFormRowValues(this.formData, this.orderedFields)
+      const rawSubTables = this.formData.__subTables || this.formData.SubTables || {}
+      this.formData.__subTables = {}
+      this.orderedSubTables.forEach((subTable) => {
+        const rows = Array.isArray(rawSubTables[subTable.tableName]) ? rawSubTables[subTable.tableName] : []
+        this.formData.__subTables[subTable.tableName] = rows.map((subRow) => {
+          const normalizedRow = { ...subRow }
+          this.normalizeFormRowValues(normalizedRow, subTable.fields)
+          return normalizedRow
+        })
       })
 
       this.dialogVisible = true
@@ -1420,6 +1689,127 @@ export default {
   min-height: 0;
 }
 
+.main-pagination {
+  flex: 0 0 auto;
+  margin-top: 12px;
+}
+
+.related-data-panel {
+  flex: 0 0 auto;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid #dce5f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.related-data-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid #e7edf6;
+  background: #f7faff;
+}
+
+.related-title-area {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.related-title-marker {
+  width: 4px;
+  height: 30px;
+  flex: 0 0 4px;
+  border-radius: 4px;
+  background: #1683ff;
+}
+
+.related-title {
+  color: #26344d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.related-subtitle {
+  overflow: hidden;
+  color: #7b8798;
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-empty-state {
+  display: flex;
+  min-height: 104px;
+  align-items: center;
+  justify-content: center;
+  color: #8a98aa;
+  font-size: 13px;
+}
+
+.related-content {
+  min-height: 150px;
+  padding: 0 12px 12px;
+}
+
+.related-tabs :deep(.el-tabs__header) {
+  margin-bottom: 10px;
+}
+
+.related-tabs :deep(.el-tabs__nav-wrap::after) {
+  height: 1px;
+  background: #e7edf6;
+}
+
+.related-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.related-tab-label em {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: #eef4ff;
+  color: #3156a6;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.related-subtable :deep(.el-table__header th) {
+  background: #f1f5fb;
+  color: #26344d;
+  font-weight: 700;
+}
+
+.related-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+}
+
+.related-table-empty {
+  min-height: 72px;
+  color: #8a98aa;
+  font-size: 13px;
+  line-height: 72px;
+}
+
+.button-leading-icon {
+  margin-right: 4px;
+}
+
 .list-toolbar {
   display: flex;
   align-items: center;
@@ -1508,6 +1898,10 @@ export default {
 .table-wrapper {
   flex: 1;
   min-height: 0;
+}
+
+.table-wrapper :deep(.is-related-active > td) {
+  background: #eef6ff !important;
 }
 
 /* 操作按钮样式 */
