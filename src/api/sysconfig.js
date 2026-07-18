@@ -13,6 +13,14 @@ export const getSystemInfo = () => {
 }
 
 /**
+ * 获取系统运行信息
+ * @returns {Promise}
+ */
+export const getSystemRuntimeInfo = () => {
+  return http.get('/api/SysConfig/GetSystemRuntimeInfo')
+}
+
+/**
  * 设置系统信息（form-data）
  * @param {Object} params
  * @param {string} params.SystemName - 系统名称

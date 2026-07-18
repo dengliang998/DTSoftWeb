@@ -7,6 +7,7 @@ const LogAction = () => import('../view/Log/LogAction.vue')
 const AttachmentList = () => import('../view/attachment/attachmentlist.vue')
 const Menus = () => import('../view/Common/Menus.vue')
 const SystemSettings = () => import('../view/Common/SystemSettings.vue')
+const SystemInfo = () => import('../view/Common/SystemInfo.vue')
 const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
 const Dictionaries = () => import('../view/Common/Dictionaries.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
@@ -51,6 +52,12 @@ export const routes = [
         name: 'SystemSettings',
         component: SystemSettings,
         meta: withCache('SystemSettings')
+      },
+      {
+        path: '/common/systeminfo',
+        name: 'SystemInfo',
+        component: SystemInfo,
+        meta: withCache('SystemInfo')
       },
       {
         path: '/common/onlineusers',
