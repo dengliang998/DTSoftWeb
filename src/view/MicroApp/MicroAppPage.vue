@@ -441,11 +441,9 @@ export default {
               parameters: this.parseEsbParams(field.esbParams)
             })
             const rows = res?.success && Array.isArray(res.data) ? res.data : []
-            const labelField = field.esbLabelField || 'label'
-            const valueField = field.esbValueField || 'value'
             field.options = rows.map((row) => ({
-              label: row[labelField] ?? row.Label ?? row.label ?? '',
-              value: row[valueField] ?? row.Value ?? row.value ?? ''
+              label: row.Label ?? row.label ?? '',
+              value: row.Value ?? row.value ?? ''
             }))
           } catch (error) {
             field.options = []
@@ -644,8 +642,6 @@ export default {
                       optionSource: field.OptionSource || field.optionSource || 'manual',
                       dictCode: field.DictCode || field.dictCode || '',
                       esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
-                      esbLabelField: field.EsbLabelField || field.esbLabelField || '',
-                      esbValueField: field.EsbValueField || field.esbValueField || '',
                       esbParams: field.EsbParams || field.esbParams || '',
                       options: this.normalizeFieldOptions(field.Options || field.options || [])
                     }))

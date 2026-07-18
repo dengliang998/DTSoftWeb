@@ -445,14 +445,25 @@
                     </el-select>
                   </div>
                   <div v-if="selectedFieldData.optionSource === 'esb'" class="esb-option-grid">
-                    <el-input v-model="selectedFieldData.esbLabelField" placeholder="显示字段，例如 label"></el-input>
-                    <el-input v-model="selectedFieldData.esbValueField" placeholder="值字段，例如 value"></el-input>
                     <el-input
+                      ref="esbParamsInput"
                       v-model="selectedFieldData.esbParams"
                       type="textarea"
                       :rows="2"
-                      placeholder='静态参数 JSON，例如 {"dictCode":"gender"}'
+                      placeholder='静态参数 JSON，例如 {"userAcc":"${currentUser.account}"}'
                     ></el-input>
+                    <div class="esb-variable-panel">
+                      <span class="esb-variable-title">可用变量</span>
+                      <el-tag
+                        v-for="variable in esbVariableOptions"
+                        :key="variable.value"
+                        class="esb-variable-tag"
+                        effect="plain"
+                        @click="insertEsbVariable(variable.value)"
+                      >
+                        {{ variable.label }} {{ variable.value }}
+                      </el-tag>
+                    </div>
                   </div>
                   <div class="options-container">
                     <div v-if="selectedFieldData.optionSource === 'dictionary'" class="empty-inline">
@@ -543,6 +554,11 @@ export default {
       selectedFieldData: null,
       dictionaryTypes: [],
       esbDataSources: [],
+      esbVariableOptions: [
+        { label: '当前用户账号', value: '${currentUser.account}' },
+        { label: '当前用户姓名', value: '${currentUser.displayName}' },
+        { label: '当前用户邮箱', value: '${currentUser.email}' }
+      ],
       // 生成的API列表
       generatedApis: [],
       // 微应用配置表单
@@ -737,15 +753,11 @@ export default {
         field.optionSource = 'manual'
         field.dictCode = ''
         field.esbDataSourceCode = ''
-        field.esbLabelField = ''
-        field.esbValueField = ''
         field.esbParams = ''
       } else {
         field.optionSource = ['dictionary', 'esb'].includes(field.optionSource) ? field.optionSource : 'manual'
         if (field.optionSource === 'dictionary') {
           field.esbDataSourceCode = ''
-          field.esbLabelField = ''
-          field.esbValueField = ''
           field.esbParams = ''
         } else if (field.optionSource === 'esb') {
           field.dictCode = ''
@@ -753,8 +765,6 @@ export default {
         } else {
           field.dictCode = ''
           field.esbDataSourceCode = ''
-          field.esbLabelField = ''
-          field.esbValueField = ''
           field.esbParams = ''
         }
       }
@@ -880,8 +890,6 @@ export default {
           optionSource: field.OptionSource || field.optionSource || 'manual',
           dictCode: field.DictCode || field.dictCode || '',
           esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
-          esbLabelField: field.EsbLabelField || field.esbLabelField || '',
-          esbValueField: field.EsbValueField || field.esbValueField || '',
           esbParams: field.EsbParams || field.esbParams || '',
           options: this.normalizeFieldOptions(field.Options || field.options || [])
         }))
@@ -1076,8 +1084,6 @@ export default {
         optionSource: 'manual',
         dictCode: '',
         esbDataSourceCode: '',
-        esbLabelField: '',
-        esbValueField: '',
         esbParams: '',
         options: []
       }
@@ -1110,8 +1116,6 @@ export default {
       if (this.selectedFieldData.optionSource === 'dictionary') {
         this.selectedFieldData.options = []
         this.selectedFieldData.esbDataSourceCode = ''
-        this.selectedFieldData.esbLabelField = ''
-        this.selectedFieldData.esbValueField = ''
         this.selectedFieldData.esbParams = ''
       } else if (this.selectedFieldData.optionSource === 'esb') {
         this.selectedFieldData.options = []
@@ -1119,11 +1123,32 @@ export default {
       } else {
         this.selectedFieldData.dictCode = ''
         this.selectedFieldData.esbDataSourceCode = ''
-        this.selectedFieldData.esbLabelField = ''
-        this.selectedFieldData.esbValueField = ''
         this.selectedFieldData.esbParams = ''
         this.selectedFieldData.options = this.selectedFieldData.options || []
       }
+    },
+    insertEsbVariable(variable) {
+      if (!this.selectedFieldData) return
+
+      const token = `"${variable}"`
+      const currentValue = this.selectedFieldData.esbParams || ''
+      const inputComponent = this.$refs.esbParamsInput
+      const textarea = inputComponent?.$el?.querySelector('textarea')
+
+      if (!textarea) {
+        this.selectedFieldData.esbParams = currentValue + token
+        return
+      }
+
+      const start = textarea.selectionStart ?? currentValue.length
+      const end = textarea.selectionEnd ?? currentValue.length
+      this.selectedFieldData.esbParams = currentValue.slice(0, start) + token + currentValue.slice(end)
+
+      this.$nextTick(() => {
+        textarea.focus()
+        const cursor = start + token.length
+        textarea.setSelectionRange(cursor, cursor)
+      })
     },
     // 选择字段
     selectField(data) {
@@ -1234,8 +1259,6 @@ export default {
               OptionSource: field.optionSource || 'manual',
               DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
               EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
-              EsbLabelField: field.optionSource === 'esb' ? field.esbLabelField || '' : '',
-              EsbValueField: field.optionSource === 'esb' ? field.esbValueField || '' : '',
               EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
               Options: this.normalizeFieldOptions(field.options)
             }
@@ -1897,14 +1920,27 @@ export default {
 }
 
 .esb-option-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: block;
   margin: 0 0 12px;
 }
 
-.esb-option-grid :deep(.el-textarea) {
-  grid-column: 1 / -1;
+.esb-variable-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.esb-variable-title {
+  color: #667085;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+.esb-variable-tag {
+  cursor: pointer;
+  user-select: none;
 }
 
 .empty-inline {
