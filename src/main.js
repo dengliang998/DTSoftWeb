@@ -5,6 +5,7 @@ import http from './api/http'
 import { installElementPlus } from './plugins/elementPlus'
 import { installResizeObserverPatch } from './plugins/resizeObserverPatch'
 import { formatDateTime } from './utils/date'
+import { applyCachedSystemAppearance } from './utils/sysConfig'
 
 /*导入字体图标*/
 import './assets/fonts/iconfont.css'
@@ -15,6 +16,7 @@ import './assets/css/global.css'
 import 'nprogress/nprogress.css'
 
 installResizeObserverPatch()
+applyCachedSystemAppearance()
 
 const app = createApp(App)
 

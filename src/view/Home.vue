@@ -3,7 +3,7 @@
     <!-- 头部区域 -->
     <header class="header-container">
       <div class="header-left">
-        <img class="header-logo" src="../assets/imgs/homelogo.png" alt="" />
+        <img class="header-logo" :src="browserLogoUrl || defaultHomeLogo" alt="" />
         <span class="header-title">{{ systemTitle }}</span>
       </div>
 
@@ -19,8 +19,8 @@
           :default-active="activeTopMenu"
           mode="horizontal"
           background-color="transparent"
-          text-color="#d1d5db"
-          active-text-color="#ffffff"
+          text-color="var(--dt-top-text)"
+          active-text-color="var(--dt-top-active-text)"
           :ellipsis="false"
           @select="handleTopMenuSelect"
         >
@@ -64,9 +64,9 @@
           :collapse-transition="true"
           :collapse="isCollapse"
           unique-opened
-          background-color="#1f2937"
-          text-color="#d1d5db"
-          active-text-color="#ffffff"
+          background-color="var(--dt-side-bg)"
+          text-color="var(--dt-side-text)"
+          active-text-color="var(--dt-side-active-text)"
         >
           <!-- 菜单列表 -->
           <template v-for="item in childrenMenuList" :key="item.id">
@@ -177,7 +177,8 @@ import {
   upsertTab
 } from '@/modules/home/tabs'
 import { createModifyPwdForm, loadCurrentUserProfile, logoutAndClearSession } from '@/modules/home/userPanel'
-import { fetchAndCacheSystemInfo, getCachedSystemName } from '@/utils/sysConfig'
+import { fetchAndCacheSystemInfo, getCachedBrowserLogoDataUrl, getCachedSystemName } from '@/utils/sysConfig'
+import defaultHomeLogo from '@/assets/imgs/homelogo.png'
 export default {
   name: 'Home',
   components: {
@@ -187,6 +188,8 @@ export default {
   data() {
     return {
       systemTitle: 'DT Program',
+      defaultHomeLogo,
+      browserLogoUrl: getCachedBrowserLogoDataUrl(),
       LoginAcc: getUserAccount(),
       UserDisplayName: '',
       circleUrl: '',
@@ -228,6 +231,7 @@ export default {
     fetchAndCacheSystemInfo()
       .then(() => {
         this.systemTitle = getCachedSystemName() || this.systemTitle
+        this.browserLogoUrl = getCachedBrowserLogoDataUrl()
         document.title = this.systemTitle
       })
       .catch(() => {})
@@ -436,7 +440,7 @@ export default {
 .home-container {
   width: 100%;
   height: 100vh;
-  background-color: #f5f7fa;
+  background-color: var(--dt-page-bg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -444,7 +448,7 @@ export default {
 
 /* 头部容器 */
 .header-container {
-  background-color: #1f2937;
+  background-color: var(--dt-top-bg);
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -453,7 +457,7 @@ export default {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
   transition: all 0.3s ease;
-  border-bottom: 1px solid #374151;
+  border-bottom: 1px solid var(--dt-top-border);
 }
 
 /* 头部左侧 */
@@ -495,7 +499,7 @@ export default {
 /* 折叠按钮 */
 .collapse-btn {
   background: transparent;
-  color: #d1d5db;
+  color: var(--dt-top-text);
   font-size: 18px;
   cursor: pointer;
   padding: 8px 5px;
@@ -509,9 +513,9 @@ export default {
 }
 
 .collapse-btn:hover {
-  background: rgba(24, 144, 255, 0.1);
-  color: #40a9ff;
-  border-color: rgba(24, 144, 255, 0.2);
+  background: var(--dt-top-hover-bg);
+  color: var(--dt-top-hover-text);
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 24%, transparent);
   transform: scale(1.05);
 }
 
@@ -536,7 +540,7 @@ export default {
   line-height: 64px;
   border: none;
   float: left;
-  color: #d1d5db !important;
+  color: var(--dt-top-text) !important;
   font-size: 15px;
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -547,33 +551,33 @@ export default {
 
 /* 顶部菜单图标样式 */
 .top-menu :deep(.el-menu-item) :deep(.el-icon) {
-  color: #d1d5db !important;
+  color: var(--dt-top-text) !important;
   margin-right: 8px;
   font-size: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .top-menu :deep(.el-menu-item:hover) {
-  background-color: #f0f9ff !important;
-  color: #1890ff !important;
+  background-color: var(--dt-top-hover-bg) !important;
+  color: var(--dt-top-hover-text) !important;
   transform: translateY(-1px);
 }
 
 .top-menu :deep(.el-menu-item:hover) :deep(.el-icon) {
-  color: #1890ff !important;
+  color: var(--dt-top-hover-text) !important;
 }
 
 .top-menu :deep(.el-menu-item.is-active) {
-  background-color: #1890ff !important;
-  color: #ffffff !important;
-  border-bottom: 2px solid #096dd9;
+  background-color: var(--dt-top-active-bg) !important;
+  color: var(--dt-top-active-text) !important;
+  border-bottom: 2px solid var(--dt-top-active-bg);
   border-radius: 8px;
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dt-top-active-bg) 30%, transparent);
 }
 
 .top-menu :deep(.el-menu-item.is-active) :deep(.el-icon) {
-  color: #ffffff !important;
+  color: var(--dt-top-active-text) !important;
 }
 
 /* 用户信息区域 */
@@ -587,7 +591,7 @@ export default {
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #d1d5db;
+  color: var(--dt-top-text);
   transition: all 0.3s ease;
 }
 
@@ -599,8 +603,8 @@ export default {
 
 .user-avatar:hover {
   transform: scale(1.1);
-  border-color: #1890ff;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+  border-color: var(--dt-top-hover-text);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--dt-top-hover-text) 24%, transparent);
 }
 
 /* 主内容区域 */
@@ -615,8 +619,8 @@ export default {
 /* 侧边栏容器 */
 .sidebar-container {
   width: 205px;
-  background-color: #1f2937;
-  border-right: 1px solid #374151;
+  background-color: var(--dt-side-bg);
+  border-right: 1px solid var(--dt-side-border);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
@@ -631,7 +635,7 @@ export default {
   border-right: 0;
   height: 100%;
   overflow-y: auto;
-  background-color: #1f2937;
+  background-color: var(--dt-side-bg);
   transition: none;
 }
 
@@ -642,7 +646,7 @@ export default {
   line-height: 48px;
   font-size: 14px;
   font-weight: 500;
-  color: #d1d5db;
+  color: var(--dt-side-text);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 8px;
   margin: 0 8px;
@@ -672,25 +676,25 @@ export default {
 /* 菜单项悬停效果 */
 .sidebar-container .el-menu-item:hover,
 .sidebar-container .el-sub-menu__title:hover {
-  background-color: rgba(24, 144, 255, 0.1) !important;
-  color: #40a9ff !important;
+  background-color: var(--dt-side-hover-bg) !important;
+  color: var(--dt-side-hover-text) !important;
   transform: translateX(2px);
 }
 
 /* 菜单项选中效果 */
 .sidebar-container .el-menu-item.is-active,
 .sidebar-container .el-sub-menu__title.is-active {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-  border-left: 3px solid #096dd9;
+  background: var(--dt-side-active-bg) !important;
+  color: var(--dt-side-active-text) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dt-side-active-bg) 30%, transparent);
+  border-left: 3px solid var(--dt-side-active-bg);
   margin: 0 8px;
   transform: translateX(2px);
 }
 
 /* 子菜单样式 */
 .sidebar-container .el-sub-menu .el-menu {
-  background-color: #1f2937 !important;
+  background-color: var(--dt-side-bg) !important;
   border-right: 0;
 }
 
@@ -699,25 +703,25 @@ export default {
   padding-left: 48px !important;
   height: 44px;
   line-height: 44px;
-  color: #d1d5db !important;
+  color: var(--dt-side-text) !important;
   font-size: 13px;
   margin: 2px 8px;
   border-left: none;
 }
 
 .sidebar-container .el-sub-menu .el-menu-item:hover {
-  background-color: rgba(24, 144, 255, 0.1) !important;
-  color: #40a9ff !important;
+  background-color: var(--dt-side-hover-bg) !important;
+  color: var(--dt-side-hover-text) !important;
 }
 
 .sidebar-container .el-sub-menu .el-menu-item.is-active {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%) !important;
-  color: #ffffff !important;
+  background: var(--dt-side-active-bg) !important;
+  color: var(--dt-side-active-text) !important;
   border-radius: 6px;
   margin: 2px 8px;
   padding-left: 44px !important;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
-  border-left: 3px solid #096dd9;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dt-side-active-bg) 30%, transparent);
+  border-left: 3px solid var(--dt-side-active-bg);
   transform: translateX(2px);
 }
 
@@ -734,13 +738,13 @@ export default {
 
 .sidebar-container .el-menu-item:hover .el-icon,
 .sidebar-container .el-sub-menu__title:hover .el-icon {
-  color: #1890ff;
+  color: var(--dt-side-hover-text);
   transform: scale(1.1);
 }
 
 .sidebar-container .el-menu-item.is-active .el-icon,
 .sidebar-container .el-sub-menu__title.is-active .el-icon {
-  color: #ffffff;
+  color: var(--dt-side-active-text);
   transform: scale(1.1);
 }
 
@@ -762,7 +766,7 @@ export default {
 
 /* 标签页容器 */
 .tabs-container {
-  background-color: #f5f7fa;
+  background-color: var(--dt-page-bg);
   border-bottom: 1px solid #e4e7ed;
   padding: 0 16px;
   flex-shrink: 0;
@@ -801,12 +805,12 @@ export default {
 
 .tabs-container :deep(.el-tabs__item:hover) {
   background-color: #ecf5ff;
-  color: #409eff;
+  color: var(--dt-primary);
 }
 
 .tabs-container :deep(.el-tabs__item.is-active) {
   background-color: #ffffff;
-  color: #1890ff;
+  color: var(--dt-primary);
   font-weight: 500;
   border-color: #dcdfe6;
   border-bottom: 2px solid #ffffff;
@@ -890,14 +894,14 @@ export default {
 .sidebar-container.collapsed .el-menu-item.is-active {
   transform: none;
   border-left: none;
-  background: #1890ff;
-  color: #ffffff;
+  background: var(--dt-side-active-bg);
+  color: var(--dt-side-active-text);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 折叠状态下的子菜单 */
 .sidebar-container.collapsed .el-sub-menu .el-menu {
-  background-color: #1f2937;
+  background-color: var(--dt-side-bg);
 }
 
 .sidebar-container.collapsed .el-sub-menu .el-menu-item {
@@ -948,7 +952,7 @@ export default {
 
 .el-sub-menu.is-opened > .el-sub-menu__title .el-sub-menu__icon-arrow {
   transform: rotate(90deg);
-  color: #1890ff;
+  color: var(--dt-side-hover-text);
 }
 
 /* 调整对话框样式 */
@@ -1514,5 +1518,116 @@ export default {
 .sidebar-container.collapsed .el-sub-menu__title span,
 .sidebar-container.collapsed .el-sub-menu__icon-arrow {
   display: none;
+}
+
+/* Theme binding override: keep the final menu skin controlled by SystemSettings. */
+.home-container .header-container {
+  background: var(--dt-top-bg) !important;
+  border-bottom-color: var(--dt-top-border) !important;
+}
+
+.home-container .header-title,
+.home-container .user-name,
+.home-container .collapse-btn {
+  color: var(--dt-top-text) !important;
+}
+
+.home-container .collapse-btn {
+  background: color-mix(in srgb, var(--dt-top-text) 8%, transparent) !important;
+  border-color: color-mix(in srgb, var(--dt-top-text) 14%, transparent) !important;
+}
+
+.home-container .collapse-btn:hover {
+  color: var(--dt-top-hover-text) !important;
+  background: var(--dt-top-hover-bg) !important;
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 28%, transparent) !important;
+}
+
+.home-container .header-user-info {
+  background: color-mix(in srgb, var(--dt-top-text) 8%, transparent) !important;
+  border-color: color-mix(in srgb, var(--dt-top-text) 14%, transparent) !important;
+}
+
+.home-container .user-avatar:hover {
+  border-color: var(--dt-top-hover-text) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dt-top-hover-text) 18%, transparent) !important;
+}
+
+.top-menu :deep(.el-menu) {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--dt-top-text);
+  --el-menu-hover-text-color: var(--dt-top-hover-text);
+  --el-menu-hover-bg-color: var(--dt-top-hover-bg);
+  --el-menu-active-color: var(--dt-top-active-text);
+  --el-menu-border-color: transparent;
+}
+
+.top-menu :deep(.el-menu-item),
+.top-menu :deep(.el-sub-menu__title) {
+  color: var(--dt-top-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.top-menu :deep(.el-menu-item:hover),
+.top-menu :deep(.el-sub-menu__title:hover) {
+  color: var(--dt-top-hover-text) !important;
+  background: var(--dt-top-hover-bg) !important;
+}
+
+.top-menu :deep(.el-menu-item.is-active),
+.top-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: var(--dt-top-active-text) !important;
+  background: var(--dt-top-active-bg) !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--dt-top-active-bg) 24%, transparent) !important;
+}
+
+.top-menu :deep(.el-menu-item .el-icon),
+.top-menu :deep(.el-sub-menu__title .el-icon) {
+  color: inherit !important;
+}
+
+.home-container .sidebar-container {
+  background: var(--dt-side-bg) !important;
+  border-color: var(--dt-side-border) !important;
+}
+
+.sidebar-container :deep(.el-menu) {
+  --el-menu-bg-color: var(--dt-side-bg);
+  --el-menu-text-color: var(--dt-side-text);
+  --el-menu-hover-text-color: var(--dt-side-hover-text);
+  --el-menu-hover-bg-color: var(--dt-side-hover-bg);
+  --el-menu-active-color: var(--dt-side-active-text);
+  --el-menu-border-color: var(--dt-side-border);
+  background: var(--dt-side-bg) !important;
+}
+
+.sidebar-container :deep(.el-menu-item),
+.sidebar-container :deep(.el-sub-menu__title) {
+  color: var(--dt-side-text) !important;
+}
+
+.sidebar-container :deep(.el-menu-item:hover),
+.sidebar-container :deep(.el-sub-menu__title:hover) {
+  color: var(--dt-side-hover-text) !important;
+  background: var(--dt-side-hover-bg) !important;
+}
+
+.sidebar-container :deep(.el-menu-item.is-active),
+.sidebar-container :deep(.el-sub-menu__title.is-active),
+.sidebar-container :deep(.el-sub-menu .el-menu-item.is-active) {
+  color: var(--dt-side-active-text) !important;
+  background: var(--dt-side-active-bg) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-side-active-bg) 24%, transparent) !important;
+}
+
+.sidebar-container :deep(.el-sub-menu .el-menu) {
+  background: color-mix(in srgb, var(--dt-side-bg) 88%, #ffffff 12%) !important;
+}
+
+.sidebar-container :deep(.el-menu-item .el-icon),
+.sidebar-container :deep(.el-sub-menu__title .el-icon),
+.sidebar-container :deep(.el-sub-menu__icon-arrow) {
+  color: inherit !important;
 }
 </style>

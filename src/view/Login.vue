@@ -327,7 +327,7 @@ export default defineComponent({
   width: 58px;
   height: 58px;
   margin-bottom: 28px;
-  color: #1e3c72;
+  color: var(--dt-primary-dark);
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0;
@@ -391,7 +391,7 @@ export default defineComponent({
   width: 44px;
   height: 4px;
   margin-top: 8px;
-  background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+  background: linear-gradient(90deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%);
   border-radius: 999px;
 }
 
@@ -449,8 +449,8 @@ export default defineComponent({
 .login_form :deep(.el-input__wrapper.is-focus) {
   background: #ffffff;
   box-shadow:
-    0 0 0 1px #1890ff inset,
-    0 0 0 4px rgba(24, 144, 255, 0.12) !important;
+    0 0 0 1px var(--dt-primary) inset,
+    0 0 0 4px color-mix(in srgb, var(--dt-primary) 12%, transparent) !important;
 }
 
 .login_form :deep(.el-input__inner) {
@@ -468,7 +468,7 @@ export default defineComponent({
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
-  box-shadow: 0 10px 22px rgba(24, 144, 255, 0.24);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--dt-primary) 24%, transparent);
 }
 
 .captcha-row {
@@ -503,8 +503,8 @@ export default defineComponent({
 .captcha-image:hover,
 .captcha-image:focus-visible {
   background: #ffffff;
-  border-color: #1890ff;
-  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.12);
+  border-color: var(--dt-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dt-primary) 12%, transparent);
   outline: none;
 }
 

@@ -1,3 +1,27 @@
+html {
+  --dt-primary: #1890ff;
+  --dt-primary-light: #40a9ff;
+  --dt-primary-dark: #096dd9;
+  --dt-top-bg: #1f2937;
+  --dt-top-border: #374151;
+  --dt-top-text: #d1d5db;
+  --dt-top-hover-bg: #f0f9ff;
+  --dt-top-hover-text: #1890ff;
+  --dt-top-active-bg: #1890ff;
+  --dt-top-active-text: #ffffff;
+  --dt-side-bg: #1f2937;
+  --dt-side-border: #374151;
+  --dt-side-text: #d1d5db;
+  --dt-side-hover-bg: #223449;
+  --dt-side-hover-text: #40a9ff;
+  --dt-side-active-bg: #1890ff;
+  --dt-side-active-text: #ffffff;
+  --dt-nav-bg: #1f2937;
+  --dt-nav-border: #374151;
+  --dt-nav-text: #d1d5db;
+  --dt-page-bg: #f5f7fa;
+}
+
 html,
 body,
 #app {
@@ -6,7 +30,7 @@ body,
   margin: 0;
   min-width: 850px;
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
-  background-color: #f5f7fa;
+  background-color: var(--dt-page-bg);
   overflow: hidden !important;
 }
 
@@ -138,14 +162,14 @@ body {
 }
 
 .el-aside .el-menu-item.is-active {
-  background-color: #3498db !important;
-  color: #ffffff !important;
+  background-color: var(--dt-side-active-bg) !important;
+  color: var(--dt-side-active-text) !important;
   border-radius: 6px;
   margin: 4px 0px;
 }
 
 .el-aside .el-sub-menu.is-active > .el-sub-menu__title {
-  color: #3498db !important;
+  color: var(--dt-side-hover-text) !important;
 }
 
 .el-aside .el-sub-menu .el-menu {
@@ -175,7 +199,7 @@ body {
 }
 
 .el-breadcrumb .el-breadcrumb__inner.is-link:hover {
-  color: #3498db;
+  color: var(--dt-primary);
 }
 
 .el-card {
@@ -233,14 +257,14 @@ body {
 }
 
 .el-button--primary {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%);
   border: none;
 }
 
 .el-button--primary:hover {
-  background: linear-gradient(135deg, #096dd9 0%, #1890ff 100%);
+  background: linear-gradient(135deg, var(--dt-primary-dark) 0%, var(--dt-primary) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--dt-primary) 36%, transparent);
 }
 
 .el-button--success {
@@ -276,7 +300,7 @@ body {
 }
 
 .el-input__wrapper.is-focus {
-  box-shadow: 0 0 0 1px #0b9ee8 inset;
+  box-shadow: 0 0 0 1px var(--dt-primary) inset;
 }
 
 .el-input-group {
@@ -285,7 +309,7 @@ body {
 }
 
 .el-input-group__append {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%);
   color: #ffffff;
   border: none;
   border-radius: 0 6px 6px 0;
@@ -330,7 +354,7 @@ body {
 .el-pagination .el-button:hover {
   background: #ecf5ff;
   border-color: #c6e2ff;
-  color: #1890ff;
+  color: var(--dt-primary);
 }
 
 .el-pagination .el-button:disabled {
@@ -350,8 +374,8 @@ body {
 }
 
 .el-pagination .el-input__wrapper.is-focus {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 1px #1890ff inset;
+  border-color: var(--dt-primary);
+  box-shadow: 0 0 0 1px var(--dt-primary) inset;
 }
 
 .el-pagination .el-pager li {
@@ -365,11 +389,11 @@ body {
 }
 
 .el-pagination .el-pager li:hover {
-  color: #1890ff;
+  color: var(--dt-primary);
 }
 
 .el-pagination .el-pager li.is-active {
-  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%);
   color: #ffffff;
 }
 
@@ -419,7 +443,7 @@ body {
   display: inline-block;
   width: 4px;
   height: 18px;
-  background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(180deg, var(--dt-primary) 0%, var(--dt-primary-dark) 100%);
   border-radius: 2px;
 }
 
@@ -536,7 +560,7 @@ body {
 
 .el-dropdown-menu__item:not(.is-disabled):hover {
   background: #ecf5ff;
-  color: #3498db;
+  color: var(--dt-primary);
 }
 
 .el-message-box {
@@ -698,7 +722,7 @@ body {
 }
 
 .el-upload-dragger:hover {
-  border-color: #0b9ee8;
+  border-color: var(--dt-primary);
 }
 
 .el-progress-bar__outer {
@@ -715,7 +739,7 @@ body {
 }
 
 .el-timeline-item__node {
-  background: #349bdb;
+  background: var(--dt-primary);
 }
 
 .el-drawer {
@@ -723,7 +747,7 @@ body {
 }
 
 .el-drawer__header {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-dark) 100%);
   color: #ffffff;
   margin-bottom: 0;
   padding: 16px 20px;

@@ -4,5 +4,7 @@ export const STORAGE_KEYS = Object.freeze({
   userInfo: 'userInfo',
   activePath: 'activePath',
   systemName: 'sysconfig.systemName',
-  loginImg: 'sysconfig.loginImg'
+  loginImg: 'sysconfig.loginImg',
+  browserLogo: 'sysconfig.browserLogo',
+  themeConfig: 'sysconfig.themeConfig'
 })
