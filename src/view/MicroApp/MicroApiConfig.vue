@@ -398,7 +398,7 @@
                   <div class="config-section-head">
                     <div class="config-section-title">选项配置</div>
                     <el-button
-                      v-if="selectedFieldData.optionSource !== 'dictionary'"
+                      v-if="selectedFieldData.optionSource === 'manual'"
                       type="primary"
                       size="small"
                       icon="Plus"
@@ -411,6 +411,7 @@
                     <el-radio-group v-model="selectedFieldData.optionSource" @change="handleOptionSourceChange">
                       <el-radio label="manual">手动选项</el-radio>
                       <el-radio label="dictionary">数据字典</el-radio>
+                      <el-radio label="esb">ESB 数据源</el-radio>
                     </el-radio-group>
                     <el-select
                       v-if="selectedFieldData.optionSource === 'dictionary'"
@@ -427,10 +428,38 @@
                         :value="dict.DictCode"
                       ></el-option>
                     </el-select>
+                    <el-select
+                      v-if="selectedFieldData.optionSource === 'esb'"
+                      v-model="selectedFieldData.esbDataSourceCode"
+                      class="dict-code-select"
+                      clearable
+                      filterable
+                      placeholder="请选择 ESB 数据源"
+                    >
+                      <el-option
+                        v-for="source in esbDataSources"
+                        :key="source.Code || source.code"
+                        :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                        :value="source.Code || source.code"
+                      ></el-option>
+                    </el-select>
+                  </div>
+                  <div v-if="selectedFieldData.optionSource === 'esb'" class="esb-option-grid">
+                    <el-input v-model="selectedFieldData.esbLabelField" placeholder="显示字段，例如 label"></el-input>
+                    <el-input v-model="selectedFieldData.esbValueField" placeholder="值字段，例如 value"></el-input>
+                    <el-input
+                      v-model="selectedFieldData.esbParams"
+                      type="textarea"
+                      :rows="2"
+                      placeholder='静态参数 JSON，例如 {"dictCode":"gender"}'
+                    ></el-input>
                   </div>
                   <div class="options-container">
                     <div v-if="selectedFieldData.optionSource === 'dictionary'" class="empty-inline">
                       运行时会按字典编码加载启用的字典项。
+                    </div>
+                    <div v-else-if="selectedFieldData.optionSource === 'esb'" class="empty-inline">
+                      运行时会调用 ESB 数据源加载选项。
                     </div>
                     <div
                       v-else-if="selectedFieldData.options && selectedFieldData.options.length > 0"
@@ -474,6 +503,7 @@
 <script>
 import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
 import { getDictionaryTypes } from '@/api/dictionary'
+import { getEsbDataSources } from '@/api/esb'
 import MicroAppConfigDialog from './components/MicroAppConfigDialog.vue'
 import ApiDocDialog from './components/ApiDocDialog.vue'
 
@@ -512,6 +542,7 @@ export default {
       // 选中的字段数据
       selectedFieldData: null,
       dictionaryTypes: [],
+      esbDataSources: [],
       // 生成的API列表
       generatedApis: [],
       // 微应用配置表单
@@ -569,6 +600,7 @@ export default {
   created() {
     this.getMicroApps()
     this.loadDictionaryTypes()
+    this.loadEsbDataSources()
   },
   methods: {
     async loadDictionaryTypes() {
@@ -579,6 +611,19 @@ export default {
         }
       } catch (error) {
         console.error('加载字典分类失败：', error)
+      }
+    },
+    async loadEsbDataSources() {
+      try {
+        const { data: res } = await getEsbDataSources({
+          sourceType: 'sql',
+          status: 1,
+          pageNum: 1,
+          pageSize: 200
+        })
+        this.esbDataSources = res?.success ? res.data || [] : []
+      } catch (error) {
+        this.esbDataSources = []
       }
     },
     isTextField(field) {
@@ -691,10 +736,26 @@ export default {
         field.options = []
         field.optionSource = 'manual'
         field.dictCode = ''
+        field.esbDataSourceCode = ''
+        field.esbLabelField = ''
+        field.esbValueField = ''
+        field.esbParams = ''
       } else {
-        field.optionSource = field.optionSource === 'dictionary' ? 'dictionary' : 'manual'
-        if (field.optionSource !== 'dictionary') {
+        field.optionSource = ['dictionary', 'esb'].includes(field.optionSource) ? field.optionSource : 'manual'
+        if (field.optionSource === 'dictionary') {
+          field.esbDataSourceCode = ''
+          field.esbLabelField = ''
+          field.esbValueField = ''
+          field.esbParams = ''
+        } else if (field.optionSource === 'esb') {
           field.dictCode = ''
+          field.options = []
+        } else {
+          field.dictCode = ''
+          field.esbDataSourceCode = ''
+          field.esbLabelField = ''
+          field.esbValueField = ''
+          field.esbParams = ''
         }
       }
 
@@ -818,6 +879,10 @@ export default {
           defaultValue: field.DefaultValue || field.defaultValue || '',
           optionSource: field.OptionSource || field.optionSource || 'manual',
           dictCode: field.DictCode || field.dictCode || '',
+          esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
+          esbLabelField: field.EsbLabelField || field.esbLabelField || '',
+          esbValueField: field.EsbValueField || field.esbValueField || '',
+          esbParams: field.EsbParams || field.esbParams || '',
           options: this.normalizeFieldOptions(field.Options || field.options || [])
         }))
       )
@@ -1010,6 +1075,10 @@ export default {
         columnLength: 500,
         optionSource: 'manual',
         dictCode: '',
+        esbDataSourceCode: '',
+        esbLabelField: '',
+        esbValueField: '',
+        esbParams: '',
         options: []
       }
       this.MicroAppForm.Fields.push(newField)
@@ -1040,8 +1109,19 @@ export default {
       if (!this.selectedFieldData) return
       if (this.selectedFieldData.optionSource === 'dictionary') {
         this.selectedFieldData.options = []
+        this.selectedFieldData.esbDataSourceCode = ''
+        this.selectedFieldData.esbLabelField = ''
+        this.selectedFieldData.esbValueField = ''
+        this.selectedFieldData.esbParams = ''
+      } else if (this.selectedFieldData.optionSource === 'esb') {
+        this.selectedFieldData.options = []
+        this.selectedFieldData.dictCode = ''
       } else {
         this.selectedFieldData.dictCode = ''
+        this.selectedFieldData.esbDataSourceCode = ''
+        this.selectedFieldData.esbLabelField = ''
+        this.selectedFieldData.esbValueField = ''
+        this.selectedFieldData.esbParams = ''
         this.selectedFieldData.options = this.selectedFieldData.options || []
       }
     },
@@ -1109,6 +1189,14 @@ export default {
           return
         }
 
+        const invalidEsbField = this.MicroAppForm.Fields.find(
+          (field) => this.supportsOptions(field) && field.optionSource === 'esb' && !field.esbDataSourceCode
+        )
+        if (invalidEsbField) {
+          this.$message.error(`${invalidEsbField.label || invalidEsbField.fieldName} 未选择 ESB 数据源`)
+          return
+        }
+
         // 将小驼峰命名转换为大驼峰命名，以适配后台接口
         const submitData = {
           ...this.MicroAppForm,
@@ -1145,6 +1233,10 @@ export default {
               DefaultValue: field.defaultValue,
               OptionSource: field.optionSource || 'manual',
               DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
+              EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
+              EsbLabelField: field.optionSource === 'esb' ? field.esbLabelField || '' : '',
+              EsbValueField: field.optionSource === 'esb' ? field.esbValueField || '' : '',
+              EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
               Options: this.normalizeFieldOptions(field.options)
             }
           })
@@ -1802,6 +1894,17 @@ export default {
 .dict-code-select {
   width: 320px;
   max-width: 100%;
+}
+
+.esb-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.esb-option-grid :deep(.el-textarea) {
+  grid-column: 1 / -1;
 }
 
 .empty-inline {

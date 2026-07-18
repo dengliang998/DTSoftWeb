@@ -268,6 +268,7 @@
 import { ElImageViewer } from 'element-plus'
 import { getFileDownloadUrl } from '@/api/file'
 import { getDictionaryItemsByCode } from '@/api/dictionary'
+import { executeEsbDataSource } from '@/api/esb'
 import {
   batchDeleteMicroRuntimeData,
   createMicroRuntimeData,
@@ -417,6 +418,40 @@ export default {
       dictionaryFields.forEach((field) => {
         field.options = optionMap[field.dictCode] || []
       })
+    },
+    parseEsbParams(value) {
+      if (!value) return {}
+      if (typeof value === 'object') return value
+      try {
+        const parsed = JSON.parse(value)
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+      } catch (error) {
+        return {}
+      }
+    },
+    async loadEsbOptionsForFields(fields) {
+      const esbFields = (fields || []).filter((field) => field?.optionSource === 'esb' && field?.esbDataSourceCode)
+      if (esbFields.length === 0) return
+
+      await Promise.all(
+        esbFields.map(async (field) => {
+          try {
+            const { data: res } = await executeEsbDataSource({
+              code: field.esbDataSourceCode,
+              parameters: this.parseEsbParams(field.esbParams)
+            })
+            const rows = res?.success && Array.isArray(res.data) ? res.data : []
+            const labelField = field.esbLabelField || 'label'
+            const valueField = field.esbValueField || 'value'
+            field.options = rows.map((row) => ({
+              label: row[labelField] ?? row.Label ?? row.label ?? '',
+              value: row[valueField] ?? row.Value ?? row.value ?? ''
+            }))
+          } catch (error) {
+            field.options = []
+          }
+        })
+      )
     },
     normalizeFormColumns(formColumns) {
       const value = Number(formColumns)
@@ -608,6 +643,10 @@ export default {
                       defaultValue: field.DefaultValue || field.defaultValue || '',
                       optionSource: field.OptionSource || field.optionSource || 'manual',
                       dictCode: field.DictCode || field.dictCode || '',
+                      esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
+                      esbLabelField: field.EsbLabelField || field.esbLabelField || '',
+                      esbValueField: field.EsbValueField || field.esbValueField || '',
+                      esbParams: field.EsbParams || field.esbParams || '',
                       options: this.normalizeFieldOptions(field.Options || field.options || [])
                     }))
                   )
@@ -615,6 +654,7 @@ export default {
             }
 
             await this.loadDictionaryOptionsForFields(this.appConfig.fields)
+            await this.loadEsbOptionsForFields(this.appConfig.fields)
 
             // 初始化表单数据
             this.initFormData()

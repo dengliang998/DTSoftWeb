@@ -10,6 +10,8 @@ const SystemSettings = () => import('../view/Common/SystemSettings.vue')
 const SystemInfo = () => import('../view/Common/SystemInfo.vue')
 const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
 const Dictionaries = () => import('../view/Common/Dictionaries.vue')
+const EsbServiceConnections = () => import('../view/Common/EsbServiceConnections.vue')
+const EsbDataSources = () => import('../view/Common/EsbDataSources.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
 const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
 const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
@@ -70,6 +72,18 @@ export const routes = [
         name: 'Dictionaries',
         component: Dictionaries,
         meta: withCache('Dictionaries')
+      },
+      {
+        path: '/common/esb-connections',
+        name: 'EsbServiceConnections',
+        component: EsbServiceConnections,
+        meta: withCache('EsbServiceConnections')
+      },
+      {
+        path: '/common/esb',
+        name: 'EsbDataSources',
+        component: EsbDataSources,
+        meta: withCache('EsbDataSources')
       },
       {
         path: '/MicroApp/MicroApiConfig',
