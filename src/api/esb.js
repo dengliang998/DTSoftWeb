@@ -24,8 +24,10 @@ export const updateEsbDataSource = (data) => http.post('/api/Esb/UpdateDataSourc
 
 export const deleteEsbDataSource = (itemId) => http.post('/api/Esb/DeleteDataSource', { ItemId: itemId })
 
-export const executeEsbDataSource = ({ code, parameters = {} }) =>
+export const executeEsbDataSource = ({ code, parameters = {}, pageNum, pageSize }) =>
   http.post('/api/Esb/Execute', {
     Code: code,
-    Parameters: parameters
+    Parameters: parameters,
+    PageNum: pageNum,
+    PageSize: pageSize
   })

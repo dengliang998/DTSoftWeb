@@ -398,6 +398,49 @@ export default {
           value: option.Value || option.value || ''
         }))
     },
+    normalizeLookupColumns(columns) {
+      let normalized = columns
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) return []
+
+      return normalized
+        .filter((column) => column && typeof column === 'object')
+        .map((column) => ({
+          field: column.Field || column.field || '',
+          label: column.Label || column.label || '',
+          width: column.Width !== undefined && column.Width !== null ? column.Width : column.width || null
+        }))
+        .filter((column) => column.field && column.label)
+    },
+    normalizeLookupMappings(mappings) {
+      let normalized = mappings
+
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+
+      if (!Array.isArray(normalized)) return []
+
+      return normalized
+        .filter((mapping) => mapping && typeof mapping === 'object')
+        .map((mapping) => ({
+          sourceField: mapping.SourceField || mapping.sourceField || '',
+          targetField: mapping.TargetField || mapping.targetField || ''
+        }))
+        .filter((mapping) => mapping.sourceField && mapping.targetField)
+    },
     async loadDictionaryOptionsForFields(fields) {
       const dictionaryFields = (fields || []).filter((field) => field?.optionSource === 'dictionary' && field?.dictCode)
       if (dictionaryFields.length === 0) return
@@ -643,6 +686,12 @@ export default {
                       dictCode: field.DictCode || field.dictCode || '',
                       esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
                       esbParams: field.EsbParams || field.esbParams || '',
+                      lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
+                      lookupParams: field.LookupParams || field.lookupParams || '',
+                      lookupValueField: field.LookupValueField || field.lookupValueField || '',
+                      lookupPageSize: field.LookupPageSize || field.lookupPageSize || 10,
+                      lookupColumns: this.normalizeLookupColumns(field.LookupColumns || field.lookupColumns || []),
+                      lookupMappings: this.normalizeLookupMappings(field.LookupMappings || field.lookupMappings || []),
                       options: this.normalizeFieldOptions(field.Options || field.options || [])
                     }))
                   )

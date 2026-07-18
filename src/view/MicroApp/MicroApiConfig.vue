@@ -253,6 +253,7 @@
                         <el-option label="下拉选择" value="select"></el-option>
                         <el-option label="单选" value="radio"></el-option>
                         <el-option label="多选" value="checkbox"></el-option>
+                        <el-option label="开窗查询" value="lookup"></el-option>
                         <el-option label="附件上传" value="attachment"></el-option>
                       </el-select>
                     </el-form-item>
@@ -392,6 +393,101 @@
                       <el-input v-model="selectedFieldData.pattern" placeholder="请输入正则表达式"></el-input>
                     </el-form-item>
                   </div>
+                </div>
+
+                <div v-if="isLookupField(selectedFieldData)" class="config-section">
+                  <div class="config-section-title">开窗查询</div>
+                  <div class="form-grid form-grid--3">
+                    <el-form-item label="ESB 数据源">
+                      <el-select
+                        v-model="selectedFieldData.lookupDataSourceCode"
+                        clearable
+                        filterable
+                        placeholder="请选择 ESB 数据源"
+                      >
+                        <el-option
+                          v-for="source in esbDataSources"
+                          :key="source.Code || source.code"
+                          :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                          :value="source.Code || source.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="当前字段取值列">
+                      <el-input v-model="selectedFieldData.lookupValueField" placeholder="例如 id"></el-input>
+                    </el-form-item>
+                    <el-form-item label="分页大小">
+                      <el-input-number
+                        v-model="selectedFieldData.lookupPageSize"
+                        :min="5"
+                        :max="200"
+                        :step="5"
+                        style="width: 100%"
+                      ></el-input-number>
+                    </el-form-item>
+                  </div>
+                  <el-form-item label="静态参数 JSON">
+                    <el-input
+                      ref="lookupParamsInput"
+                      v-model="selectedFieldData.lookupParams"
+                      type="textarea"
+                      :rows="2"
+                      placeholder='例如 {"userAcc":"${currentUser.account}"}'
+                    ></el-input>
+                    <div class="esb-variable-panel">
+                      <span class="esb-variable-title">可用变量</span>
+                      <el-tag
+                        v-for="variable in esbVariableOptions"
+                        :key="variable.value"
+                        class="esb-variable-tag"
+                        effect="plain"
+                        @click="insertLookupVariable(variable.value)"
+                      >
+                        {{ variable.label }} {{ variable.value }}
+                      </el-tag>
+                    </div>
+                  </el-form-item>
+                  <el-form-item label="弹窗显示列">
+                    <div class="lookup-config-list">
+                      <div
+                        v-for="(column, index) in selectedFieldData.lookupColumns"
+                        :key="index"
+                        class="lookup-config-row lookup-config-row--columns"
+                      >
+                        <el-input v-model="column.field" placeholder="返回字段"></el-input>
+                        <el-input v-model="column.label" placeholder="列标题"></el-input>
+                        <el-input-number
+                          v-model="column.width"
+                          :min="80"
+                          :max="500"
+                          placeholder="宽度"
+                        ></el-input-number>
+                        <el-button type="danger" icon="Delete" @click="removeLookupColumn(index)"></el-button>
+                      </div>
+                      <el-button icon="Plus" @click="addLookupColumn">添加显示列</el-button>
+                    </div>
+                  </el-form-item>
+                  <el-form-item label="字段回填映射">
+                    <div class="lookup-config-list">
+                      <div
+                        v-for="(mapping, index) in selectedFieldData.lookupMappings"
+                        :key="index"
+                        class="lookup-config-row"
+                      >
+                        <el-input v-model="mapping.sourceField" placeholder="返回字段"></el-input>
+                        <el-select v-model="mapping.targetField" filterable placeholder="回填字段">
+                          <el-option
+                            v-for="field in lookupTargetFieldOptions"
+                            :key="field.fieldName"
+                            :label="`${field.label || field.fieldName}（${field.fieldName}）`"
+                            :value="field.fieldName"
+                          ></el-option>
+                        </el-select>
+                        <el-button type="danger" icon="Delete" @click="removeLookupMapping(index)"></el-button>
+                      </div>
+                      <el-button icon="Plus" @click="addLookupMapping">添加回填映射</el-button>
+                    </div>
+                  </el-form-item>
                 </div>
 
                 <div v-if="supportsOptions(selectedFieldData)" class="config-section">
@@ -611,6 +707,9 @@ export default {
     },
     listConfigCount() {
       return this.MicroAppForm.Fields.filter((field) => field.showInList).length
+    },
+    lookupTargetFieldOptions() {
+      return this.MicroAppForm.Fields.filter((field) => field.fieldName)
     }
   },
   created() {
@@ -654,11 +753,14 @@ export default {
     isAttachmentField(field) {
       return field?.fieldType === 'attachment'
     },
+    isLookupField(field) {
+      return field?.fieldType === 'lookup'
+    },
     supportsOptions(field) {
       return ['select', 'radio', 'checkbox'].includes(field?.fieldType)
     },
     supportsColumnLength(field) {
-      return ['string', 'select', 'radio', 'checkbox'].includes(field?.fieldType)
+      return ['string', 'select', 'radio', 'checkbox', 'lookup'].includes(field?.fieldType)
     },
     getDefaultColumnLength(field) {
       return field?.fieldType === 'select' ? 200 : 500
@@ -685,6 +787,7 @@ export default {
         select: '下拉',
         radio: '单选',
         checkbox: '多选',
+        lookup: '开窗',
         attachment: '附件'
       }
 
@@ -695,6 +798,7 @@ export default {
         number: 'success',
         datetime: 'warning',
         boolean: 'info',
+        lookup: 'success',
         attachment: 'info'
       }
 
@@ -703,7 +807,7 @@ export default {
     getQueryModeOptions(field) {
       const options = [{ label: '不参与查询', value: 'none' }]
 
-      if (this.isTextField(field)) {
+      if (this.isTextField(field) || this.isLookupField(field)) {
         return options.concat([
           { label: '精确查询', value: 'exact' },
           { label: '模糊查询', value: 'fuzzy' }
@@ -782,6 +886,61 @@ export default {
       if (!this.supportsPatternRule(field)) {
         field.pattern = ''
       }
+
+      if (this.isLookupField(field)) {
+        field.lookupDataSourceCode = field.lookupDataSourceCode || ''
+        field.lookupParams = field.lookupParams || ''
+        field.lookupValueField = field.lookupValueField || ''
+        field.lookupPageSize = this.normalizeLookupPageSize(field.lookupPageSize)
+        field.lookupColumns = this.normalizeLookupColumns(field.lookupColumns)
+        field.lookupMappings = this.normalizeLookupMappings(field.lookupMappings)
+      } else {
+        field.lookupDataSourceCode = ''
+        field.lookupParams = ''
+        field.lookupValueField = ''
+        field.lookupPageSize = 10
+        field.lookupColumns = []
+        field.lookupMappings = []
+      }
+    },
+    normalizeLookupPageSize(pageSize) {
+      const value = Number(pageSize)
+      return Number.isInteger(value) && value >= 5 && value <= 200 ? value : 10
+    },
+    normalizeLookupColumns(columns) {
+      let normalized = columns
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+      if (!Array.isArray(normalized)) return []
+      return normalized
+        .filter((column) => column && typeof column === 'object')
+        .map((column) => ({
+          field: column.Field || column.field || '',
+          label: column.Label || column.label || '',
+          width: column.Width !== undefined && column.Width !== null ? column.Width : column.width || null
+        }))
+    },
+    normalizeLookupMappings(mappings) {
+      let normalized = mappings
+      if (typeof normalized === 'string') {
+        try {
+          normalized = JSON.parse(normalized)
+        } catch (error) {
+          normalized = []
+        }
+      }
+      if (!Array.isArray(normalized)) return []
+      return normalized
+        .filter((mapping) => mapping && typeof mapping === 'object')
+        .map((mapping) => ({
+          sourceField: mapping.SourceField || mapping.sourceField || '',
+          targetField: mapping.TargetField || mapping.targetField || ''
+        }))
     },
     normalizeFieldOptions(options) {
       let normalized = options
@@ -891,6 +1050,12 @@ export default {
           dictCode: field.DictCode || field.dictCode || '',
           esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
           esbParams: field.EsbParams || field.esbParams || '',
+          lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
+          lookupParams: field.LookupParams || field.lookupParams || '',
+          lookupValueField: field.LookupValueField || field.lookupValueField || '',
+          lookupPageSize: field.LookupPageSize || field.lookupPageSize || 10,
+          lookupColumns: this.normalizeLookupColumns(field.LookupColumns || field.lookupColumns || []),
+          lookupMappings: this.normalizeLookupMappings(field.LookupMappings || field.lookupMappings || []),
           options: this.normalizeFieldOptions(field.Options || field.options || [])
         }))
       )
@@ -1085,6 +1250,12 @@ export default {
         dictCode: '',
         esbDataSourceCode: '',
         esbParams: '',
+        lookupDataSourceCode: '',
+        lookupParams: '',
+        lookupValueField: '',
+        lookupPageSize: 10,
+        lookupColumns: [],
+        lookupMappings: [],
         options: []
       }
       this.MicroAppForm.Fields.push(newField)
@@ -1149,6 +1320,43 @@ export default {
         const cursor = start + token.length
         textarea.setSelectionRange(cursor, cursor)
       })
+    },
+    insertLookupVariable(variable) {
+      if (!this.selectedFieldData) return
+
+      const token = `"${variable}"`
+      const currentValue = this.selectedFieldData.lookupParams || ''
+      const inputComponent = this.$refs.lookupParamsInput
+      const textarea = inputComponent?.$el?.querySelector('textarea')
+
+      if (!textarea) {
+        this.selectedFieldData.lookupParams = currentValue + token
+        return
+      }
+
+      const start = textarea.selectionStart ?? currentValue.length
+      const end = textarea.selectionEnd ?? currentValue.length
+      this.selectedFieldData.lookupParams = currentValue.slice(0, start) + token + currentValue.slice(end)
+
+      this.$nextTick(() => {
+        textarea.focus()
+        const cursor = start + token.length
+        textarea.setSelectionRange(cursor, cursor)
+      })
+    },
+    addLookupColumn() {
+      if (!this.selectedFieldData.lookupColumns) this.selectedFieldData.lookupColumns = []
+      this.selectedFieldData.lookupColumns.push({ field: '', label: '', width: null })
+    },
+    removeLookupColumn(index) {
+      this.selectedFieldData.lookupColumns.splice(index, 1)
+    },
+    addLookupMapping() {
+      if (!this.selectedFieldData.lookupMappings) this.selectedFieldData.lookupMappings = []
+      this.selectedFieldData.lookupMappings.push({ sourceField: '', targetField: '' })
+    },
+    removeLookupMapping(index) {
+      this.selectedFieldData.lookupMappings.splice(index, 1)
     },
     // 选择字段
     selectField(data) {
@@ -1222,6 +1430,18 @@ export default {
           return
         }
 
+        const invalidLookupField = this.MicroAppForm.Fields.find(
+          (field) =>
+            this.isLookupField(field) &&
+            (!field.lookupDataSourceCode ||
+              !field.lookupValueField ||
+              this.normalizeLookupColumns(field.lookupColumns).length === 0)
+        )
+        if (invalidLookupField) {
+          this.$message.error(`${invalidLookupField.label || invalidLookupField.fieldName} 的开窗查询配置不完整`)
+          return
+        }
+
         // 将小驼峰命名转换为大驼峰命名，以适配后台接口
         const submitData = {
           ...this.MicroAppForm,
@@ -1260,6 +1480,20 @@ export default {
               DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
               EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
               EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
+              LookupDataSourceCode: field.fieldType === 'lookup' ? field.lookupDataSourceCode || '' : '',
+              LookupParams: field.fieldType === 'lookup' ? field.lookupParams || '' : '',
+              LookupValueField: field.fieldType === 'lookup' ? field.lookupValueField || '' : '',
+              LookupPageSize: field.fieldType === 'lookup' ? this.normalizeLookupPageSize(field.lookupPageSize) : null,
+              LookupColumns:
+                field.fieldType === 'lookup'
+                  ? this.normalizeLookupColumns(field.lookupColumns).filter((column) => column.field && column.label)
+                  : [],
+              LookupMappings:
+                field.fieldType === 'lookup'
+                  ? this.normalizeLookupMappings(field.lookupMappings).filter(
+                      (mapping) => mapping.sourceField && mapping.targetField
+                    )
+                  : [],
               Options: this.normalizeFieldOptions(field.options)
             }
           })
@@ -1941,6 +2175,22 @@ export default {
 .esb-variable-tag {
   cursor: pointer;
   user-select: none;
+}
+
+.lookup-config-list {
+  width: 100%;
+}
+
+.lookup-config-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.lookup-config-row--columns {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 120px 40px;
 }
 
 .empty-inline {

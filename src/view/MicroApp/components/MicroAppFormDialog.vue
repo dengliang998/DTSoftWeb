@@ -76,6 +76,21 @@
                   {{ opt.label }}
                 </el-checkbox>
               </el-checkbox-group>
+              <el-input
+                v-else-if="field.fieldType === 'lookup'"
+                v-model="formData[field.fieldName]"
+                readonly
+                :placeholder="'请选择' + (field.label || field.fieldName)"
+                :disabled="dialogType === 'edit' && !field.editable"
+              >
+                <template #append>
+                  <el-button
+                    icon="Search"
+                    :disabled="dialogType === 'edit' && !field.editable"
+                    @click="openLookupDialog(field)"
+                  ></el-button>
+                </template>
+              </el-input>
               <div v-else-if="field.fieldType === 'attachment'" class="attachment-field">
                 <el-upload
                   class="attachment-upload"
@@ -137,10 +152,44 @@
       </span>
     </template>
   </el-dialog>
+
+  <el-dialog
+    v-model="lookupDialogVisible"
+    :title="lookupDialogTitle"
+    width="760px"
+    append-to-body
+    :close-on-click-modal="false"
+  >
+    <el-table v-loading="lookupLoading" :data="lookupRows" border stripe height="360" @row-dblclick="selectLookupRow">
+      <el-table-column
+        v-for="column in activeLookupColumns"
+        :key="column.field"
+        :prop="column.field"
+        :label="column.label"
+        :width="column.width || undefined"
+        show-overflow-tooltip
+      ></el-table-column>
+      <el-table-column label="操作" width="80" fixed="right">
+        <template #default="{ row }">
+          <el-button type="primary" size="small" @click="selectLookupRow(row)">选择</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="lookup-pagination">
+      <el-pagination
+        layout="total, prev, pager, next"
+        :total="lookupTotal"
+        :page-size="lookupQuery.pageSize"
+        :current-page="lookupQuery.pageNum"
+        @current-change="handleLookupPageChange"
+      ></el-pagination>
+    </div>
+  </el-dialog>
 </template>
 
 <script>
 import { getFileDownloadUrl, getFileUploadUrl, getUploadHeaders } from '@/api/file'
+import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
 
 export default {
@@ -160,7 +209,16 @@ export default {
   data() {
     return {
       uploadActionUrl: getFileUploadUrl(),
-      uploadHeaders: getUploadHeaders()
+      uploadHeaders: getUploadHeaders(),
+      lookupDialogVisible: false,
+      lookupLoading: false,
+      activeLookupField: null,
+      lookupRows: [],
+      lookupTotal: 0,
+      lookupQuery: {
+        pageNum: 1,
+        pageSize: 10
+      }
     }
   },
   computed: {
@@ -171,6 +229,18 @@ export default {
       set(v) {
         this.$emit('update:modelValue', v)
       }
+    },
+    lookupDialogTitle() {
+      return this.activeLookupField
+        ? `选择${this.activeLookupField.label || this.activeLookupField.fieldName}`
+        : '开窗查询'
+    },
+    activeLookupColumns() {
+      const configured = this.normalizeLookupColumns(this.activeLookupField?.lookupColumns)
+      if (configured.length > 0) return configured
+
+      const firstRow = this.lookupRows[0] || {}
+      return Object.keys(firstRow).map((key) => ({ field: key, label: key, width: null }))
     }
   },
   methods: {
@@ -301,6 +371,101 @@ export default {
       }
       window.location.href = getFileDownloadUrl(fileId)
     },
+    parseLookupParams(value) {
+      if (!value) return {}
+      if (typeof value === 'object') return value
+      try {
+        const parsed = JSON.parse(value)
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+      } catch (error) {
+        return {}
+      }
+    },
+    normalizeLookupColumns(columns) {
+      if (!Array.isArray(columns)) return []
+      return columns
+        .filter((column) => column && typeof column === 'object')
+        .map((column) => ({
+          field: column.field || column.Field || '',
+          label: column.label || column.Label || '',
+          width: column.width || column.Width || null
+        }))
+        .filter((column) => column.field && column.label)
+    },
+    normalizeLookupMappings(mappings) {
+      if (!Array.isArray(mappings)) return []
+      return mappings
+        .filter((mapping) => mapping && typeof mapping === 'object')
+        .map((mapping) => ({
+          sourceField: mapping.sourceField || mapping.SourceField || '',
+          targetField: mapping.targetField || mapping.TargetField || ''
+        }))
+        .filter((mapping) => mapping.sourceField && mapping.targetField)
+    },
+    getRowValue(row, fieldName) {
+      if (!row || !fieldName) return undefined
+      if (Object.prototype.hasOwnProperty.call(row, fieldName)) return row[fieldName]
+      const matchedKey = Object.keys(row).find((key) => key.toLowerCase() === fieldName.toLowerCase())
+      return matchedKey ? row[matchedKey] : undefined
+    },
+    async openLookupDialog(field) {
+      if (!field.lookupDataSourceCode) {
+        this.$message.warning('请先配置开窗查询数据源')
+        return
+      }
+
+      this.activeLookupField = field
+      this.lookupQuery = {
+        pageNum: 1,
+        pageSize: Number(field.lookupPageSize) || 10
+      }
+      this.lookupDialogVisible = true
+      await this.loadLookupData()
+    },
+    async loadLookupData() {
+      if (!this.activeLookupField) return
+
+      this.lookupLoading = true
+      try {
+        const { data: res } = await executeEsbDataSource({
+          code: this.activeLookupField.lookupDataSourceCode,
+          parameters: this.parseLookupParams(this.activeLookupField.lookupParams),
+          pageNum: this.lookupQuery.pageNum,
+          pageSize: this.lookupQuery.pageSize
+        })
+        const payload = res?.data || {}
+        this.lookupRows = Array.isArray(payload.List || payload.list) ? payload.List || payload.list : []
+        this.lookupTotal = payload.Total || payload.total || this.lookupRows.length
+      } catch (error) {
+        this.lookupRows = []
+        this.lookupTotal = 0
+        this.$message.error(error.message || '查询失败')
+      } finally {
+        this.lookupLoading = false
+      }
+    },
+    handleLookupPageChange(page) {
+      this.lookupQuery.pageNum = page
+      this.loadLookupData()
+    },
+    selectLookupRow(row) {
+      if (!this.activeLookupField) return
+
+      const valueField = this.activeLookupField.lookupValueField || 'Value'
+      const currentValue = this.getRowValue(row, valueField)
+      // eslint-disable-next-line vue/no-mutating-props
+      this.formData[this.activeLookupField.fieldName] = currentValue ?? ''
+
+      this.normalizeLookupMappings(this.activeLookupField.lookupMappings).forEach((mapping) => {
+        const mappedValue = this.getRowValue(row, mapping.sourceField)
+        // eslint-disable-next-line vue/no-mutating-props
+        this.formData[mapping.targetField] = mappedValue ?? ''
+        this.$refs.formRef?.validateField(mapping.targetField)
+      })
+
+      this.$refs.formRef?.validateField(this.activeLookupField.fieldName)
+      this.lookupDialogVisible = false
+    },
     getDateFormatType(field) {
       return ['year', 'month', 'date', 'datetime'].includes(field?.dateFormat) ? field.dateFormat : 'datetime'
     },
@@ -379,6 +544,12 @@ export default {
 .dialog-form-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
+}
+
+.lookup-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
 }
 
 .attachment-field {
