@@ -456,10 +456,6 @@ export default {
       immediate: true
     }
   },
-  created() {
-    // 初始化应用
-    this.initApp()
-  },
   methods: {
     getRowPrimaryKey(row) {
       return row?.ItemId || row?.itemId || row?.id || row?.Id || row?.ID || row?.idField
