@@ -6,20 +6,25 @@
           <h1>系统日志</h1>
           <p>查询接口请求、操作用户、客户端 IP 和返回结果。</p>
         </div>
-        <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="resetFilters">重置</el-button>
-          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-        </div>
       </div>
 
       <div class="dt-panel log-filter-panel">
         <div class="dt-panel__header">
           <div>
             <strong>筛选条件</strong>
-            <span>支持综合搜索和字段精确筛选</span>
+            <span>{{ filterCollapsed ? '已折叠，展开后可设置筛选条件' : '支持综合搜索和字段精确筛选' }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <el-button
+              class="dt-ghost-action filter-toggle-button"
+              :icon="filterCollapsed ? ArrowDown : ArrowUp"
+              @click="toggleFilters"
+            >
+              {{ filterCollapsed ? '展开筛选' : '收起筛选' }}
+            </el-button>
           </div>
         </div>
-        <div class="search-section">
+        <div v-show="!filterCollapsed" class="search-section">
           <el-form :model="queryInfo" label-width="76px" class="filter-form">
             <el-row :gutter="12">
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
@@ -191,15 +196,18 @@
 
 <script>
 import { getLogActionList } from '@/api/log'
-import { Refresh, Search } from '@element-plus/icons-vue'
+import { ArrowDown, ArrowUp, Refresh, Search } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 export default {
   name: 'LogAction',
   data() {
     return {
+      ArrowDown: markRaw(ArrowDown),
+      ArrowUp: markRaw(ArrowUp),
       Search: markRaw(Search),
       Refresh: markRaw(Refresh),
+      filterCollapsed: true,
       logDateRange: [],
       queryInfo: {
         // 当前的页数
@@ -253,6 +261,9 @@ export default {
     handleSearch() {
       this.queryInfo.pagenum = 1
       this.GetLogActionList()
+    },
+    toggleFilters() {
+      this.filterCollapsed = !this.filterCollapsed
     },
     resetFilters() {
       this.logDateRange = []
