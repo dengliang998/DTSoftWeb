@@ -1,82 +1,135 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="选择用户" width="60%" @close="handleClose">
+  <el-dialog
+    v-model="dialogVisible"
+    title="选择用户"
+    width="72%"
+    align-center
+    class="user-selector-dialog"
+    @close="handleClose"
+  >
     <div class="user-selector-container">
-      <el-row :gutter="20">
-        <!-- 左侧部门树 -->
-        <el-col :span="8">
-          <div class="dept-tree-section">
-            <h4>部门列表</h4>
-            <el-tree
-              ref="deptTreeRef"
-              :data="deptTree"
-              :props="{ label: 'OuName', children: 'Children' }"
-              node-key="ItemId"
-              highlight-current
-              :default-expanded-keys="expandedDeptKeys"
-              @node-click="handleDeptClick"
-            >
-              <template #default="{ node }">
-                <span class="custom-tree-node">
-                  <el-icon class="tree-node-icon">
-                    <OfficeBuilding />
-                  </el-icon>
-                  <span>{{ node.label }}</span>
-                </span>
-              </template>
-            </el-tree>
+      <aside class="selector-panel dt-panel dept-tree-section">
+        <div class="selector-panel__header dt-panel__header">
+          <div>
+            <strong>部门列表</strong>
+            <span>{{ deptTree.length }} 个根部门</span>
           </div>
-        </el-col>
+        </div>
+        <div class="dept-tree-scroll">
+          <el-tree
+            ref="deptTreeRef"
+            :data="deptTree"
+            :props="{ label: 'OuName', children: 'Children' }"
+            node-key="ItemId"
+            highlight-current
+            :default-expanded-keys="expandedDeptKeys"
+            @node-click="handleDeptClick"
+          >
+            <template #default="{ node }">
+              <span class="custom-tree-node">
+                <el-icon class="tree-node-icon">
+                  <OfficeBuilding />
+                </el-icon>
+                <span>{{ node.label }}</span>
+              </span>
+            </template>
+          </el-tree>
+        </div>
+      </aside>
 
-        <!-- 右侧用户列表 -->
-        <el-col :span="16">
-          <div class="user-list-section">
-            <h4>用户列表 {{ currentDeptName ? '- ' + currentDeptName : '' }}</h4>
-            <el-input
-              v-model="queryInfo.Keyword"
-              placeholder="搜索用户账号或姓名"
-              clearable
-              size="small"
-              style="margin-bottom: 10px"
-              @clear="loadUsers"
-              @keyup.enter="loadUsers"
-            >
-              <template #append>
-                <el-button :icon="Search" size="small" @click="loadUsers"></el-button>
-              </template>
-            </el-input>
-            <el-table
-              v-loading="loading"
-              :data="userList"
-              border
-              stripe
-              height="220"
-              @selection-change="handleSelectionChange"
-            >
-              <el-table-column type="selection" width="55"></el-table-column>
-              <el-table-column label="账号" prop="Account" show-overflow-tooltip></el-table-column>
-              <el-table-column label="用户名" prop="DisplayName" show-overflow-tooltip></el-table-column>
-              <el-table-column label="职位" prop="Position" show-overflow-tooltip></el-table-column>
-            </el-table>
-            <el-pagination
-              :current-page="queryInfo.PageNum"
-              :page-sizes="[10, 20, 50, 100]"
-              :page-size="queryInfo.PageSize"
-              layout="total, sizes, prev, pager, next"
-              :total="total"
-              style="margin-top: 10px; justify-content: flex-end"
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-            ></el-pagination>
+      <section class="selector-panel dt-panel user-list-section">
+        <div class="selector-panel__header dt-panel__header">
+          <div>
+            <strong>{{ currentDeptName || '用户列表' }}</strong>
+            <span>{{ currentDeptName ? '当前部门用户' : '选择左侧部门后筛选' }}</span>
           </div>
-        </el-col>
-      </el-row>
+          <div class="selected-summary dt-panel__meta">
+            <span class="dt-chip dt-chip--success">已选 {{ selectedRows.length }}</span>
+            <el-button
+              class="dt-ghost-action selector-clear-button"
+              size="small"
+              :disabled="selectedRows.length === 0"
+              @click="clearSelection"
+            >
+              清空
+            </el-button>
+          </div>
+        </div>
+
+        <div class="user-toolbar">
+          <el-input
+            v-model="queryInfo.Keyword"
+            class="user-search dt-search"
+            placeholder="搜索用户账号或姓名"
+            clearable
+            @clear="handleSearch"
+            @keyup.enter="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+        </div>
+
+        <el-table
+          ref="userTableRef"
+          v-loading="loading"
+          :data="userList"
+          :row-class-name="getRowClassName"
+          :row-style="{ height: '46px' }"
+          :cell-style="{ padding: '0px' }"
+          class="user-table dt-table"
+          empty-text="暂无用户"
+          @selection-change="handleSelectionChange"
+          @row-click="handleRowClick"
+        >
+          <el-table-column type="selection" width="52" :selectable="isRowSelectable"></el-table-column>
+          <el-table-column label="账号" prop="Account" min-width="160" show-overflow-tooltip>
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.Account || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="用户名" prop="DisplayName" min-width="150" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="user-name">{{ row.DisplayName || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="职位" prop="Position" min-width="150" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="dt-muted-pill">{{ row.Position || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="96" align="center">
+            <template #default="{ row }">
+              <span :class="getStatusClass(row)">{{ getStatusText(row) }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-pagination
+          class="user-pagination dt-pagination"
+          :current-page="queryInfo.PageNum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="queryInfo.PageSize"
+          layout="total, sizes, prev, pager, next"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </section>
     </div>
 
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleConfirm">确 定</el-button>
-      </span>
+      <div class="dialog-footer">
+        <span class="footer-hint">点击行即可选择，翻页后保留已选用户。</span>
+        <div class="footer-actions">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :disabled="selectedRows.length === 0" @click="handleConfirm">
+            确定 {{ selectedRows.length ? `(${selectedRows.length})` : '' }}
+          </el-button>
+        </div>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -84,27 +137,24 @@
 <script>
 import { getAllOus } from '@/api/organization'
 import { getUserList } from '@/api/user'
-import { Search, OfficeBuilding } from '@element-plus/icons-vue'
+import { OfficeBuilding, Search } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 export default {
   name: 'UserSelector',
   components: {
-    Search,
-    OfficeBuilding
+    OfficeBuilding,
+    Search
   },
   props: {
-    // 是否显示对话框
     visible: {
       type: Boolean,
       default: false
     },
-    // 已选择的用户列表（用于回显或排除）
     selectedUsers: {
       type: Array,
       default: () => []
     },
-    // 是否多选
     multiple: {
       type: Boolean,
       default: true
@@ -113,12 +163,11 @@ export default {
   emits: ['update:visible', 'confirm'],
   data() {
     return {
-      // 图标 (使用 markRaw 避免响应式警告)
-      Search: markRaw(Search),
       OfficeBuilding: markRaw(OfficeBuilding),
-
-      dialogVisible: false,
+      Search: markRaw(Search),
+      dialogVisible: this.visible,
       loading: false,
+      syncingSelection: false,
       deptTree: [],
       expandedDeptKeys: [],
       currentDeptId: '',
@@ -134,6 +183,14 @@ export default {
       selectedRows: []
     }
   },
+  computed: {
+    selectedAccountSet() {
+      return new Set((this.selectedUsers || []).map((user) => user.Account).filter(Boolean))
+    },
+    selectedRowAccountSet() {
+      return new Set(this.selectedRows.map((user) => user.Account).filter(Boolean))
+    }
+  },
   watch: {
     visible(val) {
       this.dialogVisible = val
@@ -147,17 +204,16 @@ export default {
   },
   methods: {
     async initData() {
+      this.selectedRows = []
       await this.loadDeptTree()
       await this.loadUsers()
     },
 
-    // 加载部门树
     async loadDeptTree() {
       try {
         const { data: res } = await getAllOus()
         if (res.success) {
           this.deptTree = res.data || []
-          // 默认展开第一层
           this.expandedDeptKeys = this.deptTree.map((item) => item.ItemId)
         } else {
           this.$message.error('部门树加载失败：' + (res.Msg || res.message))
@@ -168,7 +224,6 @@ export default {
       }
     },
 
-    // 加载用户列表
     async loadUsers() {
       this.loading = true
       try {
@@ -181,6 +236,7 @@ export default {
         if (res.success) {
           this.userList = res.data || []
           this.total = res.Total || 0
+          this.$nextTick(() => this.syncTableSelection())
         } else {
           this.$message.error('用户列表加载失败：' + (res.Msg || res.message))
         }
@@ -192,7 +248,6 @@ export default {
       }
     },
 
-    // 部门点击事件
     handleDeptClick(data) {
       this.currentDeptId = data.ItemId
       this.currentDeptName = data.OuName
@@ -201,25 +256,107 @@ export default {
       this.loadUsers()
     },
 
-    // 表格选择变化
-    handleSelectionChange(selection) {
-      this.selectedRows = selection
+    handleSearch() {
+      this.queryInfo.PageNum = 1
+      this.loadUsers()
     },
 
-    // 分页 - 每页数量变化
+    handleSelectionChange(selection) {
+      if (this.syncingSelection) return
+
+      const selectableSelection = selection.filter((row) => this.isRowSelectable(row))
+
+      if (this.multiple) {
+        const currentPageAccounts = new Set(this.userList.map((user) => user.Account).filter(Boolean))
+        const preservedRows = this.selectedRows.filter((user) => !currentPageAccounts.has(user.Account))
+        this.selectedRows = this.mergeUsersByAccount([...preservedRows, ...selectableSelection])
+        return
+      }
+
+      this.selectedRows = selectableSelection.slice(-1)
+      this.$nextTick(() => this.syncTableSelection())
+    },
+
+    handleRowClick(row, column) {
+      if (column?.type === 'selection') return
+      if (!this.isRowSelectable(row)) return
+      if (!this.multiple) {
+        this.selectedRows = this.isNewlySelected(row) ? [] : [row]
+        this.$nextTick(() => this.syncTableSelection())
+        return
+      }
+      this.$refs.userTableRef?.toggleRowSelection(row, !this.isNewlySelected(row))
+    },
+
+    clearSelection() {
+      this.selectedRows = []
+      this.$nextTick(() => this.syncTableSelection())
+    },
+
+    syncTableSelection() {
+      const table = this.$refs.userTableRef
+      if (!table) return
+
+      this.syncingSelection = true
+      table.clearSelection()
+      this.userList.forEach((row) => {
+        if (this.isNewlySelected(row) && this.isRowSelectable(row)) {
+          table.toggleRowSelection(row, true)
+        }
+      })
+      this.$nextTick(() => {
+        this.syncingSelection = false
+      })
+    },
+
+    mergeUsersByAccount(users) {
+      const accountMap = new Map()
+      users.forEach((user) => {
+        if (user?.Account) {
+          accountMap.set(user.Account, user)
+        }
+      })
+      return Array.from(accountMap.values())
+    },
+
+    isAlreadySelected(row) {
+      return Boolean(row?.Account && this.selectedAccountSet.has(row.Account))
+    },
+
+    isNewlySelected(row) {
+      return Boolean(row?.Account && this.selectedRowAccountSet.has(row.Account))
+    },
+
+    isRowSelectable(row) {
+      return !this.isAlreadySelected(row)
+    },
+
+    getRowClassName({ row }) {
+      if (this.isAlreadySelected(row)) return 'is-already-selected'
+      return this.isNewlySelected(row) ? 'is-newly-selected' : ''
+    },
+
+    getStatusText(row) {
+      if (this.isAlreadySelected(row)) return '已添加'
+      return this.isNewlySelected(row) ? '已选择' : '可选择'
+    },
+
+    getStatusClass(row) {
+      if (this.isAlreadySelected(row)) return 'dt-badge dt-badge--warning'
+      return this.isNewlySelected(row) ? 'dt-badge dt-badge--success' : 'dt-badge dt-badge--neutral'
+    },
+
     handleSizeChange(newSize) {
       this.queryInfo.PageSize = newSize
       this.queryInfo.PageNum = 1
       this.loadUsers()
     },
 
-    // 分页 - 页码变化
     handleCurrentChange(newPage) {
       this.queryInfo.PageNum = newPage
       this.loadUsers()
     },
 
-    // 确认选择
     handleConfirm() {
       if (this.selectedRows.length === 0) {
         this.$message.warning('请至少选择一个用户')
@@ -229,9 +366,7 @@ export default {
       this.dialogVisible = false
     },
 
-    // 关闭对话框
     handleClose() {
-      // 重置数据
       this.currentDeptId = ''
       this.currentDeptName = ''
       this.queryInfo = {
@@ -240,6 +375,8 @@ export default {
         PageSize: 10,
         DeptId: ''
       }
+      this.userList = []
+      this.total = 0
       this.selectedRows = []
     }
   }
@@ -247,35 +384,173 @@ export default {
 </script>
 
 <style scoped>
+.user-selector-dialog :deep(.el-dialog) {
+  max-width: 1180px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.user-selector-dialog :deep(.el-dialog__header) {
+  margin-right: 0;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #e5edf5;
+}
+
+.user-selector-dialog :deep(.el-dialog__title) {
+  position: relative;
+  padding-left: 18px;
+  color: #172033;
+  font-size: 18px;
+  font-weight: 760;
+  line-height: 24px;
+}
+
+.user-selector-dialog :deep(.el-dialog__title::before) {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 5px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1f8fff 0%, #0f766e 100%);
+}
+
+.user-selector-dialog :deep(.el-dialog__headerbtn) {
+  top: 13px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f6fb;
+}
+
+.user-selector-dialog :deep(.el-dialog__body) {
+  padding: 14px 22px 16px;
+  background: #f5f8fb;
+}
+
+.user-selector-dialog :deep(.el-dialog__footer) {
+  padding: 12px 22px;
+  border-top: 1px solid #e5edf5;
+  background: #f7fafc;
+}
+
 .user-selector-container {
-  min-height: 280px;
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 12px;
+  height: min(620px, calc(100vh - 210px));
+  min-height: 430px;
 }
 
-.dept-tree-section,
-.user-list-section {
-  padding: 10px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  background-color: #fafafa;
+.selector-panel.dt-panel {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
-.dept-tree-section h4,
-.user-list-section h4 {
-  margin: 0 0 10px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
-  color: #303133;
-  font-size: 14px;
+.dept-tree-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
 }
 
 .custom-tree-node {
-  display: flex;
+  min-width: 0;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.custom-tree-node span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tree-node-icon {
-  color: #409eff;
+  color: #0f766e;
+}
+
+.user-toolbar {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5edf5;
+}
+
+.selected-summary {
+  flex-wrap: nowrap;
+}
+
+.user-table {
+  --el-table-row-hover-bg-color: #f7fbfb;
+}
+
+.user-table :deep(.is-already-selected > td) {
+  color: #98a2b3;
+  background: #fafbfc !important;
+}
+
+.user-table :deep(.is-newly-selected > td) {
+  background: #f8fffd !important;
+}
+
+.user-name {
+  color: #172033;
+  font-weight: 720;
+}
+
+.user-pagination {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.footer-hint {
+  color: #667085;
+  font-size: 12px;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-selector-dialog :deep(.el-button--primary) {
+  min-height: 36px;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: #0f766e !important;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.2) !important;
+  font-weight: 740 !important;
+}
+
+.user-selector-dialog :deep(.el-button--primary:hover) {
+  background: #115e59 !important;
+}
+
+.user-selector-dialog :deep(.el-button.is-disabled),
+.user-selector-dialog :deep(.el-button.is-disabled:hover) {
+  color: #b4bdc9 !important;
+  border-color: #e2e8f0 !important;
+  background: #f7f9fc !important;
+  box-shadow: none !important;
+}
+
+.selector-clear-button {
+  min-height: 30px !important;
+  padding: 0 10px !important;
 }
 
 :deep(.el-tree) {
@@ -283,10 +558,36 @@ export default {
 }
 
 :deep(.el-tree-node__content) {
-  height: 32px;
+  height: 34px;
+  border-radius: 7px;
 }
 
-:deep(.el-pagination) {
-  display: flex;
+:deep(.el-tree-node__content:hover),
+:deep(.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content) {
+  color: #0f766e;
+  background: #effbf8;
+}
+
+@media (max-width: 900px) {
+  .user-selector-container {
+    grid-template-columns: 1fr;
+    height: min(680px, calc(100vh - 180px));
+  }
+
+  .dept-tree-section {
+    min-height: 160px;
+    max-height: 220px;
+  }
+
+  .user-toolbar,
+  .dialog-footer {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .footer-actions {
+    justify-content: flex-end;
+  }
 }
 </style>
