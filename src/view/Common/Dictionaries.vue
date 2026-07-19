@@ -1,130 +1,185 @@
 <template>
-  <div class="dictionary-page">
-    <div class="dictionary-layout">
-      <el-card class="type-panel">
-        <template #header>
-          <div class="panel-header">
-            <span>字典分类</span>
-            <el-button type="primary" size="small" :icon="Plus" @click="openTypeDialog()">新增</el-button>
-          </div>
-        </template>
-
-        <el-input
-          v-model="typeQuery.Keyword"
-          clearable
-          placeholder="搜索编码或名称"
-          class="type-search"
-          @clear="loadTypes"
-          @keyup.enter="loadTypes"
-        >
-          <template #append>
-            <el-button :icon="Search" @click="loadTypes"></el-button>
-          </template>
-        </el-input>
-
-        <div v-loading="typeLoading" class="type-list">
-          <button
-            v-for="(type, index) in dictionaryTypes"
-            :key="type.ItemId"
-            type="button"
-            class="type-item"
-            :class="{
-              active: selectedType && selectedType.ItemId === type.ItemId,
-              dragging: typeDraggingId === type.ItemId,
-              'drag-over': typeDragOverIndex === index
-            }"
-            draggable="true"
-            @click="handleTypeClick(type)"
-            @dragstart="onTypeDragStart($event, index)"
-            @dragover="onTypeDragOver($event, index)"
-            @drop="onTypeDrop(index)"
-            @dragend="onTypeDragEnd"
-          >
-            <span class="type-drag-handle" title="拖拽排序" @click.stop>
-              <el-icon><Rank /></el-icon>
-            </span>
-            <span class="type-name">{{ type.DictName }}</span>
-            <span class="type-code">{{ type.DictCode }}</span>
-            <span class="type-count">{{ type.ItemCount || 0 }} 项</span>
-          </button>
-          <el-empty v-if="!typeLoading && dictionaryTypes.length === 0" description="暂无字典分类" />
+  <div class="dictionary-page dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>字典维护</h1>
+          <p>维护系统枚举分类和字典项，支持拖拽调整排序。</p>
         </div>
-      </el-card>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="refreshAll">刷新</el-button>
+          <el-button type="primary" :icon="Plus" @click="openTypeDialog()">新增分类</el-button>
+        </div>
+      </div>
 
-      <el-card class="item-panel">
-        <template #header>
-          <div class="panel-header">
-            <div class="item-title">
-              <span>{{ selectedType ? selectedType.DictName : '字典项' }}</span>
-              <el-tag v-if="selectedType" size="small" effect="plain">{{ selectedType.DictCode }}</el-tag>
+      <div class="dt-split-workspace dictionary-layout">
+        <div class="dt-panel type-panel">
+          <div class="dt-panel__header">
+            <div>
+              <strong>字典分类</strong>
+              <span>{{ dictionaryTypes.length }} 个分类</span>
             </div>
-            <div class="item-actions">
-              <el-button :icon="Refresh" @click="refreshAll">刷新</el-button>
-              <el-button :disabled="!selectedType" @click="openTypeDialog(selectedType)">编辑分类</el-button>
-              <el-button :disabled="!selectedType" type="danger" @click="removeType">删除分类</el-button>
+            <div class="dt-panel__meta">
+              <span class="dt-chip">拖拽排序</span>
+            </div>
+          </div>
+
+          <div class="type-filter-bar">
+            <el-input
+              v-model="typeQuery.Keyword"
+              clearable
+              placeholder="搜索编码或名称"
+              class="dt-search"
+              @clear="loadTypes"
+              @keyup.enter="loadTypes"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+
+          <div v-loading="typeLoading" class="type-list">
+            <button
+              v-for="(type, index) in dictionaryTypes"
+              :key="type.ItemId"
+              type="button"
+              class="type-item"
+              :class="{
+                active: selectedType && selectedType.ItemId === type.ItemId,
+                dragging: typeDraggingId === type.ItemId,
+                'drag-over': typeDragOverIndex === index
+              }"
+              draggable="true"
+              @click="handleTypeClick(type)"
+              @dragstart="onTypeDragStart($event, index)"
+              @dragover="onTypeDragOver($event, index)"
+              @drop="onTypeDrop(index)"
+              @dragend="onTypeDragEnd"
+            >
+              <span class="type-drag-handle" title="拖拽排序" @click.stop>
+                <el-icon><Rank /></el-icon>
+              </span>
+              <span class="type-name">{{ type.DictName }}</span>
+              <span class="type-code">{{ type.DictCode }}</span>
+              <span class="type-count">{{ type.ItemCount || 0 }} 项</span>
+            </button>
+            <el-empty v-if="!typeLoading && dictionaryTypes.length === 0" description="暂无字典分类" />
+          </div>
+        </div>
+
+        <div class="dt-panel item-panel">
+          <div class="dt-panel__header">
+            <div>
+              <strong>{{ selectedType ? selectedType.DictName : '字典项' }}</strong>
+              <span>{{ selectedType ? selectedType.DictCode : '请选择左侧分类' }}</span>
+            </div>
+            <div class="dt-panel__meta">
+              <span class="dt-chip">字典项 {{ dictionaryItems.length }}</span>
+              <span class="dt-chip dt-chip--success">启用 {{ itemStats.enabled }}</span>
+              <span class="dt-chip dt-chip--warning">禁用 {{ itemStats.disabled }}</span>
+            </div>
+          </div>
+
+          <div class="item-toolbar">
+            <el-input
+              v-model="itemQuery.Keyword"
+              clearable
+              class="dt-search item-search"
+              placeholder="搜索标签、值或备注"
+              @clear="loadItems"
+              @keyup.enter="loadItems"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <div class="dt-toolbar-actions">
+              <el-button class="dt-ghost-action" :disabled="!selectedType" @click="openTypeDialog(selectedType)">
+                编辑分类
+              </el-button>
+              <el-button class="dt-ghost-action danger-ghost" :disabled="!selectedType" @click="removeType">
+                删除分类
+              </el-button>
               <el-button :disabled="!selectedType" type="primary" :icon="Plus" @click="openItemDialog()">
                 新增字典项
               </el-button>
             </div>
           </div>
-        </template>
 
-        <div class="item-filter">
-          <el-input
-            v-model="itemQuery.Keyword"
-            clearable
-            placeholder="搜索标签、值或备注"
-            @clear="loadItems"
-            @keyup.enter="loadItems"
+          <el-table
+            ref="itemTable"
+            v-loading="itemLoading"
+            :data="dictionaryItems"
+            :row-style="{ height: '52px' }"
+            :cell-style="{ padding: '0px' }"
+            row-key="ItemId"
+            :row-class-name="itemRowClassName"
+            class="table-wrapper dt-table"
+            empty-text="暂无字典项"
           >
-            <template #append>
-              <el-button :icon="Search" @click="loadItems"></el-button>
-            </template>
-          </el-input>
+            <el-table-column label="" width="52" align="center">
+              <template #default>
+                <el-icon class="item-drag-handle" title="拖拽排序"><Rank /></el-icon>
+              </template>
+            </el-table-column>
+            <el-table-column label="#" width="72" align="center">
+              <template #default="scope">
+                <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="标签" prop="ItemLabel" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span class="dt-name-copy">
+                  <strong>{{ row.ItemLabel }}</strong>
+                  <small>{{ row.Remark || '未设置备注' }}</small>
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="值" prop="ItemValue" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">
+                <code class="dt-code">{{ row.ItemValue }}</code>
+              </template>
+            </el-table-column>
+            <el-table-column label="标签样式" prop="TagType" width="120">
+              <template #default="{ row }">
+                <span v-if="row.TagType" class="dt-badge dt-badge--neutral">{{ row.TagType }}</span>
+                <span v-else class="dt-muted-pill">默认</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="排序" prop="Sort" width="90">
+              <template #default="{ row }">
+                <span class="dt-muted-pill">{{ row.Sort }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" prop="Enabled" width="96" align="center">
+              <template #default="{ row }">
+                <span :class="['dt-badge', row.Enabled ? 'dt-badge--success' : 'dt-badge--warning']">
+                  {{ row.Enabled ? '启用' : '禁用' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="启用" prop="Enabled" width="90" align="center">
+              <template #default="{ row }">
+                <el-switch v-model="row.Enabled" @change="toggleItem(row)"></el-switch>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="108" fixed="right" align="right">
+              <template #default="{ row }">
+                <div class="dt-operation-buttons dictionary-actions">
+                  <el-tooltip content="编辑字典项" placement="top">
+                    <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="openItemDialog(row)" />
+                  </el-tooltip>
+                  <el-tooltip content="删除字典项" placement="top">
+                    <el-button class="dt-icon-action dt-icon-action--danger" :icon="Delete" @click="removeItem(row)" />
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
-
-        <el-table
-          ref="itemTable"
-          v-loading="itemLoading"
-          :data="dictionaryItems"
-          border
-          stripe
-          row-key="ItemId"
-          :row-class-name="itemRowClassName"
-          class="table-wrapper"
-        >
-          <el-table-column label="" width="48" align="center">
-            <template #default>
-              <el-icon class="item-drag-handle" title="拖拽排序"><Rank /></el-icon>
-            </template>
-          </el-table-column>
-          <el-table-column label="#" type="index" width="64"></el-table-column>
-          <el-table-column label="标签" prop="ItemLabel" min-width="150" show-overflow-tooltip></el-table-column>
-          <el-table-column label="值" prop="ItemValue" min-width="160" show-overflow-tooltip></el-table-column>
-          <el-table-column label="标签样式" prop="TagType" width="120">
-            <template #default="{ row }">
-              <el-tag v-if="row.TagType" :type="row.TagType" effect="light">{{ row.TagType }}</el-tag>
-              <span v-else>-</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="排序" prop="Sort" width="90"></el-table-column>
-          <el-table-column label="启用" prop="Enabled" width="90" align="center">
-            <template #default="{ row }">
-              <el-switch v-model="row.Enabled" @change="toggleItem(row)"></el-switch>
-            </template>
-          </el-table-column>
-          <el-table-column label="备注" prop="Remark" min-width="180" show-overflow-tooltip></el-table-column>
-          <el-table-column label="操作" width="150" fixed="right">
-            <template #default="{ row }">
-              <div class="operation-buttons">
-                <el-button type="primary" size="small" :icon="Edit" @click="openItemDialog(row)"></el-button>
-                <el-button type="danger" size="small" :icon="Delete" @click="removeItem(row)"></el-button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-card>
-    </div>
+      </div>
+    </section>
 
     <el-dialog v-model="typeDialogVisible" :title="typeForm.ItemId ? '编辑字典分类' : '新增字典分类'" width="520px">
       <el-form ref="typeFormRef" :model="typeForm" label-width="96px">
@@ -264,6 +319,21 @@ export default {
       typeDragOverIndex: null,
       suppressTypeClick: false,
       itemDragIndex: null
+    }
+  },
+  computed: {
+    itemStats() {
+      return this.dictionaryItems.reduce(
+        (stats, item) => {
+          if (item.Enabled) {
+            stats.enabled += 1
+          } else {
+            stats.disabled += 1
+          }
+          return stats
+        },
+        { enabled: 0, disabled: 0 }
+      )
     }
   },
   created() {
@@ -626,52 +696,39 @@ export default {
 }
 
 .dictionary-layout {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 16px;
-  height: 100%;
-  min-height: 0;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
 }
 
 .type-panel,
 .item-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-radius: 8px;
-}
-
-.type-panel :deep(.el-card__body),
-.item-panel :deep(.el-card__body) {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+  min-width: 0;
   min-height: 0;
 }
 
-.panel-header {
+.type-filter-bar,
+.item-toolbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #e5edf5;
+  background: #ffffff;
 }
 
-.item-title,
-.item-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.item-toolbar {
   flex-wrap: wrap;
 }
 
-.type-search,
-.item-filter {
-  margin-bottom: 12px;
+.item-search {
+  max-width: 360px;
 }
 
 .type-list {
   flex: 1;
   min-height: 0;
+  padding: 10px;
   overflow-y: auto;
 }
 
@@ -690,18 +747,23 @@ export default {
   grid-template-columns: 24px minmax(0, 1fr) auto;
   gap: 4px 8px;
   padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid #dbe5ef;
+  border-radius: 8px;
+  background: #ffffff;
   text-align: left;
   cursor: pointer;
   margin-bottom: 8px;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .type-item:hover,
 .type-item.active {
-  border-color: #409eff;
-  background: #f0f7ff;
+  border-color: #0f9f8f;
+  background: #f0fbf8;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.08);
 }
 
 .type-item.dragging {
@@ -709,8 +771,8 @@ export default {
 }
 
 .type-item.drag-over {
-  border-color: #409eff;
-  box-shadow: inset 0 0 0 1px #409eff;
+  border-color: #0f9f8f;
+  box-shadow: inset 0 0 0 1px rgba(15, 159, 143, 0.45);
 }
 
 .type-drag-handle {
@@ -728,8 +790,8 @@ export default {
 
 .type-name {
   grid-column: 2;
-  color: #111827;
-  font-weight: 600;
+  color: #172033;
+  font-weight: 740;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -737,7 +799,7 @@ export default {
 
 .type-code {
   grid-column: 2;
-  color: #6b7280;
+  color: #7a8798;
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -748,8 +810,9 @@ export default {
   grid-column: 3;
   grid-row: 1 / span 2;
   align-self: center;
-  color: #059669;
+  color: #0f766e;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .item-drag-handle {
@@ -766,7 +829,7 @@ export default {
 }
 
 .item-panel :deep(.dictionary-item-row.drag-over > td) {
-  background-color: #f0f7ff !important;
+  background-color: #e7fbf6 !important;
 }
 
 .item-panel :deep(.dictionary-item-row[draggable='true']) {
@@ -776,6 +839,15 @@ export default {
 @media (max-width: 960px) {
   .dictionary-layout {
     grid-template-columns: 1fr;
+  }
+
+  .item-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .item-search {
+    max-width: none;
   }
 }
 </style>

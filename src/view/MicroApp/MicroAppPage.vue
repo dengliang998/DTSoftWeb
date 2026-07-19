@@ -1,43 +1,67 @@
 <template>
-  <div class="dynamic-app-container">
+  <div class="dynamic-app-container dt-page-shell">
     <!-- 动态加载的微应用内容 -->
-    <div v-if="!loading && appConfig" class="app-content">
+    <section v-if="!loading && appConfig" class="app-content dt-workbench">
       <!-- 列表页面 -->
       <div class="list-page">
-        <el-card class="table-card">
-          <!-- 搜索与添加区域 -->
-          <div class="list-toolbar">
-            <div class="toolbar-actions">
-              <el-button v-if="appConfig.supportCreate" type="primary" icon="Plus" @click="openCreateDialog">
-                新增
-              </el-button>
-              <el-button v-if="appConfig.supportExport" type="primary" icon="Download" @click="exportData">
-                导出Excel
-              </el-button>
-              <el-button v-if="appConfig.supportImport" type="primary" icon="Upload" @click="openImportDialog">
-                导入Excel
-              </el-button>
-              <el-button
-                v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
-                type="danger"
-                icon="Delete"
-                :disabled="selectedRows.length === 0"
-                @click="batchDeleteData"
-              >
-                批量删除
-              </el-button>
-            </div>
-            <el-input
-              v-model="searchKeyword"
-              class="toolbar-search"
-              clearable
-              placeholder="请输入关键词搜索"
-              @clear="getAppData"
+        <div class="dt-commandbar">
+          <div class="dt-page-title">
+            <h1>{{ appConfig.configName || '微应用' }}</h1>
+            <p>动态数据列表，支持查询、导入导出和关联明细查看。</p>
+          </div>
+          <div class="dt-command-actions">
+            <el-button class="dt-ghost-action" :icon="Refresh" @click="getAppData">刷新</el-button>
+          </div>
+        </div>
+
+        <div class="dt-toolbar runtime-toolbar">
+          <el-input
+            v-model="searchKeyword"
+            class="dt-search toolbar-search"
+            clearable
+            placeholder="请输入关键词搜索"
+            @clear="getAppData"
+            @keyup.enter="getAppData"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <div class="dt-toolbar-actions toolbar-actions">
+            <el-button v-if="appConfig.supportCreate" type="primary" :icon="Plus" @click="openCreateDialog">
+              新增
+            </el-button>
+            <el-button v-if="appConfig.supportExport" class="dt-ghost-action" :icon="Download" @click="exportData">
+              导出Excel
+            </el-button>
+            <el-button v-if="appConfig.supportImport" class="dt-ghost-action" :icon="Upload" @click="openImportDialog">
+              导入Excel
+            </el-button>
+            <el-button
+              v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
+              class="dt-ghost-action danger-ghost"
+              :icon="Delete"
+              :disabled="selectedRows.length === 0"
+              @click="batchDeleteData"
             >
-              <template #append>
-                <el-button icon="Search" @click="getAppData"></el-button>
-              </template>
-            </el-input>
+              批量删除
+            </el-button>
+          </div>
+        </div>
+
+        <div class="dt-panel runtime-panel">
+          <div class="dt-panel__header">
+            <div>
+              <strong>数据列表</strong>
+              <span>服务端总数 {{ appData.total }}</span>
+            </div>
+            <div class="dt-panel__meta">
+              <span class="dt-chip">本页 {{ appData.list.length }}</span>
+              <span v-if="queryableFields.length > 0" class="dt-chip">查询字段 {{ queryableFields.length }}</span>
+              <span v-if="selectedRows.length > 0" class="dt-chip dt-chip--warning">
+                已选 {{ selectedRows.length }}
+              </span>
+            </div>
           </div>
           <div v-if="queryableFields.length > 0" class="advanced-query-row">
             <div v-for="(row, rowIndex) in queryFieldRows" :key="rowIndex" class="advanced-query-line">
@@ -116,8 +140,8 @@
                 ></el-input>
               </div>
               <div v-if="rowIndex === queryFieldRows.length - 1" class="query-actions">
-                <el-button type="primary" icon="Search" @click="applyQueryFilters">查询</el-button>
-                <el-button icon="RefreshLeft" @click="resetQueryFilters">重置</el-button>
+                <el-button type="primary" :icon="Search" @click="applyQueryFilters">查询</el-button>
+                <el-button class="dt-ghost-action" :icon="Refresh" @click="resetQueryFilters">重置</el-button>
               </div>
             </div>
           </div>
@@ -126,14 +150,13 @@
           <div class="table-container">
             <el-table
               :data="appData.list"
-              :row-style="{ height: '40px' }"
+              :row-style="{ height: '52px' }"
               :row-class-name="getTableRowClassName"
               :cell-style="{ padding: '0px' }"
-              border
-              stripe
               highlight-current-row
-              class="table-wrapper"
+              class="table-wrapper dt-table"
               height="100%"
+              empty-text="暂无数据"
               @selection-change="handleSelectionChange"
               @sort-change="handleSortChange"
               @row-click="handleRuntimeRowClick"
@@ -145,7 +168,11 @@
                 fixed="left"
               ></el-table-column>
               <!-- 序号列 -->
-              <el-table-column type="index" label="序号" width="80" fixed="left"></el-table-column>
+              <el-table-column label="#" width="72" fixed="left" align="center">
+                <template #default="scope">
+                  <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+                </template>
+              </el-table-column>
               <!-- 渲染所有有效的字段 -->
               <template v-for="field in orderedFields" :key="field.fieldName">
                 <el-table-column
@@ -191,41 +218,37 @@
                   </template>
                 </el-table-column>
               </template>
-              <el-table-column label="操作" width="200" fixed="right">
+              <el-table-column label="操作" width="108" fixed="right" align="right">
                 <template #default="scope">
-                  <div class="operation-buttons">
-                    <el-button
-                      v-if="appConfig.supportUpdate"
-                      type="primary"
-                      size="small"
-                      icon="Edit"
-                      @click="openEditDialog(scope.row)"
-                    >
-                      编辑
-                    </el-button>
-                    <el-button
-                      v-if="appConfig.supportDelete"
-                      type="danger"
-                      size="small"
-                      icon="Delete"
-                      @click="deleteData(scope.row)"
-                    >
-                      删除
-                    </el-button>
+                  <div class="dt-operation-buttons operation-buttons runtime-actions">
+                    <el-tooltip v-if="appConfig.supportUpdate" content="编辑数据" placement="top">
+                      <el-button
+                        class="dt-icon-action dt-icon-action--edit"
+                        :icon="Edit"
+                        @click="openEditDialog(scope.row)"
+                      />
+                    </el-tooltip>
+                    <el-tooltip v-if="appConfig.supportDelete" content="删除数据" placement="top">
+                      <el-button
+                        class="dt-icon-action dt-icon-action--danger"
+                        :icon="Delete"
+                        @click="deleteData(scope.row)"
+                      />
+                    </el-tooltip>
                   </div>
                 </template>
               </el-table-column>
             </el-table>
           </div>
           <el-pagination
-            class="main-pagination"
+            class="main-pagination dt-pagination"
             layout="total, sizes, prev, pager, next, jumper"
             :total="appData.total"
             :page-size="pagination.pageSize"
             :current-page="pagination.currentPage"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-          ></el-pagination>
+          />
           <div v-if="showSubTablesInList && orderedSubTables.length > 0" class="related-data-panel">
             <div class="related-data-header">
               <div class="related-title-area">
@@ -259,13 +282,15 @@
                   </template>
                   <el-table
                     :data="getRelatedSubTablePageRows(subTable)"
-                    border
-                    stripe
                     size="small"
-                    class="related-subtable"
+                    class="related-subtable dt-table"
                     max-height="220"
                   >
-                    <el-table-column type="index" label="序号" width="64"></el-table-column>
+                    <el-table-column label="#" width="64" align="center">
+                      <template #default="scope">
+                        <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+                      </template>
+                    </el-table-column>
                     <el-table-column
                       v-for="field in normalizeFieldOrder(subTable.fields).filter((item) => item.showInList !== false)"
                       :key="field.fieldName"
@@ -298,9 +323,9 @@
               </el-tabs>
             </div>
           </div>
-        </el-card>
+        </div>
       </div>
-    </div>
+    </section>
 
     <!-- 加载中 -->
     <div v-if="loading" v-loading="loading" class="loading-container" element-loading-text="加载微应用配置中..."></div>
@@ -339,7 +364,8 @@
 
 <script>
 import { ElImageViewer } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { Delete, Download, Edit, Plus, Refresh, Search, Upload } from '@element-plus/icons-vue'
+import { markRaw } from 'vue'
 import { getFileDownloadUrl } from '@/api/file'
 import { getDictionaryItemsByCode } from '@/api/dictionary'
 import { executeEsbDataSource } from '@/api/esb'
@@ -385,6 +411,7 @@ export default {
   name: 'MicroAppPage',
   components: {
     ElImageViewer,
+    Search,
     Refresh,
     MicroAppFormDialog,
     MicroAppImportDialog,
@@ -392,6 +419,13 @@ export default {
   },
   data() {
     return {
+      Delete: markRaw(Delete),
+      Download: markRaw(Download),
+      Edit: markRaw(Edit),
+      Plus: markRaw(Plus),
+      Refresh: markRaw(Refresh),
+      Search: markRaw(Search),
+      Upload: markRaw(Upload),
       // 微应用配置
       appConfig: null,
       // 加载状态
@@ -1511,18 +1545,14 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 0;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 /* 应用内容 */
 .app-content {
   width: 100%;
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* 列表页面 */
@@ -1531,7 +1561,8 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  gap: 10px;
+  overflow: hidden;
   min-height: 0;
 }
 
@@ -1552,30 +1583,19 @@ export default {
   text-align: center;
 }
 
-/* 表格卡片样式 */
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.table-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+.runtime-panel {
   min-height: 0;
 }
 
 .table-container {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .main-pagination {
   flex: 0 0 auto;
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .related-data-panel {
@@ -1694,14 +1714,6 @@ export default {
   margin-right: 4px;
 }
 
-.list-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 15px;
-}
-
 .toolbar-actions {
   display: flex;
   align-items: center;
@@ -1715,15 +1727,18 @@ export default {
 }
 
 .toolbar-search {
-  width: 240px;
-  flex: 0 0 240px;
+  width: 100%;
+  flex: 1 1 auto;
 }
 
 .advanced-query-row {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 12px;
+  flex: 0 0 auto;
+  padding: 12px;
+  border-bottom: 1px solid #e5edf5;
+  background: #fbfdff;
   max-width: 100%;
 }
 
@@ -1791,10 +1806,18 @@ export default {
 /* 操作按钮样式 */
 .operation-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 5px;
+  gap: 8px;
+}
+
+.runtime-actions {
+  min-width: 70px;
+}
+
+.runtime-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .attachment-cell {

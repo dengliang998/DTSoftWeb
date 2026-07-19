@@ -1,72 +1,127 @@
 <template>
-  <div class="apikey-container">
-    <!-- 卡片视图区域 -->
-    <el-card class="table-card">
-      <!-- 搜索与添加区域 -->
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <el-input v-model="queryInfo.KeyName" placeholder="请输入密钥名称" clearable @clear="getApiKeyList">
-            <template #append>
-              <el-button icon="Search" @click="getApiKeyList"></el-button>
-            </template>
-          </el-input>
-        </el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="queryInfo.Enabled"
-            placeholder="启用状态"
-            clearable
-            style="width: 100%"
-            @change="getApiKeyList"
-          >
-            <el-option label="启用" :value="true"></el-option>
-            <el-option label="禁用" :value="false"></el-option>
-          </el-select>
-        </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="showAddDialog">创建密钥</el-button>
-        </el-col>
-      </el-row>
+  <div class="apikey-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>API Key 管理</h1>
+          <p>创建、禁用和维护外部系统访问密钥。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getApiKeyList">刷新</el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddDialog">创建密钥</el-button>
+        </div>
+      </div>
 
-      <!-- API密钥列表区域 -->
-      <el-table
-        v-loading="loading"
-        :data="apiKeyList"
-        :row-style="{ height: '40px' }"
-        :cell-style="{ padding: '0px' }"
-        border
-        stripe
-        class="table-wrapper"
-      >
-        <el-table-column label="#" type="index" :index="indexMethod"></el-table-column>
-        <el-table-column label="密钥名称" prop="KeyName" width="200"></el-table-column>
-        <el-table-column label="描述信息" prop="Description" show-overflow-tooltip></el-table-column>
-        <el-table-column label="启用状态" width="120" align="center">
-          <template #default="scope">
-            <el-switch v-model="scope.row.Enabled" @change="handleStatusChange(scope.row)"></el-switch>
+      <div class="dt-toolbar">
+        <el-input
+          v-model="queryInfo.KeyName"
+          class="dt-search"
+          placeholder="搜索密钥名称"
+          clearable
+          @clear="getApiKeyList"
+          @keyup.enter="getApiKeyList"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
           </template>
-        </el-table-column>
-        <el-table-column label="创建时间" width="180">
-          <template #default="scope">
-            {{ formatDate(scope.row.CreateTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="过期时间" width="180">
-          <template #default="scope">
-            {{ scope.row.ExpireTime ? formatDate(scope.row.ExpireTime) : '永不过期' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="创建人" prop="CreatedBy" width="120"></el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <el-button type="primary" size="small" icon="Edit" @click="showEditDialog(scope.row)"></el-button>
-              <el-button type="danger" size="small" icon="Delete" @click="removeApiKey(scope.row.ItemId)"></el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+        </el-input>
+        <div class="dt-filter-tabs">
+          <button
+            v-for="item in enabledFilters"
+            :key="item.label"
+            type="button"
+            :class="['dt-filter-tab', { 'is-active': queryInfo.Enabled === item.value }]"
+            @click="setEnabledFilter(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>密钥列表</strong>
+            <span>共 {{ apiKeyList.length }} 条</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">全部 {{ apiKeyStats.total }}</span>
+            <span class="dt-chip dt-chip--success">启用 {{ apiKeyStats.enabled }}</span>
+            <span class="dt-chip dt-chip--warning">禁用 {{ apiKeyStats.disabled }}</span>
+          </div>
+        </div>
+
+        <el-table
+          v-loading="loading"
+          :data="apiKeyList"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无 API Key"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="密钥" prop="KeyName" min-width="220">
+            <template #default="scope">
+              <span class="dt-name-copy">
+                <strong>{{ scope.row.KeyName }}</strong>
+                <small>{{ scope.row.Description || '未设置描述' }}</small>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="96" align="center">
+            <template #default="scope">
+              <span :class="['dt-badge', scope.row.Enabled ? 'dt-badge--success' : 'dt-badge--warning']">
+                {{ scope.row.Enabled ? '启用' : '禁用' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="启用状态" width="110" align="center">
+            <template #default="scope">
+              <el-switch v-model="scope.row.Enabled" @change="handleStatusChange(scope.row)"></el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" width="180">
+            <template #default="scope">
+              <code class="dt-code">{{ formatDate(scope.row.CreateTime) }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="过期时间" width="180">
+            <template #default="scope">
+              <code class="dt-code">{{ scope.row.ExpireTime ? formatDate(scope.row.ExpireTime) : '永不过期' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建人" prop="CreatedBy" width="120">
+            <template #default="scope">
+              <span class="dt-muted-pill">{{ scope.row.CreatedBy || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="108" fixed="right" align="right">
+            <template #default="scope">
+              <div class="dt-operation-buttons apikey-actions">
+                <el-tooltip content="编辑密钥" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--edit"
+                    :icon="Edit"
+                    @click="showEditDialog(scope.row)"
+                  />
+                </el-tooltip>
+                <el-tooltip content="删除密钥" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    @click="removeApiKey(scope.row.ItemId)"
+                  />
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </section>
 
     <!-- 创建密钥对话框 -->
     <ApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
@@ -80,8 +135,9 @@
 </template>
 
 <script>
-import { defineComponent, reactive, ref, onMounted } from 'vue'
+import { computed, defineComponent, reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { getApiKeyList, updateApiKey, deleteApiKey } from '@/api/apikey'
 import ApiKeyAddDialog from './components/ApiKeyAddDialog.vue'
 import ApiKeyEditDialog from './components/ApiKeyEditDialog.vue'
@@ -92,7 +148,8 @@ export default defineComponent({
   components: {
     ApiKeyAddDialog,
     ApiKeyEditDialog,
-    ApiKeySecretDialog
+    ApiKeySecretDialog,
+    Search
   },
   setup() {
     const loading = ref(false)
@@ -103,6 +160,27 @@ export default defineComponent({
       KeyName: '',
       Enabled: undefined
     })
+
+    const enabledFilters = [
+      { label: '全部', value: undefined },
+      { label: '启用', value: true },
+      { label: '禁用', value: false }
+    ]
+
+    const apiKeyStats = computed(() =>
+      apiKeyList.value.reduce(
+        (stats, item) => {
+          stats.total += 1
+          if (item.Enabled) {
+            stats.enabled += 1
+          } else {
+            stats.disabled += 1
+          }
+          return stats
+        },
+        { total: 0, enabled: 0, disabled: 0 }
+      )
+    )
 
     // 添加对话框
     const addDialogVisible = ref(false)
@@ -157,6 +235,11 @@ export default defineComponent({
     // 显示添加对话框
     const showAddDialog = () => {
       addDialogVisible.value = true
+    }
+
+    const setEnabledFilter = (value) => {
+      queryInfo.Enabled = value
+      getApiKeyListData()
     }
 
     // 添加对话框关闭
@@ -266,10 +349,17 @@ export default defineComponent({
       loading,
       apiKeyList,
       queryInfo,
+      enabledFilters,
+      apiKeyStats,
+      Delete,
+      Edit,
+      Plus,
+      Refresh,
       getApiKeyList: getApiKeyListData,
       addDialogVisible,
       addForm,
       showAddDialog,
+      setEnabledFilter,
       onApiKeyCreated,
       editDialogVisible,
       editForm,
@@ -288,25 +378,24 @@ export default defineComponent({
 <style lang="less" scoped>
 .apikey-container {
   height: 100%;
-  padding: 20px;
-}
-
-.table-card {
-  min-height: 100%;
+  min-height: 0;
 }
 
 .table-wrapper {
-  margin-top: 20px;
+  flex: 1;
+  min-height: 0;
 }
 
-.operation-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+.apikey-actions {
+  min-width: 70px;
+  display: grid;
+  grid-template-columns: repeat(2, 30px);
+  justify-content: end;
+  gap: 10px;
 }
 
-:deep(.el-table) {
-  font-size: 14px;
+.apikey-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 :deep(.el-dialog) {

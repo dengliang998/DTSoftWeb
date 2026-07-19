@@ -1,89 +1,143 @@
 <template>
-  <div class="esb-container">
-    <el-card class="esb-card">
-      <template #header>
-        <div class="card-header">
-          <span>ESB 服务连接</span>
-          <div class="header-actions">
-            <el-input
-              v-model="query.keyword"
-              class="keyword-input"
-              clearable
-              placeholder="搜索连接编码或名称"
-              @clear="loadServiceConnections"
-              @keyup.enter="loadServiceConnections"
-            >
-              <template #append>
-                <el-button icon="Search" @click="loadServiceConnections"></el-button>
-              </template>
-            </el-input>
-            <el-select
-              v-model="query.serviceType"
-              class="type-filter"
-              clearable
-              placeholder="服务类型"
-              @change="loadServiceConnections"
-            >
-              <el-option label="数据库" value="database"></el-option>
-              <el-option label="WebApi" value="webapi"></el-option>
-            </el-select>
-            <el-button type="primary" icon="Plus" @click="openCreateDialog">新增连接</el-button>
+  <div class="esb-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>ESB 服务连接</h1>
+          <p>维护外部数据库和 WebApi 服务连接配置。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadServiceConnections">刷新</el-button>
+          <el-button type="primary" :icon="Plus" @click="openCreateDialog">新增连接</el-button>
+        </div>
+      </div>
+
+      <div class="dt-toolbar">
+        <el-input
+          v-model="query.keyword"
+          class="dt-search"
+          clearable
+          placeholder="搜索连接编码或名称"
+          @clear="loadServiceConnections"
+          @keyup.enter="loadServiceConnections"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <div class="dt-filter-tabs">
+          <button
+            v-for="item in serviceTypeFilters"
+            :key="item.value"
+            type="button"
+            :class="['dt-filter-tab', { 'is-active': query.serviceType === item.value }]"
+            @click="setServiceTypeFilter(item.value)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>连接列表</strong>
+            <span>服务端总数 {{ total }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">本页 {{ serviceConnections.length }}</span>
+            <span class="dt-chip dt-chip--success">数据库 {{ connectionStats.database }}</span>
+            <span class="dt-chip">WebApi {{ connectionStats.webapi }}</span>
+            <span class="dt-chip dt-chip--warning">禁用 {{ connectionStats.disabled }}</span>
           </div>
         </div>
-      </template>
 
-      <div class="table-container">
-        <el-table :data="serviceConnections" border stripe class="table-wrapper">
-          <el-table-column type="index" label="序号" width="70"></el-table-column>
-          <el-table-column prop="Code" label="编码" min-width="150"></el-table-column>
-          <el-table-column prop="Name" label="名称" min-width="150"></el-table-column>
-          <el-table-column label="服务类型" width="110">
+        <el-table
+          :data="serviceConnections"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无服务连接"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="Name" label="连接" min-width="220">
             <template #default="{ row }">
-              <el-tag effect="plain">{{ getServiceTypeLabel(row.ServiceType) }}</el-tag>
+              <span class="dt-name-copy">
+                <strong>{{ row.Name }}</strong>
+                <small>{{ row.Code }}</small>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="Code" label="编码" min-width="170">
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.Code }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="服务类型" width="116">
+            <template #default="{ row }">
+              <span :class="['dt-badge', row.ServiceType === 'database' ? 'dt-badge--success' : 'dt-badge--neutral']">
+                {{ getServiceTypeLabel(row.ServiceType) }}
+              </span>
             </template>
           </el-table-column>
           <el-table-column label="数据库类型" width="130">
-            <template #default="{ row }">{{ row.DbType ? getDatabaseTypeLabel(row.DbType) : '-' }}</template>
-          </el-table-column>
-          <el-table-column label="状态" width="90">
             <template #default="{ row }">
-              <el-tag :type="normalizeStatus(row) === 1 ? 'success' : 'danger'">
+              <span class="dt-muted-pill">{{ row.DbType ? getDatabaseTypeLabel(row.DbType) : '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="96">
+            <template #default="{ row }">
+              <span :class="['dt-badge', normalizeStatus(row) === 1 ? 'dt-badge--success' : 'dt-badge--warning']">
                 {{ normalizeStatus(row) === 1 ? '启用' : '禁用' }}
-              </el-tag>
+              </span>
             </template>
           </el-table-column>
           <el-table-column label="更新时间" width="180">
-            <template #default="{ row }">{{ formatDate(row.UpdateTime || row.updateTime) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
-              <div class="operation-buttons">
-                <el-button
-                  type="success"
-                  size="small"
-                  icon="Document"
-                  :disabled="row.ServiceType !== 'database'"
-                  @click="testConnection(row)"
-                ></el-button>
-                <el-button type="primary" size="small" icon="Edit" @click="openEditDialog(row)"></el-button>
-                <el-button type="danger" size="small" icon="Delete" @click="removeConnection(row)"></el-button>
+              <code class="dt-code">{{ formatDate(row.UpdateTime || row.updateTime) }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="132" fixed="right" align="right">
+            <template #default="{ row }">
+              <div class="dt-operation-buttons esb-actions">
+                <el-tooltip content="测试连接" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--add"
+                    :icon="Document"
+                    :disabled="row.ServiceType !== 'database'"
+                    @click="testConnection(row)"
+                  />
+                </el-tooltip>
+                <el-tooltip content="编辑连接" placement="top">
+                  <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="openEditDialog(row)" />
+                </el-tooltip>
+                <el-tooltip content="删除连接" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    @click="removeConnection(row)"
+                  />
+                </el-tooltip>
               </div>
             </template>
           </el-table-column>
         </el-table>
-      </div>
 
-      <div class="pagination-container">
         <el-pagination
+          class="dt-pagination"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total"
           :page-size="query.pageSize"
           :current-page="query.pageNum"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-        ></el-pagination>
+        />
       </div>
-    </el-card>
+    </section>
 
     <el-dialog v-model="formDialogVisible" :title="form.ItemId ? '编辑服务连接' : '新增服务连接'" width="760px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
@@ -160,6 +214,8 @@ import {
   testEsbServiceConnection,
   updateEsbServiceConnection
 } from '@/api/esb'
+import { Delete, Document, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { markRaw } from 'vue'
 
 const createDefaultForm = () => ({
   ItemId: null,
@@ -176,14 +232,27 @@ const createDefaultForm = () => ({
 
 export default {
   name: 'EsbServiceConnections',
+  components: {
+    Search
+  },
   data() {
     return {
+      Delete: markRaw(Delete),
+      Document: markRaw(Document),
+      Edit: markRaw(Edit),
+      Plus: markRaw(Plus),
+      Refresh: markRaw(Refresh),
       query: {
         keyword: '',
         serviceType: '',
         pageNum: 1,
         pageSize: 10
       },
+      serviceTypeFilters: [
+        { label: '全部', value: '' },
+        { label: '数据库', value: 'database' },
+        { label: 'WebApi', value: 'webapi' }
+      ],
       serviceConnections: [],
       supportedDatabaseTypes: [],
       total: 0,
@@ -198,6 +267,22 @@ export default {
         ConnectionString: [{ required: true, message: '请输入连接字符串', trigger: 'blur' }],
         WebApiConfig: [{ required: true, message: '请输入 WebApi 配置', trigger: 'blur' }]
       }
+    }
+  },
+  computed: {
+    connectionStats() {
+      return this.serviceConnections.reduce(
+        (stats, row) => {
+          if (row.ServiceType === 'webapi') {
+            stats.webapi += 1
+          } else {
+            stats.database += 1
+          }
+          if (this.normalizeStatus(row) !== 1) stats.disabled += 1
+          return stats
+        },
+        { database: 0, webapi: 0, disabled: 0 }
+      )
     }
   },
   created() {
@@ -270,6 +355,11 @@ export default {
     },
     handleCurrentChange(page) {
       this.query.pageNum = page
+      this.loadServiceConnections()
+    },
+    setServiceTypeFilter(value) {
+      this.query.serviceType = value
+      this.query.pageNum = 1
       this.loadServiceConnections()
     },
     openCreateDialog() {
@@ -361,56 +451,12 @@ export default {
 <style scoped>
 .esb-container {
   height: 100%;
-}
-
-.esb-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.esb-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
   min-height: 0;
-  overflow: hidden;
-}
-
-.card-header,
-.header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.keyword-input {
-  width: 280px;
-}
-
-.type-filter {
-  width: 140px;
 }
 
 .table-wrapper {
-  height: 100%;
-}
-
-.table-container {
   flex: 1;
   min-height: 0;
-  margin-top: 4px;
-  overflow: auto;
-}
-
-.pagination-container {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 0 0;
-  background-color: #fff;
-  border-top: 1px solid #ebeef5;
 }
 
 .form-grid {
@@ -419,8 +465,21 @@ export default {
   gap: 0 16px;
 }
 
-.operation-buttons {
-  display: flex;
-  gap: 6px;
+.esb-actions {
+  min-width: 108px;
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  justify-content: end;
+  gap: 9px;
+}
+
+.esb-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,70 +1,127 @@
 <template>
-  <div class="crud-config-container">
-    <!-- 配置列表卡片 -->
-    <el-card class="table-card">
-      <!-- 搜索与添加区域 -->
-      <el-row :gutter="20" style="margin-bottom: 15px">
-        <el-col :span="6">
-          <el-input v-model="queryInfo.query" clearable placeholder="请输入配置名称" @clear="getMicroApps">
-            <template #append>
-              <el-button icon="Search" @click="getMicroApps"></el-button>
+  <div class="crud-config-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>微应用配置</h1>
+          <p>配置动态 CRUD 页面、字段模型、查询条件和运行时能力。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getMicroApps">刷新</el-button>
+          <el-button type="primary" :icon="Plus" @click="addMicroApp">创建微应用</el-button>
+        </div>
+      </div>
+
+      <div class="dt-toolbar dt-toolbar--compact">
+        <el-input
+          v-model="queryInfo.query"
+          class="dt-search"
+          clearable
+          placeholder="搜索配置名称、模型或路径"
+          @clear="getMicroApps"
+          @keyup.enter="getMicroApps"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>配置列表</strong>
+            <span>服务端总数 {{ total }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">本页 {{ MicroAppList.length }}</span>
+            <span class="dt-chip dt-chip--success">启用 {{ microAppStats.enabled }}</span>
+            <span class="dt-chip dt-chip--warning">禁用 {{ microAppStats.disabled }}</span>
+          </div>
+        </div>
+
+        <el-table
+          :data="MicroAppList"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无微应用配置"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
             </template>
-          </el-input>
-        </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="addMicroApp">创建微应用</el-button>
-        </el-col>
-      </el-row>
+          </el-table-column>
+          <el-table-column label="配置" prop="ConfigName" min-width="240" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="dt-name-copy">
+                <strong>{{ row.ConfigName }}</strong>
+                <small>{{ row.configDesc || row.ConfigDesc || '未设置描述' }}</small>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="数据模型" prop="ModelName" min-width="180">
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.ModelName || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="微应用路径" prop="MicroAppPath" min-width="180">
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.MicroAppPath || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="96" align="center">
+            <template #default="{ row }">
+              <span :class="['dt-badge', row.Status === 1 ? 'dt-badge--success' : 'dt-badge--warning']">
+                {{ row.Status === 1 ? '启用' : '禁用' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" width="180">
+            <template #default="{ row }">
+              <code class="dt-code">{{ $filters.dateFormat(row.CreateTime) }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="更新时间" width="180">
+            <template #default="{ row }">
+              <code class="dt-code">{{ $filters.dateFormat(row.UpdateTime) }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="156" fixed="right" align="right">
+            <template #default="{ row }">
+              <div class="dt-operation-buttons micro-actions">
+                <el-tooltip content="编辑配置" placement="top">
+                  <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="editMicroApp(row)" />
+                </el-tooltip>
+                <el-tooltip content="可视化配置" placement="top">
+                  <el-button class="dt-icon-action" :icon="Setting" @click="visualConfig(row)" />
+                </el-tooltip>
+                <el-tooltip content="接口文档" placement="top">
+                  <el-button class="dt-icon-action dt-icon-action--add" :icon="Document" @click="generateApiDoc(row)" />
+                </el-tooltip>
+                <el-tooltip content="删除配置" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    @click="deleteMicroApp(row.ItemId)"
+                  />
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <!-- 配置列表 -->
-      <el-table
-        :data="MicroAppList"
-        :row-style="{ height: '40px' }"
-        :cell-style="{ padding: '0px' }"
-        border
-        stripe
-        class="table-wrapper"
-      >
-        <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column label="配置名称" prop="ConfigName"></el-table-column>
-        <el-table-column label="数据模型" prop="ModelName"></el-table-column>
-        <el-table-column label="微应用路径" prop="MicroAppPath"></el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="scope">
-            <el-tag :type="scope.row.Status === 1 ? 'success' : 'danger'">
-              {{ scope.row.Status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" width="180">
-          <template #default="scope">{{ $filters.dateFormat(scope.row.CreateTime) }}</template>
-        </el-table-column>
-        <el-table-column label="更新时间" width="180">
-          <template #default="scope">{{ $filters.dateFormat(scope.row.UpdateTime) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="250">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <el-button type="primary" size="small" icon="Edit" @click="editMicroApp(scope.row)"></el-button>
-              <el-button type="primary" size="small" icon="Setting" @click="visualConfig(scope.row)"></el-button>
-              <el-button type="success" size="small" icon="Document" @click="generateApiDoc(scope.row)"></el-button>
-              <el-button type="danger" size="small" icon="Delete" @click="deleteMicroApp(scope.row.ItemId)"></el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <el-pagination
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        :page-size="queryInfo.pagesize"
-        :current-page="queryInfo.pagenum"
-        style="margin-top: 15px"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      ></el-pagination>
-    </el-card>
+        <el-pagination
+          class="dt-pagination"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-size="queryInfo.pagesize"
+          :current-page="queryInfo.pagenum"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </section>
 
     <!-- 配置基本信息对话框 -->
     <MicroAppConfigDialog
@@ -783,7 +840,8 @@
 import { addMicroAppConfig, deleteMicroAppConfig, getMicroAppConfigs, updateMicroAppConfig } from '@/api/microApp'
 import { getDictionaryTypes } from '@/api/dictionary'
 import { getEsbDataSources } from '@/api/esb'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, Document, Edit, Plus, Refresh, Search, Setting } from '@element-plus/icons-vue'
+import { markRaw } from 'vue'
 import MicroAppConfigDialog from './components/MicroAppConfigDialog.vue'
 import ApiDocDialog from './components/ApiDocDialog.vue'
 
@@ -791,11 +849,18 @@ export default {
   name: 'MicroApp',
   components: {
     Delete,
+    Search,
     MicroAppConfigDialog,
     ApiDocDialog
   },
   data() {
     return {
+      Delete: markRaw(Delete),
+      Document: markRaw(Document),
+      Edit: markRaw(Edit),
+      Plus: markRaw(Plus),
+      Refresh: markRaw(Refresh),
+      Setting: markRaw(Setting),
       // 查询条件
       queryInfo: {
         query: '',
@@ -880,6 +945,19 @@ export default {
     }
   },
   computed: {
+    microAppStats() {
+      return this.MicroAppList.reduce(
+        (stats, item) => {
+          if (item.Status === 1) {
+            stats.enabled += 1
+          } else {
+            stats.disabled += 1
+          }
+          return stats
+        },
+        { enabled: 0, disabled: 0 }
+      )
+    },
     queryConfigCount() {
       return this.MicroAppForm.Fields.filter((field) => field.queryMode && field.queryMode !== 'none').length
     },
@@ -2071,28 +2149,25 @@ export default {
 
 <style scoped>
 .crud-config-container {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.table-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
 .table-wrapper {
   flex: 1;
+  min-height: 0;
+}
+
+.micro-actions {
+  min-width: 120px;
+  display: grid;
+  grid-template-columns: repeat(4, 30px);
+  justify-content: end;
+  gap: 6px;
+}
+
+.micro-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .operation-buttons {

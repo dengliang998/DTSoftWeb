@@ -1,39 +1,60 @@
 <template>
-  <div class="system-info-container">
-    <section class="page-toolbar">
-      <div>
-        <h2>系统信息</h2>
-        <p>当前服务运行状态</p>
-      </div>
-      <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadSystemRuntimeInfo">刷新</el-button>
-    </section>
-
-    <section class="summary-grid">
-      <div v-for="item in summaryCards" :key="item.label" class="summary-card">
-        <span class="summary-icon" :class="item.tone">
-          <el-icon><component :is="item.icon" /></el-icon>
-        </span>
-        <span class="summary-content">
-          <strong>{{ item.value }}</strong>
-          <span>{{ item.label }}</span>
-        </span>
-      </div>
-    </section>
-
-    <el-skeleton v-if="loading && !hasInfo" :rows="8" animated />
-
-    <section v-else class="info-grid">
-      <div v-for="section in infoSections" :key="section.title" class="info-panel">
-        <div class="panel-header">
-          <span class="panel-title">{{ section.title }}</span>
-          <el-icon><component :is="section.icon" /></el-icon>
+  <div class="system-info-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>系统信息</h1>
+          <p>查看当前服务运行状态、资源占用和数据库连接信息。</p>
         </div>
-        <dl class="info-list">
-          <template v-for="row in section.rows" :key="row.label">
-            <dt>{{ row.label }}</dt>
-            <dd :title="row.value">{{ row.value }}</dd>
-          </template>
-        </dl>
+        <div class="dt-command-actions">
+          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadSystemRuntimeInfo">刷新</el-button>
+        </div>
+      </div>
+
+      <section class="summary-grid">
+        <div v-for="item in summaryCards" :key="item.label" class="summary-card">
+          <span class="summary-icon" :class="item.tone">
+            <el-icon><component :is="item.icon" /></el-icon>
+          </span>
+          <span class="summary-content">
+            <strong>{{ item.value }}</strong>
+            <span>{{ item.label }}</span>
+          </span>
+        </div>
+      </section>
+
+      <div class="dt-panel info-work-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>运行明细</strong>
+            <span>最近刷新：{{ lastRefreshTime || '-' }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">应用</span>
+            <span class="dt-chip">运行时</span>
+            <span class="dt-chip">服务器</span>
+            <span class="dt-chip dt-chip--success">数据库</span>
+          </div>
+        </div>
+
+        <div class="info-scroll">
+          <el-skeleton v-if="loading && !hasInfo" :rows="8" animated />
+
+          <section v-else class="info-grid">
+            <div v-for="section in infoSections" :key="section.title" class="info-panel">
+              <div class="panel-header">
+                <span class="panel-title">{{ section.title }}</span>
+                <el-icon><component :is="section.icon" /></el-icon>
+              </div>
+              <dl class="info-list">
+                <template v-for="row in section.rows" :key="row.label">
+                  <dt>{{ row.label }}</dt>
+                  <dd :title="row.value">{{ row.value }}</dd>
+                </template>
+              </dl>
+            </div>
+          </section>
+        </div>
       </div>
     </section>
   </div>
@@ -217,41 +238,15 @@ export default {
 
 <style lang="less" scoped>
 .system-info-container {
-  min-height: 100%;
-  padding: 16px;
-  background: #f6f8fb;
-}
-
-.page-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-  padding: 18px 20px;
-  border: 1px solid #d9e2ec;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.page-toolbar h2 {
-  margin: 0;
-  color: #182230;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.page-toolbar p {
-  margin: 4px 0 0;
-  color: #667085;
-  font-size: 13px;
+  height: 100%;
+  min-height: 0;
 }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 14px;
+  flex: 0 0 auto;
 }
 
 .summary-card {
@@ -263,6 +258,17 @@ export default {
   border: 1px solid #e4e7ec;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.info-work-panel {
+  min-width: 0;
+}
+
+.info-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
 }
 
 .summary-icon {
@@ -385,15 +391,6 @@ export default {
 }
 
 @media (max-width: 640px) {
-  .system-info-container {
-    padding: 10px;
-  }
-
-  .page-toolbar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .summary-grid {
     grid-template-columns: 1fr;
   }

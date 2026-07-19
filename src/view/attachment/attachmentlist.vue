@@ -1,105 +1,147 @@
 <template>
-  <div class="attachment-container">
-    <!-- 卡片视图区域 -->
-    <el-card class="table-card">
-      <!-- 搜索与添加区域 -->
-      <el-row :gutter="20">
-        <el-col :span="7">
-          <!-- 搜索与添加区域 -->
-          <el-input v-model="queryInfo.query" clearable placeholder="请输入内容" @clear="GetFileList">
-            <template #append>
-              <el-button icon="Search" @click="GetFileList"></el-button>
-            </template>
-          </el-input>
-        </el-col>
-        <el-col :span="6">
-          <div style="display: flex; align-items: center; gap: 20px">
-            <!-- 文件上传按钮 -->
-            <el-upload
-              class="upload-demo"
-              action="/api/File/Save"
-              :on-success="handleUploadSuccess"
-              :on-error="handleUploadError"
-              :before-upload="beforeUpload"
-              :show-file-list="false"
-              :headers="uploadHeaders"
-              :on-response="handleResponse"
-              :on-progress="handleUploadProgress"
-              multiple
-              name="Files"
-            >
-              <el-button type="primary">上传文件</el-button>
-            </el-upload>
+  <div class="attachment-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>附件管理</h1>
+          <p>维护系统上传文件，支持下载、图片预览、视频预览和删除。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="GetFileList">刷新</el-button>
+          <el-upload
+            class="upload-demo"
+            action="/api/File/Save"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            :headers="uploadHeaders"
+            :on-response="handleResponse"
+            :on-progress="handleUploadProgress"
+            multiple
+            name="Files"
+          >
+            <el-button type="primary" :icon="Upload">上传文件</el-button>
+          </el-upload>
+        </div>
+      </div>
 
-            <!-- 上传进度条 -->
-            <el-progress
-              v-if="showUploadProgress"
-              :percentage="uploadProgress"
-              :stroke-width="10"
-              striped
-              animated
-              style="width: 200px; margin-top: 0"
-            ></el-progress>
-          </div>
-        </el-col>
-      </el-row>
-
-      <!-- 用户列表区域 -->
-      <el-table :data="userList" border stripe class="table-wrapper">
-        <el-table-column label="#" type="index" :index="indexMethod"></el-table-column>
-        <el-table-column label="文件编号" prop="FileID"></el-table-column>
-        <el-table-column label="文件名称" prop="FileName"></el-table-column>
-        <el-table-column label="文件路径" prop="FilePath"></el-table-column>
-        <el-table-column label="文件大小(MB)" prop="Size"></el-table-column>
-        <el-table-column label="创建人" prop="CreateUser"></el-table-column>
-        <el-table-column label="创建时间" prop="CreateDate"></el-table-column>
-        <el-table-column label="操作" width="180px">
-          <template #default="scope">
-            <!-- 下载按钮 -->
-            <el-button type="primary" size="small" @click="FileDownload(scope.row.FileID)">
-              <el-icon><Download /></el-icon>
-            </el-button>
-            <!-- 图片预览按钮 -->
-            <el-button
-              v-if="
-                scope.row.Ext === '.jpeg' ||
-                scope.row.Ext === '.jpg' ||
-                scope.row.Ext === '.gif' ||
-                scope.row.Ext === '.png'
-              "
-              type="primary"
-              size="small"
-              @click="FilePreview(scope.row.FileID, scope.row.FilePath)"
-            >
-              <el-icon><Picture /></el-icon>
-            </el-button>
-            <el-button
-              v-if="scope.row.Ext.toLowerCase() === '.mp4' || scope.row.Ext.toLowerCase() === '.mov'"
-              type="primary"
-              size="small"
-              @click="VideoPreview(scope.row.FileID)"
-            >
-              <el-icon><VideoCamera /></el-icon>
-            </el-button>
-            <!-- 删除按钮 -->
-            <el-button type="danger" size="small" @click="RemoveFile(scope.row.FileID)">
-              <el-icon><Delete /></el-icon>
-            </el-button>
+      <div class="dt-toolbar attachment-toolbar">
+        <el-input
+          v-model="queryInfo.query"
+          class="dt-search"
+          clearable
+          placeholder="搜索文件名称或路径"
+          @clear="GetFileList"
+          @keyup.enter="GetFileList"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
           </template>
-        </el-table-column>
-      </el-table>
+        </el-input>
+        <el-progress
+          v-if="showUploadProgress"
+          class="upload-progress"
+          :percentage="uploadProgress"
+          :stroke-width="10"
+          striped
+          animated
+        />
+      </div>
 
-      <!-- 分页区域 -->
-      <el-pagination
-        :current-page="queryInfo.pagenum"
-        :page-sizes="[1, 2, 5, 10]"
-        :page-size="queryInfo.pagesize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      ></el-pagination>
-    </el-card>
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>附件列表</strong>
+            <span>服务端总数 {{ total }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">本页 {{ userList.length }}</span>
+            <span class="dt-chip dt-chip--success">图片 {{ fileStats.images }}</span>
+            <span class="dt-chip">视频 {{ fileStats.videos }}</span>
+          </div>
+        </div>
+
+        <el-table
+          :data="userList"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无附件"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="文件" prop="FileName" min-width="240" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="dt-name-copy">
+                <strong>{{ row.FileName }}</strong>
+                <small>{{ row.FileID }}</small>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="文件路径" prop="FilePath" min-width="260" show-overflow-tooltip>
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.FilePath || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="大小" prop="Size" width="110">
+            <template #default="{ row }">
+              <span class="dt-muted-pill">{{ row.Size || 0 }} MB</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建人" prop="CreateUser" width="130">
+            <template #default="{ row }">
+              <span class="dt-muted-pill">{{ row.CreateUser || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" prop="CreateDate" width="180">
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.CreateDate || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="156" fixed="right" align="right">
+            <template #default="{ row }">
+              <div class="dt-operation-buttons attachment-actions">
+                <el-tooltip content="下载文件" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--add"
+                    :icon="Download"
+                    @click="FileDownload(row.FileID)"
+                  />
+                </el-tooltip>
+                <el-tooltip v-if="isImageFile(row)" content="预览图片" placement="top">
+                  <el-button class="dt-icon-action" :icon="PictureIcon" @click="FilePreview(row.FileID)" />
+                </el-tooltip>
+                <el-tooltip v-if="isVideoFile(row)" content="预览视频" placement="top">
+                  <el-button class="dt-icon-action" :icon="VideoCamera" @click="VideoPreview(row.FileID)" />
+                </el-tooltip>
+                <el-tooltip content="删除文件" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    @click="RemoveFile(row.FileID)"
+                  />
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-pagination
+          class="dt-pagination"
+          :current-page="queryInfo.pagenum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="queryInfo.pagesize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </section>
 
     <!-- 视频预览对话框 -->
     <VideoPreviewDialog v-model="VideoPreviewDialogVisible" :video-url="Video" />
@@ -111,7 +153,8 @@
 <script>
 import { getFileDownloadUrl, getFileList, getUploadHeaders, previewOfficeFile, removeFile } from '@/api/file'
 import { ElImageViewer } from 'element-plus'
-import { Download, Picture, VideoCamera, Delete } from '@element-plus/icons-vue'
+import { Delete, Download, Picture as PictureIcon, Refresh, Search, Upload, VideoCamera } from '@element-plus/icons-vue'
+import { markRaw } from 'vue'
 import VideoPreviewDialog from './components/VideoPreviewDialog.vue'
 
 export default {
@@ -119,13 +162,16 @@ export default {
   components: {
     ElImageViewer,
     VideoPreviewDialog,
-    Download,
-    Picture,
-    VideoCamera,
-    Delete
+    Search
   },
   data() {
     return {
+      Delete: markRaw(Delete),
+      Download: markRaw(Download),
+      PictureIcon: markRaw(PictureIcon),
+      Refresh: markRaw(Refresh),
+      Upload: markRaw(Upload),
+      VideoCamera: markRaw(VideoCamera),
       ShowViewer: false,
       guidePic: null,
       // 获取参数对象
@@ -153,12 +199,24 @@ export default {
       showUploadProgress: false
     }
   },
+  computed: {
+    fileStats() {
+      return this.userList.reduce(
+        (stats, file) => {
+          if (this.isImageFile(file)) stats.images += 1
+          if (this.isVideoFile(file)) stats.videos += 1
+          return stats
+        },
+        { images: 0, videos: 0 }
+      )
+    }
+  },
   created() {
     this.GetFileList()
   },
   methods: {
     // 监听上传成功的事件
-    handleUploadSuccess(response, file, fileList) {
+    handleUploadSuccess(response) {
       this.showUploadProgress = false
       this.uploadProgress = 0
 
@@ -173,7 +231,7 @@ export default {
       }
     },
     // 监听上传失败的事件
-    handleUploadError(err, file, fileList) {
+    handleUploadError(err) {
       this.showUploadProgress = false
       this.uploadProgress = 0
 
@@ -186,17 +244,17 @@ export default {
       this.$message.error(errorMessage)
     },
     // 上传进度处理
-    handleUploadProgress(event, file, fileList) {
+    handleUploadProgress(event) {
       this.showUploadProgress = true
       this.uploadProgress = Math.round(event.percent)
     },
 
     // 上传前的检查
-    beforeUpload(file) {
+    beforeUpload() {
       // 可以在这里添加文件类型或大小限制检查
       return true
     },
-    handleResponse(response, file, fileList) {
+    handleResponse(response) {
       this.showUploadProgress = false
       this.uploadProgress = 0
 
@@ -222,7 +280,7 @@ export default {
             me.$message.error(response.data.Msg)
           }
         })
-        .catch(function (error) {
+        .catch(function () {
           me.$message.error('文件列表获取失败，请稍后重试！')
         })
     },
@@ -275,6 +333,15 @@ export default {
       this.Video = getFileDownloadUrl(FileID)
       this.VideoPreviewDialogVisible = true
     },
+    getFileExt(row) {
+      return String(row?.Ext || '').toLowerCase()
+    },
+    isImageFile(row) {
+      return ['.jpeg', '.jpg', '.gif', '.png', '.webp'].includes(this.getFileExt(row))
+    },
+    isVideoFile(row) {
+      return ['.mp4', '.mov'].includes(this.getFileExt(row))
+    },
 
     FilePreviewDialogClosed() {
       this.FilePreviewDialogVisible = false
@@ -309,32 +376,28 @@ export default {
 
 <style scoped>
 .attachment-container {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+.attachment-toolbar {
+  grid-template-columns: minmax(260px, 360px) minmax(200px, 320px) 1fr;
 }
 
-.table-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+.upload-progress {
+  width: 100%;
 }
 
 .table-wrapper {
   flex: 1;
-  margin-top: 15px;
+  min-height: 0;
 }
 
-.el-breadcrumb {
-  margin-bottom: 15px;
+.attachment-actions {
+  min-width: 120px;
+}
+
+.attachment-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 </style>

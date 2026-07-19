@@ -1,68 +1,94 @@
 <template>
-  <div class="online-users-container">
-    <el-card class="online-users-card">
-      <template #header>
-        <div class="card-header">
-          <div class="title-group">
-            <span class="page-title">在线用户</span>
-            <span class="online-count">{{ filteredUsers.length }} / {{ total }} 人在线</span>
-          </div>
-          <div class="header-actions">
-            <el-input
-              v-model="keyword"
-              class="search-input"
-              clearable
-              placeholder="搜索账号或姓名"
-              @keyup.enter="loadOnlineUsers"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
-            <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadOnlineUsers">刷新</el-button>
-          </div>
+  <div class="online-users-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>在线用户</h1>
+          <p>查看最近有操作记录的在线账号。</p>
         </div>
-      </template>
-
-      <div class="status-strip">
-        <div class="status-item">
-          <span class="status-label">在线判定</span>
-          <span class="status-value">最近 5 分钟有操作</span>
-        </div>
-        <div class="status-item">
-          <span class="status-label">最近刷新</span>
-          <span class="status-value">{{ lastRefreshText }}</span>
+        <div class="dt-command-actions">
+          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadOnlineUsers">刷新</el-button>
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="filteredUsers" border stripe class="table-wrapper" empty-text="暂无在线用户">
-        <el-table-column label="#" type="index" width="72"></el-table-column>
-        <el-table-column label="账号" prop="Account" min-width="160" show-overflow-tooltip></el-table-column>
-        <el-table-column label="姓名" prop="DisplayName" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span>{{ row.DisplayName || row.Account }}</span>
+      <div class="dt-toolbar dt-toolbar--compact">
+        <el-input
+          v-model="keyword"
+          class="dt-search"
+          clearable
+          placeholder="搜索账号或姓名"
+          @keyup.enter="loadOnlineUsers"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
           </template>
-        </el-table-column>
-        <el-table-column label="最后操作时间" prop="LastActiveTime" min-width="190"></el-table-column>
-        <el-table-column label="状态" width="120" align="center">
-          <template #default>
-            <el-tag type="success" effect="light" round>在线</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+        </el-input>
+      </div>
+
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>在线列表</strong>
+            <span>{{ filteredUsers.length }} / {{ total }} 人在线</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip dt-chip--success">最近 5 分钟有操作</span>
+            <span class="dt-chip">最近刷新 {{ lastRefreshText }}</span>
+          </div>
+        </div>
+
+        <el-table
+          v-loading="loading"
+          :data="filteredUsers"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无在线用户"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="用户" prop="DisplayName" min-width="220" show-overflow-tooltip>
+            <template #default="{ row }">
+              <div class="dt-name-cell">
+                <span class="dt-icon-shell online-user-icon">
+                  <el-icon><UserFilled /></el-icon>
+                </span>
+                <span class="dt-name-copy">
+                  <strong>{{ row.DisplayName || row.Account }}</strong>
+                  <small>{{ row.Account }}</small>
+                </span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="最后操作时间" prop="LastActiveTime" min-width="190">
+            <template #default="{ row }">
+              <code class="dt-code">{{ row.LastActiveTime || '-' }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="120" align="center">
+            <template #default>
+              <span class="dt-badge dt-badge--success">在线</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
 import { getOnlineUsers } from '@/api/user'
-import { Refresh, Search } from '@element-plus/icons-vue'
+import { Refresh, Search, UserFilled } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 export default {
   name: 'OnlineUsers',
   components: {
-    Search
+    Search,
+    UserFilled
   },
   data() {
     return {
@@ -122,90 +148,16 @@ export default {
 <style lang="less" scoped>
 .online-users-container {
   height: 100%;
-}
-
-.online-users-card {
-  border-radius: 8px;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.title-group {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
   min-width: 0;
 }
 
-.page-title {
-  color: #1f2937;
-  font-size: 16px;
-  font-weight: 600;
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
 }
 
-.online-count {
-  color: #059669;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-input {
-  width: 240px;
-}
-
-.status-strip {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 32px;
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #f9fafb;
-}
-
-.status-label {
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.status-value {
-  color: #111827;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-@media (max-width: 768px) {
-  .card-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .header-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .search-input {
-    width: 100%;
-  }
+.online-user-icon {
+  color: #0f766e;
+  background: #e8f7f4;
 }
 </style>

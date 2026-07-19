@@ -1,170 +1,186 @@
 <template>
-  <div class="system-settings-container">
-    <el-card class="settings-card">
-      <template #header>
-        <div class="card-header">
-          <span>系统设置</span>
-          <div class="header-actions">
-            <el-button @click="loadSystemInfo">刷新</el-button>
-            <el-button type="primary" :loading="saving" @click="save">保存</el-button>
+  <div class="system-settings-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>系统设置</h1>
+          <p>维护系统名称、登录视觉和后台主题配色。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadSystemInfo">刷新</el-button>
+          <el-button type="primary" :icon="Check" :loading="saving" @click="save">保存</el-button>
+        </div>
+      </div>
+
+      <div class="dt-panel settings-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>设置项</strong>
+            <span>{{ form.systemName || 'DT Program' }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">基础信息</span>
+            <span class="dt-chip dt-chip--success">视觉标识</span>
+            <span class="dt-chip">主题</span>
           </div>
         </div>
-      </template>
 
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-        <section class="settings-section">
-          <div class="section-title">基础信息</div>
-          <el-form-item label="系统名称" prop="systemName">
-            <el-input v-model="form.systemName" placeholder="请输入系统名称" maxlength="50" show-word-limit />
-          </el-form-item>
-        </section>
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="settings-form">
+          <section class="settings-section">
+            <div class="section-title">基础信息</div>
+            <el-form-item label="系统名称" prop="systemName">
+              <el-input v-model="form.systemName" placeholder="请输入系统名称" maxlength="50" show-word-limit />
+            </el-form-item>
+          </section>
 
-        <section class="settings-section">
-          <div class="section-title">视觉标识</div>
-          <el-form-item label="登录背景图">
-            <div class="upload-row">
-              <el-upload
-                class="upload"
-                action=""
-                :auto-upload="false"
-                :show-file-list="false"
-                accept="image/*"
-                :on-change="handleLoginImgChange"
-              >
-                <el-button type="primary">选择图片</el-button>
-              </el-upload>
-
-              <el-button :disabled="!selectedLoginImgFile" @click="clearSelectedLoginImg">清除已选</el-button>
-              <span class="hint">支持常见图片格式；不选则保留当前背景图</span>
-            </div>
-
-            <div class="preview">
-              <div class="preview-title">预览</div>
-              <div class="login-preview-box" :style="loginPreviewStyle">
-                <div v-if="!loginPreviewUrl" class="preview-empty">暂无图片</div>
-              </div>
-            </div>
-          </el-form-item>
-
-          <el-form-item label="Tab 小 Logo">
-            <div class="logo-setting">
+          <section class="settings-section">
+            <div class="section-title">视觉标识</div>
+            <el-form-item label="登录背景图">
               <div class="upload-row">
                 <el-upload
                   class="upload"
                   action=""
                   :auto-upload="false"
                   :show-file-list="false"
-                  accept="image/png,image/jpeg,image/svg+xml,image/x-icon,image/webp"
-                  :on-change="handleBrowserLogoChange"
+                  accept="image/*"
+                  :on-change="handleLoginImgChange"
                 >
                   <el-button type="primary">选择图片</el-button>
                 </el-upload>
 
-                <el-button :disabled="!selectedBrowserLogoFile" @click="clearSelectedBrowserLogo">清除已选</el-button>
-                <span class="hint">建议使用正方形 PNG、ICO 或 SVG</span>
+                <el-button :disabled="!selectedLoginImgFile" @click="clearSelectedLoginImg">清除已选</el-button>
+                <span class="hint">支持常见图片格式；不选则保留当前背景图</span>
               </div>
 
-              <div class="favicon-preview">
-                <div class="favicon-window">
-                  <div class="favicon-dot"></div>
-                  <div class="favicon-dot"></div>
-                  <div class="favicon-dot"></div>
-                  <div class="favicon-tab">
-                    <div class="favicon-icon-box">
-                      <img v-if="browserLogoPreviewUrl" :src="browserLogoPreviewUrl" alt="" />
-                      <span v-else>DT</span>
+              <div class="preview">
+                <div class="preview-title">预览</div>
+                <div class="login-preview-box" :style="loginPreviewStyle">
+                  <div v-if="!loginPreviewUrl" class="preview-empty">暂无图片</div>
+                </div>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="Tab 小 Logo">
+              <div class="logo-setting">
+                <div class="upload-row">
+                  <el-upload
+                    class="upload"
+                    action=""
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    accept="image/png,image/jpeg,image/svg+xml,image/x-icon,image/webp"
+                    :on-change="handleBrowserLogoChange"
+                  >
+                    <el-button type="primary">选择图片</el-button>
+                  </el-upload>
+
+                  <el-button :disabled="!selectedBrowserLogoFile" @click="clearSelectedBrowserLogo">清除已选</el-button>
+                  <span class="hint">建议使用正方形 PNG、ICO 或 SVG</span>
+                </div>
+
+                <div class="favicon-preview">
+                  <div class="favicon-window">
+                    <div class="favicon-dot"></div>
+                    <div class="favicon-dot"></div>
+                    <div class="favicon-dot"></div>
+                    <div class="favicon-tab">
+                      <div class="favicon-icon-box">
+                        <img v-if="browserLogoPreviewUrl" :src="browserLogoPreviewUrl" alt="" />
+                        <span v-else>DT</span>
+                      </div>
+                      <span class="favicon-title">{{ form.systemName || 'DT Program' }}</span>
                     </div>
-                    <span class="favicon-title">{{ form.systemName || 'DT Program' }}</span>
                   </div>
                 </div>
               </div>
-            </div>
-          </el-form-item>
-        </section>
+            </el-form-item>
+          </section>
 
-        <section class="settings-section">
-          <div class="section-title">系统主题</div>
-          <el-form-item label="主题模式">
-            <el-radio-group v-model="form.theme.mode" @change="handleThemeModeChange">
-              <el-radio-button label="preset">预设</el-radio-button>
-              <el-radio-button label="custom">自定义</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
+          <section class="settings-section">
+            <div class="section-title">系统主题</div>
+            <el-form-item label="主题模式">
+              <el-radio-group v-model="form.theme.mode" @change="handleThemeModeChange">
+                <el-radio-button label="preset">预设</el-radio-button>
+                <el-radio-button label="custom">自定义</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
 
-          <el-form-item label="主题配色">
-            <div class="theme-panel">
-              <div class="preset-grid">
-                <button
-                  v-for="preset in themePresets"
-                  :key="preset.key"
-                  type="button"
-                  class="preset-card"
-                  :class="{ active: form.theme.preset === preset.key }"
-                  @click="selectThemePreset(preset.key)"
-                >
-                  <span class="preset-name">{{ preset.name }}</span>
-                  <span class="preset-swatches">
-                    <span
-                      v-for="color in getPresetSwatches(preset)"
-                      :key="color"
-                      class="preset-swatch"
-                      :style="{ backgroundColor: color }"
-                    ></span>
-                  </span>
-                </button>
-              </div>
+            <el-form-item label="主题配色">
+              <div class="theme-panel">
+                <div class="preset-grid">
+                  <button
+                    v-for="preset in themePresets"
+                    :key="preset.key"
+                    type="button"
+                    class="preset-card"
+                    :class="{ active: form.theme.preset === preset.key }"
+                    @click="selectThemePreset(preset.key)"
+                  >
+                    <span class="preset-name">{{ preset.name }}</span>
+                    <span class="preset-swatches">
+                      <span
+                        v-for="color in getPresetSwatches(preset)"
+                        :key="color"
+                        class="preset-swatch"
+                        :style="{ backgroundColor: color }"
+                      ></span>
+                    </span>
+                  </button>
+                </div>
 
-              <div v-if="form.theme.mode === 'custom'" class="custom-color-groups">
-                <div v-for="group in colorGroups" :key="group.title" class="custom-color-group">
-                  <div class="custom-color-title">{{ group.title }}</div>
-                  <div class="custom-color-grid">
-                    <label v-for="field in group.fields" :key="field.key" class="color-field">
-                      <span>{{ field.label }}</span>
-                      <el-color-picker
-                        v-model="form.theme.colors[field.key]"
-                        color-format="hex"
-                        @change="previewTheme"
-                      />
-                    </label>
+                <div v-if="form.theme.mode === 'custom'" class="custom-color-groups">
+                  <div v-for="group in colorGroups" :key="group.title" class="custom-color-group">
+                    <div class="custom-color-title">{{ group.title }}</div>
+                    <div class="custom-color-grid">
+                      <label v-for="field in group.fields" :key="field.key" class="color-field">
+                        <span>{{ field.label }}</span>
+                        <el-color-picker
+                          v-model="form.theme.colors[field.key]"
+                          color-format="hex"
+                          @change="previewTheme"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="theme-preview" :style="themePreviewStyle">
-                <div class="theme-preview-topbar">
-                  <div class="theme-preview-logo"></div>
-                  <span></span>
-                  <span class="active"></span>
-                  <span></span>
-                </div>
-                <div class="theme-preview-body">
-                  <div class="theme-preview-sidebar">
+                <div class="theme-preview" :style="themePreviewStyle">
+                  <div class="theme-preview-topbar">
+                    <div class="theme-preview-logo"></div>
                     <span></span>
-                    <span class="hover"></span>
                     <span class="active"></span>
                     <span></span>
                   </div>
-                  <div class="theme-preview-main">
-                    <div class="theme-preview-header"></div>
-                    <div class="theme-preview-button"></div>
-                    <div class="theme-preview-lines">
+                  <div class="theme-preview-body">
+                    <div class="theme-preview-sidebar">
                       <span></span>
+                      <span class="hover"></span>
+                      <span class="active"></span>
                       <span></span>
-                      <span></span>
+                    </div>
+                    <div class="theme-preview-main">
+                      <div class="theme-preview-header"></div>
+                      <div class="theme-preview-button"></div>
+                      <div class="theme-preview-lines">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </el-form-item>
-        </section>
-      </el-form>
-    </el-card>
+            </el-form-item>
+          </section>
+        </el-form>
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
 import { defineComponent, reactive, ref, computed, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue'
+import { Check, Refresh } from '@element-plus/icons-vue'
 import { setSystemInfo } from '@/api/sysconfig'
 import {
   THEME_PRESETS,
@@ -435,7 +451,9 @@ export default defineComponent({
       handleThemeModeChange,
       previewTheme,
       loadSystemInfo,
-      save
+      save,
+      Check,
+      Refresh
     }
   }
 })
@@ -444,37 +462,18 @@ export default defineComponent({
 <style lang="less" scoped>
 .system-settings-container {
   height: 100%;
-  min-height: 100%;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.settings-card {
-  flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 8px;
 }
 
-.settings-card :deep(.el-card__body) {
+.settings-panel {
+  min-width: 0;
+}
+
+.settings-form {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 22px 26px 26px !important;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
+  padding: 22px 26px 26px;
 }
 
 .settings-section {
