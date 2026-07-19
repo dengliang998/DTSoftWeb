@@ -904,8 +904,8 @@ export default {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: 6px;
+  padding: 6px;
 }
 
 .menu-commandbar {
@@ -913,9 +913,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 58px;
-  padding: 12px 14px 12px 16px;
+  gap: 8px;
+  min-height: 46px;
+  padding: 6px 8px;
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 8px;
   background: #ffffff;
@@ -936,7 +936,7 @@ export default {
 }
 
 .menu-title p {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: #5c667a;
   font-size: 13px;
   line-height: 1.35;
@@ -946,7 +946,7 @@ export default {
 .toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex: 0 0 auto;
 }
 
@@ -954,10 +954,10 @@ export default {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(260px, 360px) 1fr auto;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
-  min-height: 50px;
-  padding: 8px;
+  min-height: 42px;
+  padding: 5px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 8px;
   background: #ffffff;

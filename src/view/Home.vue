@@ -112,14 +112,18 @@
       <main class="main-container">
         <!-- 标签页区域 -->
         <div class="tabs-container">
-          <el-tabs v-model="activeTab" type="card" @tab-click="handleTabClick" @tab-remove="handleTabRemove">
-            <el-tab-pane
-              v-for="tab in openedTabs"
-              :key="tab.path"
-              :label="tab.title"
-              :name="tab.path"
-              :closable="tab.path !== '/welcome'"
-            ></el-tab-pane>
+          <el-tabs
+            v-model="activeTab"
+            class="workspace-tabs"
+            type="card"
+            @tab-click="handleTabClick"
+            @tab-remove="handleTabRemove"
+          >
+            <el-tab-pane v-for="tab in openedTabs" :key="tab.path" :name="tab.path" :closable="tab.path !== '/welcome'">
+              <template #label>
+                <span class="tab-label" :title="tab.title">{{ tab.title }}</span>
+              </template>
+            </el-tab-pane>
           </el-tabs>
         </div>
 
@@ -1236,38 +1240,136 @@ export default {
 }
 
 .tabs-container {
-  padding: 8px 14px 0;
-  background: rgba(248, 250, 252, 0.92);
+  height: 48px;
+  padding: 6px 10px;
+  background: #f6f8fb;
   border-bottom: 1px solid #dde5ef;
 }
 
+.workspace-tabs {
+  height: 100%;
+}
+
+.tabs-container :deep(.el-tabs__header) {
+  height: 100%;
+  margin: 0;
+  border-bottom: 0;
+}
+
 .tabs-container :deep(.el-tabs__nav-wrap) {
+  display: flex;
+  align-items: center;
+  height: 100%;
   padding: 0;
 }
 
+.tabs-container :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.tabs-container :deep(.el-tabs__nav-scroll) {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.tabs-container :deep(.el-tabs__nav-scroll::-webkit-scrollbar) {
+  height: 4px;
+}
+
+.tabs-container :deep(.el-tabs__nav-scroll::-webkit-scrollbar-thumb) {
+  background: #cfd8e3;
+  border-radius: 999px;
+}
+
+.tabs-container :deep(.el-tabs__nav) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  border: 0 !important;
+}
+
 .tabs-container :deep(.el-tabs__item) {
+  display: inline-flex !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 92px;
+  max-width: 176px;
   height: 34px;
-  line-height: 34px;
-  padding: 0 14px !important;
-  margin-right: 6px;
-  color: #667085;
-  background: transparent;
-  border: 1px solid transparent !important;
-  border-radius: 9px 9px 0 0;
+  line-height: 32px;
+  padding: 0 12px !important;
+  margin: 0 !important;
+  color: #5f6f85;
+  background: #ffffff;
+  border: 1px solid #dbe3ee !important;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   font-size: 13px;
   font-weight: 650;
+  white-space: nowrap;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.tabs-container :deep(.el-tabs__item:first-child) {
+  min-width: 72px;
+}
+
+.tabs-container :deep(.el-tabs__item .tab-label) {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tabs-container :deep(.el-tabs__item:hover) {
   color: var(--dt-primary);
-  background: #edf4ff;
+  background: var(--dt-primary-subtle);
+  border-color: var(--dt-primary-border) !important;
 }
 
 .tabs-container :deep(.el-tabs__item.is-active) {
-  color: #182230;
-  background: #ffffff;
-  border-color: #dde5ef !important;
-  border-bottom-color: #ffffff !important;
+  color: var(--dt-primary-dark);
+  background: linear-gradient(180deg, #f8fbff 0%, #edf6ff 100%);
+  border-color: var(--dt-primary-border) !important;
+  box-shadow: 0 4px 10px rgba(24, 144, 255, 0.12);
+}
+
+.tabs-container :deep(.el-tabs__item.is-active .tab-label) {
+  font-weight: 700;
+}
+
+.tabs-container :deep(.el-tabs__item.is-active .el-tabs__close-icon) {
+  color: var(--dt-primary-dark);
+  background: color-mix(in srgb, var(--dt-primary) 9%, transparent);
+}
+
+.tabs-container :deep(.el-tabs__close-icon) {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-left: 0;
+  border-radius: 50%;
+  color: #8a97a8;
+  opacity: 0.72;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.tabs-container :deep(.el-tabs__item:hover .el-tabs__close-icon),
+.tabs-container :deep(.el-tabs__item.is-active .el-tabs__close-icon) {
+  opacity: 1;
 }
 
 .tabs-container :deep(.el-tabs__close-icon:hover) {
@@ -1289,7 +1391,7 @@ export default {
 }
 
 .content-wrapper {
-  padding: 10px;
+  padding: 5px;
 }
 
 .fade-slide-enter-active,
@@ -1421,8 +1523,8 @@ export default {
 
 /* Sidebar refinement */
 .main-content {
-  padding: 6px;
-  gap: 8px;
+  padding: 4px;
+  gap: 4px;
 }
 
 .sidebar-container {
