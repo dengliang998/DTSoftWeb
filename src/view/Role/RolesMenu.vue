@@ -1,86 +1,146 @@
 <template>
-  <div class="role-container">
-    <!-- 卡片视图区域 -->
-    <el-card class="table-card">
-      <!-- 搜索与添加区域 -->
-      <el-row :gutter="20">
-        <el-col :span="7">
-          <!-- 搜索与添加区域 -->
-          <el-input v-model="queryInfo.query" clearable placeholder="请输入内容" @clear="getRoleList">
-            <template #append>
-              <el-button icon="Search" @click="getRoleList"></el-button>
-            </template>
-          </el-input>
-        </el-col>
+  <div class="role-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>角色管理</h1>
+          <p>维护系统角色、成员范围和菜单访问权限。系统内置角色会限制高风险操作。</p>
+        </div>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getRoleList">刷新</el-button>
+          <el-button type="primary" :icon="Plus" @click="openAddRoleDialog">添加角色</el-button>
+        </div>
+      </div>
 
-        <el-col :span="4">
-          <el-button type="primary" @click="openAddRoleDialog">添加角色</el-button>
-        </el-col>
-      </el-row>
-
-      <!-- 用户列表区域 -->
-      <el-table
-        :data="RoleList"
-        :row-style="{ height: '40px' }"
-        :cell-style="{ padding: '0px' }"
-        border
-        stripe
-        class="table-wrapper"
-      >
-        <el-table-column label="#" type="index" :index="indexMethod"></el-table-column>
-        <el-table-column label="角色编码" prop="id"></el-table-column>
-        <el-table-column label="角色名称" prop="RoleName"></el-table-column>
-        <el-table-column label="操作" width="230px">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <!-- 添加成员 -->
-              <el-button
-                type="primary"
-                size="small"
-                icon="User"
-                :disabled="scope.row.RoleName == 'Everyone'"
-                @click="showMenuPermDialog(scope.row.id, scope.row.RoleName)"
-              ></el-button>
-              <!-- 配置可访问的菜单 -->
-              <el-button
-                type="primary"
-                size="small"
-                icon="Setting"
-                :disabled="scope.row.RoleName == 'Administrator'"
-                @click="showEditMenuDialog(scope.row.id)"
-              ></el-button>
-              <!-- 修改按钮 -->
-              <el-button
-                type="primary"
-                size="small"
-                icon="Edit"
-                :disabled="scope.row.RoleName == 'Administrator' || scope.row.RoleName == 'Everyone'"
-                @click="showEditDialog(scope.row.id)"
-              ></el-button>
-              <!-- 删除按钮 -->
-              <el-button
-                type="danger"
-                size="small"
-                icon="Delete"
-                :disabled="scope.row.RoleName == 'Administrator' || scope.row.RoleName == 'Everyone'"
-                @click="removeRole(scope.row.id)"
-              ></el-button>
-            </div>
+      <div class="dt-toolbar dt-toolbar--compact">
+        <el-input
+          v-model="queryInfo.query"
+          clearable
+          class="dt-search"
+          placeholder="搜索角色名称或编码"
+          @clear="getRoleList"
+          @keyup.enter="getRoleList"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
           </template>
-        </el-table-column>
-      </el-table>
+        </el-input>
 
-      <!-- 分页区域 -->
-      <el-pagination
-        :current-page="queryInfo.pagenum"
-        :page-sizes="[1, 2, 5, 10]"
-        :page-size="queryInfo.pagesize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      ></el-pagination>
-    </el-card>
+        <div class="dt-filter-tabs">
+          <button
+            v-for="item in roleFilterOptions"
+            :key="item.value"
+            type="button"
+            :class="['dt-filter-tab', { 'is-active': activeRoleFilter === item.value }]"
+            @click="activeRoleFilter = item.value"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="dt-panel">
+        <div class="dt-panel__header">
+          <div>
+            <strong>角色列表</strong>
+            <span>{{ roleSummaryText }}</span>
+          </div>
+          <div class="dt-panel__meta">
+            <span class="dt-chip">本页 {{ roleStats.total }}</span>
+            <span class="dt-chip dt-chip--warning">内置 {{ roleStats.system }}</span>
+            <span class="dt-chip dt-chip--success">自定义 {{ roleStats.custom }}</span>
+          </div>
+        </div>
+
+        <el-table
+          :data="filteredRoleList"
+          :row-style="{ height: '52px' }"
+          :cell-style="{ padding: '0px' }"
+          class="table-wrapper dt-table"
+          empty-text="暂无匹配角色"
+        >
+          <el-table-column label="#" width="72" align="center">
+            <template #default="scope">
+              <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="角色" prop="RoleName" min-width="260">
+            <template #default="scope">
+              <div class="dt-name-cell">
+                <span :class="['dt-icon-shell', isSystemRole(scope.row.RoleName) ? 'role-icon--system' : '']">
+                  <el-icon><component :is="UserIcon" /></el-icon>
+                </span>
+                <span class="dt-name-copy">
+                  <strong>{{ scope.row.RoleName || '未命名角色' }}</strong>
+                  <small>{{ isSystemRole(scope.row.RoleName) ? '系统内置角色' : '自定义业务角色' }}</small>
+                </span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="角色编码" prop="id" min-width="220">
+            <template #default="scope">
+              <code class="dt-code">{{ scope.row.id }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="类型" width="120">
+            <template #default="scope">
+              <span :class="['dt-badge', isSystemRole(scope.row.RoleName) ? 'dt-badge--warning' : 'dt-badge--success']">
+                {{ isSystemRole(scope.row.RoleName) ? '内置' : '自定义' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="220" align="right" class-name="role-action-column">
+            <template #default="scope">
+              <div class="dt-operation-buttons role-actions">
+                <el-tooltip content="管理成员" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--add"
+                    :icon="UserIcon"
+                    :disabled="scope.row.RoleName == 'Everyone'"
+                    @click="showMenuPermDialog(scope.row.id, scope.row.RoleName)"
+                  />
+                </el-tooltip>
+                <el-tooltip content="菜单权限" placement="top">
+                  <el-button
+                    class="dt-icon-action"
+                    :icon="Setting"
+                    :disabled="scope.row.RoleName == 'Administrator'"
+                    @click="showEditMenuDialog(scope.row.id)"
+                  />
+                </el-tooltip>
+                <el-tooltip content="编辑角色" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--edit"
+                    :icon="Edit"
+                    :disabled="isSystemRole(scope.row.RoleName)"
+                    @click="showEditDialog(scope.row.id)"
+                  />
+                </el-tooltip>
+                <el-tooltip content="删除角色" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    :disabled="isSystemRole(scope.row.RoleName)"
+                    @click="removeRole(scope.row.id)"
+                  />
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-pagination
+          class="dt-pagination"
+          :current-page="queryInfo.pagenum"
+          :page-sizes="[1, 2, 5, 10]"
+          :page-size="queryInfo.pagesize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </section>
 
     <!-- 添加角色对话框 -->
     <RoleAddDialog v-model="addDialogVisible" :form="addForm" @success="getRoleList" />
@@ -135,6 +195,8 @@
 </template>
 
 <script>
+import { markRaw } from 'vue'
+import { Delete, Edit, Plus, Refresh, Search, Setting, User as UserIcon } from '@element-plus/icons-vue'
 import { addRoleMember, createRole, deleteRole, getRole, getRoleList, getRoleMemberList, updateRole } from '@/api/role'
 import { getMenu, getRoleMenuMap, updateMenuAuthority } from '@/api/menu'
 import UserSelector from '@/components/user/UserSelector.vue'
@@ -151,6 +213,13 @@ export default {
   },
   data() {
     return {
+      Delete: markRaw(Delete),
+      Edit: markRaw(Edit),
+      Plus: markRaw(Plus),
+      Refresh: markRaw(Refresh),
+      Search: markRaw(Search),
+      Setting: markRaw(Setting),
+      UserIcon: markRaw(UserIcon),
       queryInfo: {
         query: '',
         queryuser: '',
@@ -159,6 +228,12 @@ export default {
         // 当前每页显示多少条数据
         pagesize: 10
       },
+      activeRoleFilter: 'all',
+      roleFilterOptions: [
+        { label: '全部', value: 'all' },
+        { label: '系统内置', value: 'system' },
+        { label: '自定义', value: 'custom' }
+      ],
       // 用户列表
       RoleList: [],
       // 总数据
@@ -206,6 +281,30 @@ export default {
     }
   },
   computed: {
+    filteredRoleList() {
+      if (this.activeRoleFilter === 'system') return this.RoleList.filter((role) => this.isSystemRole(role.RoleName))
+      if (this.activeRoleFilter === 'custom') return this.RoleList.filter((role) => !this.isSystemRole(role.RoleName))
+      return this.RoleList
+    },
+    roleStats() {
+      return this.RoleList.reduce(
+        (stats, role) => {
+          stats.total += 1
+          if (this.isSystemRole(role.RoleName)) {
+            stats.system += 1
+          } else {
+            stats.custom += 1
+          }
+          return stats
+        },
+        { total: 0, system: 0, custom: 0 }
+      )
+    },
+    roleSummaryText() {
+      const count = this.filteredRoleList.length
+      if (count === this.RoleList.length) return `共 ${count} 个角色，服务端总数 ${this.total}`
+      return `筛选出 ${count} / ${this.RoleList.length} 个角色，服务端总数 ${this.total}`
+    },
     selectedPermissionCount() {
       return new Set(this.TreeChecked.concat(this.HalfChecked)).size
     }
@@ -223,6 +322,9 @@ export default {
     this.getRoleList()
   },
   methods: {
+    isSystemRole(roleName) {
+      return ['administrator', 'everyone'].includes(String(roleName || '').toLowerCase())
+    },
     openAddRoleDialog() {
       this.addDialogVisible = true
       this.imageUrl = ''
@@ -641,38 +743,39 @@ export default {
   display: block;
 }
 
-.operation-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 5px;
-}
-
 .role-container {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.table-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
 .table-wrapper {
   flex: 1;
-  margin-top: 15px;
+  margin-top: 0;
+}
+
+.role-actions {
+  min-width: 168px;
+  display: grid;
+  grid-template-columns: repeat(4, 30px);
+  justify-content: end;
+  gap: 10px;
+}
+
+.role-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.role-actions :deep(.el-button) {
+  box-sizing: border-box;
+}
+
+.table-wrapper :deep(.role-action-column .cell) {
+  padding-right: 16px;
+}
+
+.role-icon--system {
+  color: #8a5a00;
+  background: #fff7df;
 }
 
 :deep(.menu-auth-dialog) {

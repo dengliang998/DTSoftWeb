@@ -1,138 +1,228 @@
 <template>
-  <div class="organization-container">
-    <!-- 左侧部门树区域 -->
-    <el-card class="dept-tree-card">
-      <template #header>
-        <div class="card-header">
-          <span>部门结构</span>
-          <el-button type="primary" size="small" :icon="Plus" @click="showAddDeptDialog">新增部门</el-button>
+  <div class="organization-container dt-page-shell">
+    <section class="dt-workbench">
+      <div class="dt-commandbar">
+        <div class="dt-page-title">
+          <h1>组织架构</h1>
+          <p>维护部门层级、成员信息和账号状态。右键部门可快速编辑结构。</p>
         </div>
-      </template>
-
-      <el-tree
-        ref="deptTreeRef"
-        :data="deptTree"
-        :props="{ label: 'OuName', children: 'Children' }"
-        node-key="ItemId"
-        highlight-current
-        @node-click="handleDeptClick"
-      >
-        <template #default="{ node, data }">
-          <div class="custom-tree-node" @contextmenu.prevent="showContextMenu($event, data)">
-            <span class="tree-node-label">
-              <el-icon class="tree-node-icon">
-                <OfficeBuilding />
-              </el-icon>
-              {{ node.label }}
-            </span>
-          </div>
-        </template>
-      </el-tree>
-
-      <!-- 右键菜单 -->
-      <div
-        v-show="contextMenuVisible"
-        class="context-menu"
-        :style="{ left: contextMenuLeft + 'px', top: contextMenuTop + 'px' }"
-        @click.stop
-      >
-        <div class="context-menu-item" @click="handleEditDept">
-          <el-icon><Edit /></el-icon>
-          <span>编辑部门</span>
-        </div>
-        <div class="context-menu-item" @click="handleAddChildDept">
-          <el-icon><Plus /></el-icon>
-          <span>添加子部门</span>
-        </div>
-        <div class="context-menu-item delete" @click="handleDeleteDept">
-          <el-icon><Delete /></el-icon>
-          <span>删除部门</span>
+        <div class="dt-command-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getDeptTree(true)">刷新组织</el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddDeptDialog">新增部门</el-button>
         </div>
       </div>
-    </el-card>
 
-    <!-- 右侧用户列表区域 -->
-    <el-card class="user-list-card">
-      <template #header>
-        <div class="card-header">
-          <span>{{ currentDeptName || '全部用户' }}</span>
+      <div class="dt-toolbar">
+        <el-input
+          v-model="queryInfo.query"
+          clearable
+          class="dt-search"
+          placeholder="搜索用户账号、姓名或邮箱"
+          @clear="getUserList"
+          @keyup.enter="getUserList"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+
+        <div class="dt-filter-tabs">
+          <button
+            v-for="item in userFilterOptions"
+            :key="item.value"
+            type="button"
+            :class="['dt-filter-tab', { 'is-active': activeUserFilter === item.value }]"
+            @click="activeUserFilter = item.value"
+          >
+            {{ item.label }}
+          </button>
         </div>
-      </template>
 
-      <!-- 搜索与添加区域 -->
-      <el-row :gutter="20">
-        <el-col :span="7">
-          <el-input v-model="queryInfo.query" clearable placeholder="请输入用户账号或姓名" @clear="getUserList">
-            <template #append>
-              <el-button :icon="Search" @click="getUserList"></el-button>
-            </template>
-          </el-input>
-        </el-col>
-        <el-col :span="4">
-          <el-button type="primary" @click="showAddUserDialog">添加用户</el-button>
-        </el-col>
-      </el-row>
+        <div class="dt-toolbar-actions">
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getUserList">刷新用户</el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddUserDialog">添加用户</el-button>
+        </div>
+      </div>
 
-      <!-- 用户列表表格 -->
-      <el-table :data="userList" border stripe class="table-wrapper">
-        <el-table-column label="#" type="index" :index="indexMethod"></el-table-column>
-        <el-table-column label="账号" prop="Account"></el-table-column>
-        <el-table-column label="用户名" prop="DisplayName"></el-table-column>
-        <el-table-column label="性别" prop="Sex" :formatter="SetSex"></el-table-column>
-        <el-table-column label="职位" prop="Position"></el-table-column>
-        <el-table-column label="邮箱" prop="Email"></el-table-column>
-        <el-table-column label="直属主管" prop="SupervisorDisplayName">
-          <template #default="scope">
-            <span>{{ scope.row.SupervisorDisplayName || scope.row.SupervisorAcc || '' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="禁用">
-          <template #default="scope">
-            <el-switch
-              v-model="scope.row.Disable"
-              :disabled="scope.row.Account == 'Admin' || scope.row.Account == 'admin'"
-              @change="userStateChanged(scope.row.Account, scope.row.Disable)"
-            ></el-switch>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180px">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <el-button
-                type="primary"
-                size="small"
-                :icon="Edit"
-                @click="showEditUserDialog(scope.row.Account)"
-              ></el-button>
-              <el-button
-                type="primary"
-                size="small"
-                :icon="Unlock"
-                @click="showResetPasswordDialog(scope.row.Account)"
-              ></el-button>
-              <el-button
-                type="danger"
-                size="small"
-                :icon="Delete"
-                :disabled="scope.row.Account == 'admin' || scope.row.Account == 'Admin'"
-                @click="removeUserById(scope.row.Account)"
-              ></el-button>
+      <div class="dt-split-workspace">
+        <div class="dt-panel dt-side-panel dept-tree-panel">
+          <div class="dt-panel__header">
+            <div>
+              <strong>部门结构</strong>
+              <span>{{ deptSummaryText }}</span>
             </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            <div class="dt-panel__meta">
+              <span class="dt-chip">部门 {{ deptStats.total }}</span>
+              <el-button class="dt-ghost-action dept-reset-button" size="small" @click="resetDeptSelection">
+                全部
+              </el-button>
+            </div>
+          </div>
 
-      <!-- 分页区域 -->
-      <el-pagination
-        :current-page="queryInfo.pagenum"
-        :page-sizes="[1, 2, 5, 10]"
-        :page-size="queryInfo.pagesize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      ></el-pagination>
-    </el-card>
+          <div class="dt-tree-scroll">
+            <el-tree
+              ref="deptTreeRef"
+              class="dept-tree"
+              :data="deptTree"
+              :props="{ label: 'OuName', children: 'Children' }"
+              node-key="ItemId"
+              highlight-current
+              @node-click="handleDeptClick"
+            >
+              <template #default="{ node, data }">
+                <div class="custom-tree-node" @contextmenu.prevent="showContextMenu($event, data)">
+                  <span class="tree-node-label">
+                    <el-icon class="tree-node-icon">
+                      <OfficeBuilding />
+                    </el-icon>
+                    {{ node.label }}
+                  </span>
+                </div>
+              </template>
+            </el-tree>
+          </div>
+
+          <!-- 右键菜单 -->
+          <div
+            v-show="contextMenuVisible"
+            class="context-menu"
+            :style="{ left: contextMenuLeft + 'px', top: contextMenuTop + 'px' }"
+            @click.stop
+          >
+            <div class="context-menu-item" @click="handleEditDept">
+              <el-icon><Edit /></el-icon>
+              <span>编辑部门</span>
+            </div>
+            <div class="context-menu-item" @click="handleAddChildDept">
+              <el-icon><Plus /></el-icon>
+              <span>添加子部门</span>
+            </div>
+            <div class="context-menu-item delete" @click="handleDeleteDept">
+              <el-icon><Delete /></el-icon>
+              <span>删除部门</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dt-panel user-list-panel">
+          <div class="dt-panel__header">
+            <div>
+              <strong>{{ currentDeptName || '全部用户' }}</strong>
+              <span>{{ userSummaryText }}</span>
+            </div>
+            <div class="dt-panel__meta">
+              <span class="dt-chip">本页 {{ userStats.total }}</span>
+              <span class="dt-chip dt-chip--success">启用 {{ userStats.enabled }}</span>
+              <span class="dt-chip dt-chip--warning">禁用 {{ userStats.disabled }}</span>
+            </div>
+          </div>
+
+          <el-table
+            :data="filteredUserList"
+            :row-style="{ height: '52px' }"
+            :cell-style="{ padding: '0px' }"
+            class="table-wrapper dt-table"
+            empty-text="暂无匹配用户"
+          >
+            <el-table-column label="#" width="72" align="center">
+              <template #default="scope">
+                <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="用户" prop="DisplayName" min-width="220">
+              <template #default="scope">
+                <div class="dt-name-cell">
+                  <span class="dt-icon-shell user-avatar-shell">
+                    <el-icon><UserFilled /></el-icon>
+                  </span>
+                  <span class="dt-name-copy">
+                    <strong>{{ scope.row.DisplayName || scope.row.Account }}</strong>
+                    <small>{{ scope.row.Account || '未设置账号' }}</small>
+                  </span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="性别" prop="Sex" width="86">
+              <template #default="scope">
+                <span class="dt-badge dt-badge--neutral">{{ SetSex(scope.row, null, scope.row.Sex) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="职位" prop="Position" min-width="130">
+              <template #default="scope">
+                <span class="dt-muted-pill">{{ scope.row.Position || '未设置' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="邮箱" prop="Email" min-width="220">
+              <template #default="scope">
+                <code class="dt-code">{{ scope.row.Email || '未设置' }}</code>
+              </template>
+            </el-table-column>
+            <el-table-column label="直属主管" prop="SupervisorDisplayName" min-width="160">
+              <template #default="scope">
+                <span class="dt-muted-pill">
+                  {{ scope.row.SupervisorDisplayName || scope.row.SupervisorAcc || '未设置' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="96">
+              <template #default="scope">
+                <span :class="['dt-badge', scope.row.Disable ? 'dt-badge--warning' : 'dt-badge--success']">
+                  {{ scope.row.Disable ? '禁用' : '启用' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="禁用" width="86" align="center">
+              <template #default="scope">
+                <el-switch
+                  v-model="scope.row.Disable"
+                  :disabled="scope.row.Account == 'Admin' || scope.row.Account == 'admin'"
+                  @change="userStateChanged(scope.row.Account, scope.row.Disable)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="132" align="right">
+              <template #default="scope">
+                <div class="dt-operation-buttons">
+                  <el-tooltip content="编辑用户" placement="top">
+                    <el-button
+                      class="dt-icon-action dt-icon-action--edit"
+                      :icon="Edit"
+                      @click="showEditUserDialog(scope.row.Account)"
+                    />
+                  </el-tooltip>
+                  <el-tooltip content="重置密码" placement="top">
+                    <el-button
+                      class="dt-icon-action"
+                      :icon="Unlock"
+                      @click="showResetPasswordDialog(scope.row.Account)"
+                    />
+                  </el-tooltip>
+                  <el-tooltip content="删除用户" placement="top">
+                    <el-button
+                      class="dt-icon-action dt-icon-action--danger"
+                      :icon="Delete"
+                      :disabled="scope.row.Account == 'admin' || scope.row.Account == 'Admin'"
+                      @click="removeUserById(scope.row.Account)"
+                    />
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <el-pagination
+            class="dt-pagination"
+            :current-page="queryInfo.pagenum"
+            :page-sizes="[1, 2, 5, 10]"
+            :page-size="queryInfo.pagesize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </div>
+      </div>
+    </section>
 
     <!-- 部门管理对话框 -->
     <DeptDialog
@@ -199,11 +289,11 @@
 
 <script>
 import { createOu, deleteOu, getAllOus, updateOu } from '@/api/organization'
-import { deleteUser, getUserList, modifyUserInfo, resetPassword } from '@/api/user'
+import { deleteUser, getUserList, modifyUserInfo } from '@/api/user'
 import UserInfoComponents from '../../components/user/UserInfoComponents.vue'
 import DeptDialog from './components/DeptDialog.vue'
 import ResetPwdDialog from './components/ResetPwdDialog.vue'
-import { Search, Plus, Edit, Delete, Unlock, OfficeBuilding } from '@element-plus/icons-vue'
+import { Search, Plus, Edit, Delete, Unlock, OfficeBuilding, Refresh, UserFilled } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 export default {
@@ -212,7 +302,8 @@ export default {
     UserInfoComponents,
     DeptDialog,
     ResetPwdDialog,
-    OfficeBuilding
+    OfficeBuilding,
+    UserFilled
   },
   data() {
     return {
@@ -222,6 +313,7 @@ export default {
       Edit: markRaw(Edit),
       Delete: markRaw(Delete),
       Unlock: markRaw(Unlock),
+      Refresh: markRaw(Refresh),
 
       // 部门相关
       deptTree: [],
@@ -253,6 +345,13 @@ export default {
         pagenum: 1,
         pagesize: 10
       },
+      activeUserFilter: 'all',
+      userFilterOptions: [
+        { label: '全部', value: 'all' },
+        { label: '启用', value: 'enabled' },
+        { label: '禁用', value: 'disabled' },
+        { label: '管理员', value: 'admin' }
+      ],
       userList: [],
       total: 0,
       ResetPwdDialogVisible: false,
@@ -263,12 +362,66 @@ export default {
       imageUrl: ''
     }
   },
+  computed: {
+    deptStats() {
+      return {
+        total: this.countDepartments(this.deptTree)
+      }
+    },
+    deptSummaryText() {
+      return this.currentDeptName ? `当前选中：${this.currentDeptName}` : '选择部门查看成员，右键管理部门'
+    },
+    filteredUserList() {
+      if (this.activeUserFilter === 'enabled') return this.userList.filter((user) => !user.Disable)
+      if (this.activeUserFilter === 'disabled') return this.userList.filter((user) => user.Disable)
+      if (this.activeUserFilter === 'admin') {
+        return this.userList.filter((user) =>
+          ['admin', 'administrator'].includes(String(user.Account || '').toLowerCase())
+        )
+      }
+      return this.userList
+    },
+    userStats() {
+      return this.userList.reduce(
+        (stats, user) => {
+          stats.total += 1
+          if (user.Disable) {
+            stats.disabled += 1
+          } else {
+            stats.enabled += 1
+          }
+          return stats
+        },
+        { total: 0, enabled: 0, disabled: 0 }
+      )
+    },
+    userSummaryText() {
+      const count = this.filteredUserList.length
+      if (count === this.userList.length) return `共 ${count} 人，服务端总数 ${this.total}`
+      return `筛选出 ${count} / ${this.userList.length} 人，服务端总数 ${this.total}`
+    }
+  },
   created() {
     this.getDeptTree()
     this.getUserList()
   },
   methods: {
     // ========== 部门管理方法 ==========
+
+    countDepartments(departments) {
+      if (!Array.isArray(departments)) return 0
+      return departments.reduce((count, item) => count + 1 + this.countDepartments(item.Children || []), 0)
+    },
+
+    resetDeptSelection() {
+      this.currentDeptId = null
+      this.currentDeptName = ''
+      this.queryInfo.pagenum = 1
+      if (this.$refs.deptTreeRef) {
+        this.$refs.deptTreeRef.setCurrentKey(null)
+      }
+      this.getUserList()
+    },
 
     // 获取所有部门树
     async getDeptTree(expandAll = false) {
@@ -530,7 +683,7 @@ export default {
       }
     },
 
-    SetSex(row, column, cellValue, index) {
+    SetSex(row, column, cellValue, _index) {
       return cellValue === 'Male' ? '男' : '女'
     },
 
@@ -648,58 +801,51 @@ export default {
 
 <style scoped>
 .organization-container {
-  display: flex;
-  gap: 20px;
   height: 100%;
   min-height: 0;
 }
 
-.dept-tree-card {
-  width: 280px;
-  min-width: 250px;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
+.dept-tree-panel {
+  min-width: 0;
 }
 
-.dept-tree-card :deep(.el-card__body) {
-  flex: 1;
-  overflow: auto;
-  padding: 12px;
+.dept-reset-button {
+  min-height: 28px;
+  padding: 4px 9px;
 }
 
-/* 树节点样式优化 */
-.dept-tree-card :deep(.el-tree) {
+.dept-tree {
   background: transparent;
 }
 
-.dept-tree-card :deep(.el-tree-node__content) {
-  height: 32px;
+.dept-tree :deep(.el-tree-node__content) {
+  height: 34px;
   padding: 0 6px;
-  border-radius: 4px;
-  margin-bottom: 1px;
+  border-radius: 7px;
+  margin-bottom: 2px;
   transition: all 0.2s;
 }
 
-.dept-tree-card :deep(.el-tree-node__content:hover) {
-  background-color: #f0f2f5;
+.dept-tree :deep(.el-tree-node__content:hover) {
+  color: #0f766e;
+  background-color: #f0fbf8;
 }
 
-.dept-tree-card :deep(.el-tree-node.is-current > .el-tree-node__content) {
-  background: linear-gradient(90deg, #ecf5ff 0%, #f5f9ff 100%);
-  color: #409eff;
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(64, 158, 255, 0.15);
+.dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background: linear-gradient(90deg, #e8f7f4 0%, #f5fbfa 100%) !important;
+  color: #0f766e;
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, 0.12);
 }
 
 /* 树节点缩进优化 */
-.dept-tree-card :deep(.el-tree-node__children) {
+.dept-tree :deep(.el-tree-node__children) {
   padding-left: 12px;
   position: relative;
 }
 
 /* 左侧引导线 */
-.dept-tree-card :deep(.el-tree-node__children)::before {
+.dept-tree :deep(.el-tree-node__children)::before {
   content: '';
   position: absolute;
   left: 0;
@@ -709,7 +855,7 @@ export default {
   background: #e8e8e8;
 }
 
-.dept-tree-card :deep(.el-tree-node__children .el-tree-node__content)::before {
+.dept-tree :deep(.el-tree-node__children .el-tree-node__content)::before {
   content: '';
   position: absolute;
   left: -12px;
@@ -720,45 +866,34 @@ export default {
 }
 
 /* 展开图标优化 */
-.dept-tree-card :deep(.el-tree-node__expand-icon) {
+.dept-tree :deep(.el-tree-node__expand-icon) {
   font-size: 12px;
   color: #909399;
   margin-right: 4px;
   transition: transform 0.2s;
 }
 
-.dept-tree-card :deep(.el-tree-node__expand-icon.is-leaf) {
+.dept-tree :deep(.el-tree-node__expand-icon.is-leaf) {
   color: transparent;
   width: 12px;
 }
 
-.dept-tree-card :deep(.el-tree-node__expand-icon.expanded) {
+.dept-tree :deep(.el-tree-node__expand-icon.expanded) {
   transform: rotate(90deg);
 }
 
-.user-list-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+.user-list-panel {
+  min-width: 0;
 }
 
-.user-list-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
+.user-avatar-shell {
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .table-wrapper {
   flex: 1;
-  margin-top: 15px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-top: 0;
 }
 
 .custom-tree-node {
@@ -790,8 +925,8 @@ export default {
   color: #909399;
 }
 
-.dept-tree-card :deep(.el-tree-node.is-current > .el-tree-node__content) .tree-node-icon {
-  color: #409eff;
+.dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content) .tree-node-icon {
+  color: #0f766e;
 }
 
 .user-form-dialog {
