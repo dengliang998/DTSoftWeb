@@ -288,7 +288,7 @@ export default {
 }
 
 .summary-icon.green {
-  background: #0f766e;
+  background: var(--dt-primary);
 }
 
 .summary-icon.amber {

@@ -1180,7 +1180,7 @@ export default {
 }
 
 .rail-progress__value {
-  color: #0f766e;
+  color: var(--dt-primary);
   font-size: 30px;
   font-weight: 800;
   line-height: 34px;

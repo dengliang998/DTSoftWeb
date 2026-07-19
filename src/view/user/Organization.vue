@@ -827,15 +827,15 @@ export default {
 }
 
 .dept-tree :deep(.el-tree-node__content:hover) {
-  color: #0f766e;
-  background-color: #f0fbf8;
+  color: var(--dt-primary);
+  background-color: var(--dt-primary-soft);
 }
 
 .dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
-  background: linear-gradient(90deg, #e8f7f4 0%, #f5fbfa 100%) !important;
-  color: #0f766e;
+  background: linear-gradient(90deg, var(--dt-primary-soft) 0%, var(--dt-bg) 100%) !important;
+  color: var(--dt-primary);
   font-weight: 650;
-  box-shadow: 0 1px 3px rgba(15, 118, 110, 0.12);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--dt-primary) 12%, transparent);
 }
 
 /* 树节点缩进优化 */
@@ -926,7 +926,7 @@ export default {
 }
 
 .dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content) .tree-node-icon {
-  color: #0f766e;
+  color: var(--dt-primary);
 }
 
 .user-form-dialog {

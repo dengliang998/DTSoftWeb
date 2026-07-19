@@ -157,7 +157,7 @@ export default {
 }
 
 .online-user-icon {
-  color: #0f766e;
-  background: #e8f7f4;
+  color: var(--dt-primary);
+  background: var(--dt-primary-soft);
 }
 </style>

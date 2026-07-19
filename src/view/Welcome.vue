@@ -150,14 +150,14 @@ export default {
           label: '用户总数',
           value: 0,
           icon: 'User',
-          color: 'linear-gradient(135deg, #235bff 0%, #6b8cff 100%)',
+          color: 'linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%)',
           path: '/user/organization'
         },
         {
           label: '角色数量',
           value: 0,
           icon: 'Avatar',
-          color: 'linear-gradient(135deg, #00a889 0%, #35d2b4 100%)',
+          color: 'linear-gradient(135deg, var(--dt-primary-light) 0%, var(--dt-primary-light) 100%)',
           path: '/role/rolesmenu'
         },
         {
@@ -177,10 +177,10 @@ export default {
       ],
       // 快捷导航
       quickNavList: [
-        { name: '用户管理', icon: 'User', color: '#235bff', path: '/user/organization' },
-        { name: '角色管理', icon: 'Avatar', color: '#00a889', path: '/role/rolesmenu' },
+        { name: '用户管理', icon: 'User', color: 'var(--dt-primary)', path: '/user/organization' },
+        { name: '角色管理', icon: 'Avatar', color: 'var(--dt-primary-light)', path: '/role/rolesmenu' },
         { name: '菜单管理', icon: 'Operation', color: '#7c3aed', path: '/common/menus' },
-        { name: '微应用配置', icon: 'Setting', color: '#0f766e', path: '/MicroApp/MicroApiConfig' },
+        { name: '微应用配置', icon: 'Setting', color: 'var(--dt-primary)', path: '/MicroApp/MicroApiConfig' },
         { name: '操作日志', icon: 'Document', color: '#f59e0b', path: '/log/logaction' },
         { name: '附件管理', icon: 'DocumentCopy', color: '#475467', path: '/attachment/attachmentlist' }
       ]
@@ -821,7 +821,7 @@ export default {
   color: #ffffff;
   background:
     linear-gradient(120deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 36, 64, 0.94) 52%, rgba(0, 95, 87, 0.88) 100%),
-    linear-gradient(135deg, #101828 0%, #235bff 100%);
+    linear-gradient(135deg, #101828 0%, var(--dt-primary) 100%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
   box-shadow: 0 18px 42px rgba(16, 24, 40, 0.18);
@@ -850,7 +850,7 @@ export default {
   border-radius: 50%;
   box-shadow:
     inset 0 0 0 22px rgba(125, 211, 199, 0.07),
-    inset 0 0 0 52px rgba(35, 91, 255, 0.08);
+    inset 0 0 0 52px color-mix(in srgb, var(--dt-primary) 8%, transparent);
 }
 
 .greeting-banner:hover {
@@ -866,7 +866,7 @@ export default {
 .greeting-banner.late-night {
   background:
     linear-gradient(120deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 36, 64, 0.94) 52%, rgba(0, 95, 87, 0.88) 100%),
-    linear-gradient(135deg, #101828 0%, #235bff 100%);
+    linear-gradient(135deg, #101828 0%, var(--dt-primary) 100%);
 }
 
 .greeting-content {
@@ -977,7 +977,7 @@ export default {
 .nav-item:hover {
   background: #ffffff;
   border-color: #9bb8ff;
-  box-shadow: 0 10px 24px rgba(35, 91, 255, 0.12);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--dt-primary) 12%, transparent);
   transform: none;
 }
 
@@ -1005,13 +1005,13 @@ export default {
 }
 
 .card-header .el-icon {
-  color: #235bff;
+  color: var(--dt-primary);
 }
 
 .tip-item,
 .log-item {
   background: #f8fafc;
-  border-left-color: #235bff;
+  border-left-color: var(--dt-primary);
 }
 
 @media (max-width: 1100px) {
@@ -1062,7 +1062,7 @@ export default {
   color: #ffffff;
   background:
     linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(24, 36, 64, 0.95) 56%, rgba(0, 95, 87, 0.9) 100%),
-    linear-gradient(135deg, #101828 0%, #235bff 100%);
+    linear-gradient(135deg, #101828 0%, var(--dt-primary) 100%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   box-shadow: 0 16px 36px rgba(16, 24, 40, 0.18);
@@ -1235,7 +1235,7 @@ export default {
 .stat-card:hover,
 .nav-item:hover {
   border-color: #9bb8ff;
-  box-shadow: 0 12px 26px rgba(35, 91, 255, 0.12);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--dt-primary) 12%, transparent);
   transform: translateY(-1px);
 }
 
@@ -1312,7 +1312,7 @@ export default {
 }
 
 .panel-header > .el-icon {
-  color: #235bff;
+  color: var(--dt-primary);
   font-size: 20px;
 }
 
@@ -1364,7 +1364,7 @@ export default {
   align-items: center;
   height: 24px;
   padding: 0 9px;
-  color: #00a889;
+  color: var(--dt-primary-light);
   font-size: 12px;
   font-weight: 800;
   background: #e8f8f4;
@@ -1398,7 +1398,7 @@ export default {
   justify-content: center;
   width: 26px;
   height: 26px;
-  color: #235bff;
+  color: var(--dt-primary);
   background: #edf4ff;
   border-radius: 8px;
   flex: 0 0 auto;

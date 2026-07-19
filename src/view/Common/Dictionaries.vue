@@ -761,9 +761,9 @@ export default {
 
 .type-item:hover,
 .type-item.active {
-  border-color: #0f9f8f;
-  background: #f0fbf8;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.08);
+  border-color: var(--dt-primary-light);
+  background: var(--dt-primary-soft);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-primary) 8%, transparent);
 }
 
 .type-item.dragging {
@@ -771,8 +771,8 @@ export default {
 }
 
 .type-item.drag-over {
-  border-color: #0f9f8f;
-  box-shadow: inset 0 0 0 1px rgba(15, 159, 143, 0.45);
+  border-color: var(--dt-primary-light);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dt-primary) 45%, transparent);
 }
 
 .type-drag-handle {
@@ -810,7 +810,7 @@ export default {
   grid-column: 3;
   grid-row: 1 / span 2;
   align-self: center;
-  color: #0f766e;
+  color: var(--dt-primary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -829,7 +829,7 @@ export default {
 }
 
 .item-panel :deep(.dictionary-item-row.drag-over > td) {
-  background-color: #e7fbf6 !important;
+  background-color: var(--dt-primary-soft) !important;
 }
 
 .item-panel :deep(.dictionary-item-row[draggable='true']) {

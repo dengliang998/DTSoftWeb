@@ -413,7 +413,7 @@ export default {
   width: 5px;
   height: 18px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #1f8fff 0%, #0f766e 100%);
+  background: linear-gradient(180deg, var(--dt-primary-light) 0%, var(--dt-primary) 100%);
 }
 
 .user-selector-dialog :deep(.el-dialog__headerbtn) {
@@ -470,7 +470,7 @@ export default {
 }
 
 .tree-node-icon {
-  color: #0f766e;
+  color: var(--dt-primary);
 }
 
 .user-toolbar {
@@ -531,13 +531,13 @@ export default {
   min-height: 36px;
   border: 0 !important;
   border-radius: 8px !important;
-  background: #0f766e !important;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.2) !important;
+  background: var(--dt-primary) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-primary) 20%, transparent) !important;
   font-weight: 740 !important;
 }
 
 .user-selector-dialog :deep(.el-button--primary:hover) {
-  background: #115e59 !important;
+  background: var(--dt-primary-hover) !important;
 }
 
 .user-selector-dialog :deep(.el-button.is-disabled),
@@ -564,8 +564,8 @@ export default {
 
 :deep(.el-tree-node__content:hover),
 :deep(.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content) {
-  color: #0f766e;
-  background: #effbf8;
+  color: var(--dt-primary);
+  background: var(--dt-primary-soft);
 }
 
 @media (max-width: 900px) {

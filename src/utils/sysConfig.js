@@ -27,6 +27,30 @@ export const THEME_PRESETS = Object.freeze([
     }
   },
   {
+    key: 'workbenchGreen',
+    name: '工作台绿',
+    colors: {
+      primary: '#0f766e',
+      primaryLight: '#0f9f8f',
+      primaryDark: '#115e59',
+      topBg: '#12332d',
+      topBorder: '#1f5a4f',
+      topText: '#d1fae5',
+      topHoverBg: '#effbf8',
+      topHoverText: '#0f766e',
+      topActiveBg: '#0f766e',
+      topActiveText: '#ffffff',
+      sideBg: '#12332d',
+      sideBorder: '#1f5a4f',
+      sideText: '#d1fae5',
+      sideHoverBg: '#17483f',
+      sideHoverText: '#0f9f8f',
+      sideActiveBg: '#0f766e',
+      sideActiveText: '#ffffff',
+      pageBg: '#f5fbfa'
+    }
+  },
+  {
     key: 'emerald',
     name: '松石绿',
     colors: {
@@ -239,6 +263,13 @@ export const applyThemeConfig = (themeConfig = getCachedThemeConfig()) => {
   rootStyle.setProperty('--dt-primary', normalized.colors.primary)
   rootStyle.setProperty('--dt-primary-light', normalized.colors.primaryLight)
   rootStyle.setProperty('--dt-primary-dark', normalized.colors.primaryDark)
+  rootStyle.setProperty('--dt-primary-hover', normalized.colors.primaryDark)
+  rootStyle.setProperty('--dt-primary-soft', `color-mix(in srgb, ${normalized.colors.primary} 12%, #ffffff)`)
+  rootStyle.setProperty('--dt-primary-subtle', `color-mix(in srgb, ${normalized.colors.primary} 6%, #ffffff)`)
+  rootStyle.setProperty('--dt-primary-border', `color-mix(in srgb, ${normalized.colors.primary} 28%, #ffffff)`)
+  rootStyle.setProperty('--dt-primary-focus', `color-mix(in srgb, ${normalized.colors.primary} 14%, transparent)`)
+  rootStyle.setProperty('--dt-accent', normalized.colors.primaryLight)
+  rootStyle.setProperty('--dt-accent-soft', `color-mix(in srgb, ${normalized.colors.primaryLight} 14%, #ffffff)`)
   rootStyle.setProperty('--dt-top-bg', normalized.colors.topBg)
   rootStyle.setProperty('--dt-top-border', normalized.colors.topBorder)
   rootStyle.setProperty('--dt-top-text', normalized.colors.topText)
@@ -257,8 +288,13 @@ export const applyThemeConfig = (themeConfig = getCachedThemeConfig()) => {
   rootStyle.setProperty('--dt-nav-border', normalized.colors.sideBorder)
   rootStyle.setProperty('--dt-nav-text', normalized.colors.sideText)
   rootStyle.setProperty('--dt-page-bg', normalized.colors.pageBg)
+  rootStyle.setProperty('--dt-bg', normalized.colors.pageBg)
   rootStyle.setProperty('--el-color-primary', normalized.colors.primary)
   rootStyle.setProperty('--el-color-primary-light-3', normalized.colors.primaryLight)
+  rootStyle.setProperty('--el-color-primary-light-5', `color-mix(in srgb, ${normalized.colors.primary} 50%, #ffffff)`)
+  rootStyle.setProperty('--el-color-primary-light-7', `color-mix(in srgb, ${normalized.colors.primary} 30%, #ffffff)`)
+  rootStyle.setProperty('--el-color-primary-light-8', `color-mix(in srgb, ${normalized.colors.primary} 20%, #ffffff)`)
+  rootStyle.setProperty('--el-color-primary-light-9', `color-mix(in srgb, ${normalized.colors.primary} 10%, #ffffff)`)
   rootStyle.setProperty('--el-color-primary-dark-2', normalized.colors.primaryDark)
   rootStyle.setProperty('--el-menu-active-color', normalized.colors.primary)
   rootStyle.setProperty('--el-menu-hover-text-color', normalized.colors.primary)

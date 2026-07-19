@@ -999,7 +999,7 @@ export default {
 /* Modern shell refresh */
 .home-container {
   background:
-    radial-gradient(circle at 12% 8%, rgba(35, 91, 255, 0.11), transparent 26%),
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--dt-primary) 11%, transparent), transparent 26%),
     linear-gradient(180deg, #f8fbff 0%, #eef3f9 100%);
 }
 
@@ -1050,7 +1050,7 @@ export default {
 
 .collapse-btn:hover {
   color: #ffffff;
-  background: rgba(35, 91, 255, 0.78);
+  background: color-mix(in srgb, var(--dt-primary) 78%, transparent);
   border-color: rgba(141, 173, 255, 0.7);
   transform: none;
 }
@@ -1090,9 +1090,9 @@ export default {
 
 .top-menu :deep(.el-menu-item.is-active) {
   color: #ffffff !important;
-  background: linear-gradient(135deg, #235bff 0%, #00a889 100%) !important;
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%) !important;
   border: 0 !important;
-  box-shadow: 0 10px 22px rgba(35, 91, 255, 0.22);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--dt-primary) 22%, transparent);
   transform: none;
 }
 
@@ -1173,9 +1173,13 @@ export default {
 .sidebar-container .el-sub-menu__title.is-active,
 .sidebar-container .el-sub-menu .el-menu-item.is-active {
   color: #ffffff !important;
-  background: linear-gradient(135deg, rgba(35, 91, 255, 0.96) 0%, rgba(0, 168, 137, 0.92) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--dt-primary) 96%, transparent) 0%,
+    color-mix(in srgb, var(--dt-primary-light) 92%, transparent) 100%
+  ) !important;
   border-left: 0;
-  box-shadow: 0 10px 20px rgba(35, 91, 255, 0.22);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--dt-primary) 22%, transparent);
   transform: none;
 }
 
@@ -1216,7 +1220,7 @@ export default {
 }
 
 .sidebar-container.collapsed .el-menu-item.is-active {
-  background: linear-gradient(135deg, #235bff 0%, #00a889 100%) !important;
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%) !important;
 }
 
 .sidebar-container.collapsed .el-sub-menu .el-menu {
@@ -1255,7 +1259,7 @@ export default {
 }
 
 .tabs-container :deep(.el-tabs__item:hover) {
-  color: #235bff;
+  color: var(--dt-primary);
   background: #edf4ff;
 }
 
@@ -1275,8 +1279,8 @@ export default {
 .content-wrapper {
   padding: 18px;
   background:
-    linear-gradient(90deg, rgba(35, 91, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(35, 91, 255, 0.035) 1px, transparent 1px), #f4f7fb;
+    linear-gradient(90deg, color-mix(in srgb, var(--dt-primary) 3.5%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--dt-primary) 3.5%, transparent) 1px, transparent 1px), #f4f7fb;
   background-size: 28px 28px;
 }
 
@@ -1475,8 +1479,8 @@ export default {
 .sidebar-container .el-sub-menu__title.is-active,
 .sidebar-container .el-sub-menu .el-menu-item.is-active {
   color: #ffffff !important;
-  background: linear-gradient(135deg, #235bff 0%, #00a889 100%) !important;
-  box-shadow: 0 8px 18px rgba(35, 91, 255, 0.2);
+  background: linear-gradient(135deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-primary) 20%, transparent);
 }
 
 .sidebar-container .el-sub-menu .el-menu {
