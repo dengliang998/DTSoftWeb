@@ -114,6 +114,7 @@ export default {
       menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
       path: '',
       microAppPath: '',
+      customPageRoute: '',
       component: '',
       perms: '',
       icon: '',
@@ -136,6 +137,11 @@ export default {
       if (!path || typeof path !== 'string') return ''
       const match = path.match(/^\/?app\/([^/?#]+)/i)
       return match ? decodeURIComponent(match[1]) : ''
+    }
+
+    const extractCustomPageRoute = (path) => {
+      if (!path || typeof path !== 'string') return ''
+      return path.replace(/^\/+/, '').startsWith('custom/') ? path.replace(/^\/+/, '') : ''
     }
 
     const handleMicroAppPathChange = (value) => {
@@ -288,6 +294,7 @@ export default {
         menuType: '0', // 修改为字符串类型，确保默认选中内部菜单
         path: '',
         microAppPath: '',
+        customPageRoute: '',
         component: '',
         perms: '',
         icon: '',
@@ -307,6 +314,7 @@ export default {
         menuType: '0',
         path: '',
         microAppPath: '',
+        customPageRoute: '',
         component: '',
         perms: '',
         icon: '',
@@ -334,6 +342,7 @@ export default {
         menuType: menuTypeValue,
         path: menu.path,
         microAppPath: extractMicroAppPath(menu.path),
+        customPageRoute: extractCustomPageRoute(menu.path),
         component: menu.component || '',
         perms: menu.perms || '',
         icon: menu.icon,

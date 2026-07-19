@@ -340,7 +340,7 @@ export default {
     handleTopMenuSelect(index) {
       this.activeTopMenu = index
       // 获取选中菜单的子菜单
-      this.getChildrenMenuList(parseInt(index))
+      this.getChildrenMenuList(index)
     },
 
     // 点击按钮切换菜单折叠和展开

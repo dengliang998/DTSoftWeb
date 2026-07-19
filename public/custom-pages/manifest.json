@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "name": "demo",
+      "path": "index",
+      "title": "自定义页面示例",
+      "icon": "Document",
+      "sfc": "demo/index.vue",
+      "version": "1.0.0"
+    }
+  ]
+}

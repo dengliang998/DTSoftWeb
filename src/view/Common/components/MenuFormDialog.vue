@@ -47,6 +47,23 @@
       <el-form-item v-if="form.menuType !== 'F'" label="路由地址" prop="path">
         <el-input v-model="form.path" placeholder="请输入路由地址"></el-input>
       </el-form-item>
+      <el-form-item v-if="form.menuType !== '1'" label="自定义页面" prop="customPageRoute">
+        <el-select
+          v-model="form.customPageRoute"
+          clearable
+          filterable
+          placeholder="可选：选择 public/custom-pages 中的页面"
+          style="width: 100%"
+          @change="handleCustomPageChange"
+        >
+          <el-option
+            v-for="page in customPageOptions"
+            :key="page.routePath"
+            :label="`${page.title} (${page.routePath})`"
+            :value="page.routePath"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item v-if="form.menuType !== '1'" label="微应用路径" prop="microAppPath">
         <el-select
           v-model="form.microAppPath"
@@ -92,6 +109,7 @@
 <script>
 /* eslint-disable vue/no-mutating-props */
 import { getMicroAppConfigs } from '@/api/microApp'
+import { getCustomPageEntries } from '@/custom-pages/registry'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 export default {
@@ -108,6 +126,7 @@ export default {
   data() {
     return {
       microAppOptions: [],
+      customPageOptions: [],
       iconNames: Object.keys(ElementPlusIconsVue).filter((k) => k && k !== 'default'),
       ElementPlusIconsVue
     }
@@ -124,7 +143,10 @@ export default {
   },
   watch: {
     modelValue(val) {
-      if (val) this.loadMicroApps()
+      if (val) {
+        this.loadMicroApps()
+        this.loadCustomPages()
+      }
     }
   },
   methods: {
@@ -146,9 +168,26 @@ export default {
         this.microAppOptions = []
       }
     },
+    async loadCustomPages() {
+      try {
+        this.customPageOptions = await getCustomPageEntries({ force: true })
+      } catch {
+        this.customPageOptions = []
+      }
+    },
+    handleCustomPageChange(value) {
+      if (!value) return
+      this.form.path = value
+      this.form.microAppPath = ''
+
+      const page = this.customPageOptions.find((item) => item.routePath === value)
+      if (!this.form.menuName && page?.title) this.form.menuName = page.title
+      if (!this.form.icon && page?.icon) this.form.icon = page.icon
+    },
     handleMicroAppPathChange(value) {
       if (!value) return
       this.form.path = `app/${value}`
+      this.form.customPageRoute = ''
     },
     handleClose() {
       if (this.$refs.formRef) this.$refs.formRef.resetFields()

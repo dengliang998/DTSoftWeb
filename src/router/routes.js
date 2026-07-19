@@ -15,6 +15,7 @@ const EsbDataSources = () => import('../view/Common/EsbDataSources.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
 const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
 const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
+const CustomPage = () => import('../view/CustomPage/CustomPage.vue')
 const ApiKeyManagement = () => import('../view/ApiKey/ApiKeyManagement.vue')
 
 const withCache = (cacheName, extraMeta = {}) => ({
@@ -103,6 +104,12 @@ export const routes = [
         name: 'MicroAppPage',
         component: MicroAppPage,
         meta: withCache('MicroAppPage')
+      },
+      {
+        path: '/custom/:pageName/:pagePath(.*)*',
+        name: 'CustomPage',
+        component: CustomPage,
+        meta: withCache('CustomPage')
       }
     ]
   }
