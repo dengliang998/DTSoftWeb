@@ -2,7 +2,6 @@
   <div class="login_container" :style="loginContainerStyle">
     <div class="login_shell">
       <section class="login_brand" aria-label="系统信息">
-        <div class="brand_mark">DT</div>
         <div class="brand_copy">
           <div class="login_brand-title">{{ systemName }}</div>
           <div class="login_brand-subtitle">安全、清晰、高效的管理工作台</div>
@@ -320,22 +319,6 @@ export default defineComponent({
   max-width: 560px;
 }
 
-.brand_mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  margin-bottom: 28px;
-  color: var(--dt-primary-dark);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0;
-  background: linear-gradient(135deg, #ffffff 0%, #dceeff 100%);
-  border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(11, 27, 51, 0.2);
-}
-
 .brand_copy {
   width: 100%;
 }
@@ -350,11 +333,12 @@ export default defineComponent({
 }
 
 .login_brand-subtitle {
-  margin-top: 22px;
-  color: rgba(226, 232, 240, 0.86);
+  margin-top: 18px;
+  color: rgba(255, 255, 255, 0.78);
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 650;
   letter-spacing: 0;
+  text-shadow: 0 1px 12px rgba(15, 23, 42, 0.22);
 }
 
 .login_box {
@@ -542,8 +526,8 @@ export default defineComponent({
     text-align: center;
   }
 
-  .brand_mark {
-    margin-bottom: 18px;
+  .brand_copy {
+    padding: 0;
   }
 
   .login_brand-title {
