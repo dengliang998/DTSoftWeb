@@ -252,7 +252,7 @@ export default defineComponent({
     ]
 
     const rules = {
-      systemName: [{ required: true, message: '请输入系统名称', trigger: 'blur' }]
+      systemName: [{ required: true, whitespace: true, message: '请输入系统名称', trigger: ['blur', 'change'] }]
     }
 
     const loginPreviewUrl = computed(() => {
@@ -391,12 +391,17 @@ export default defineComponent({
 
     const save = async () => {
       if (!formRef.value) return
-      await formRef.value.validate()
+      const valid = await formRef.value.validate().catch(() => false)
+      if (!valid) {
+        proxy.$message.warning('请先填写系统名称')
+        return
+      }
 
       saving.value = true
       try {
+        const systemName = form.systemName.trim()
         const { data: res } = await setSystemInfo({
-          SystemName: form.systemName,
+          SystemName: systemName,
           LoginImg: selectedLoginImgFile.value,
           BrowserLogo: selectedBrowserLogoFile.value,
           ThemeConfig: serializeThemeConfig(form.theme)

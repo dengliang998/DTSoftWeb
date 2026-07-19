@@ -36,16 +36,28 @@
       <div class="header-right">
         <!-- 用户信息区域 -->
         <div class="header-user-info">
-          <span class="user-name">{{ UserDisplayName }}</span>
-          <el-dropdown trigger="click" @command="handleCommand">
-            <el-avatar :size="40" class="user-avatar" :src="circleUrl">
-              <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-            </el-avatar>
+          <el-dropdown trigger="click" popper-class="user-menu-popper" @command="handleCommand">
+            <button type="button" class="user-trigger">
+              <el-avatar :size="30" class="user-avatar" :src="circleUrl">
+                <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+              </el-avatar>
+              <span class="user-name">{{ UserDisplayName }}</span>
+              <el-icon class="user-arrow"><ArrowDown /></el-icon>
+            </button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="ModifyPwdDialog">修改密码</el-dropdown-item>
-                <el-dropdown-item command="ModifyAccountInfoDialog">账号信息</el-dropdown-item>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item command="ModifyPwdDialog">
+                  <el-icon><Lock /></el-icon>
+                  <span>修改密码</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="ModifyAccountInfoDialog">
+                  <el-icon><User /></el-icon>
+                  <span>账号信息</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="logout" divided>
+                  <el-icon><SwitchButton /></el-icon>
+                  <span>退出登录</span>
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -160,6 +172,7 @@
 <script>
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
 import ModifyPwdDialog from '@/components/ModifyPwdDialog.vue'
+import { ArrowDown, Lock, SwitchButton, User } from '@element-plus/icons-vue'
 import { getMenu } from '@/api/menu'
 import { getUserAccount } from '@/core/session'
 import {
@@ -186,7 +199,11 @@ import defaultHomeLogo from '@/assets/imgs/homelogo.png'
 export default {
   name: 'Home',
   components: {
+    ArrowDown,
+    Lock,
     UserInfoComponents,
+    SwitchButton,
+    User,
     ModifyPwdDialog
   },
   data() {
@@ -1735,5 +1752,124 @@ export default {
 .sidebar-container :deep(.el-sub-menu__title .el-icon),
 .sidebar-container :deep(.el-sub-menu__icon-arrow) {
   color: inherit !important;
+}
+
+.home-container .header-user-info {
+  height: 40px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.user-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  max-width: 190px;
+  padding: 3px 9px 3px 4px;
+  color: var(--dt-top-text);
+  background: color-mix(in srgb, var(--dt-top-text) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dt-top-text) 16%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.user-trigger:hover,
+.user-trigger:focus-visible {
+  color: var(--dt-top-hover-text);
+  background: color-mix(in srgb, var(--dt-top-hover-bg) 86%, transparent);
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 32%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dt-top-hover-text) 14%, transparent);
+}
+
+.home-container .user-name {
+  max-width: 110px;
+  overflow: hidden;
+  color: inherit !important;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-container .user-avatar {
+  width: 30px !important;
+  height: 30px !important;
+  border: 2px solid color-mix(in srgb, var(--dt-top-text) 36%, transparent);
+  background: color-mix(in srgb, var(--dt-top-text) 14%, transparent);
+  transition: border-color 0.18s ease;
+}
+
+.user-trigger:hover .user-avatar,
+.user-trigger:focus-visible .user-avatar {
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 58%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.user-arrow {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+  opacity: 0.76;
+}
+
+:global(.user-menu-popper.el-popper) {
+  border: 1px solid #d9e2ee !important;
+  border-radius: 10px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+}
+
+:global(.user-menu-popper .el-popper__arrow::before) {
+  border-color: #d9e2ee !important;
+}
+
+:global(.user-menu-popper .el-dropdown-menu) {
+  min-width: 138px;
+  padding: 6px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+:global(.user-menu-popper .el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px !important;
+  color: #4b5565;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 36px;
+}
+
+:global(.user-menu-popper .el-dropdown-menu__item .el-icon) {
+  margin: 0;
+  color: #7a8797;
+  font-size: 16px;
+}
+
+:global(.user-menu-popper .el-dropdown-menu__item:not(.is-disabled):hover) {
+  color: var(--dt-primary-dark) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+:global(.user-menu-popper .el-dropdown-menu__item:not(.is-disabled):hover .el-icon) {
+  color: var(--dt-primary-dark);
+}
+
+:global(.user-menu-popper .el-dropdown-menu__item--divided) {
+  margin-top: 6px;
+  border-top-color: #edf1f6;
 }
 </style>
