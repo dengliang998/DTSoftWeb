@@ -31,6 +31,12 @@
             <el-form-item label="系统名称" prop="systemName">
               <el-input v-model="form.systemName" placeholder="请输入系统名称" maxlength="50" show-word-limit />
             </el-form-item>
+            <el-form-item label="登录验证码">
+              <div class="switch-setting">
+                <el-switch v-model="form.loginCaptchaEnabled" active-text="启用" inactive-text="停用" inline-prompt />
+                <span class="hint">停用后登录页不显示验证码，登录接口也不校验验证码</span>
+              </div>
+            </el-form-item>
           </section>
 
           <section class="settings-section">
@@ -188,6 +194,7 @@ import {
   applyThemeConfig,
   fetchAndCacheSystemInfo,
   getCachedBrowserLogoDataUrl,
+  getCachedLoginCaptchaEnabled,
   getCachedLoginImgDataUrl,
   getCachedSystemName,
   getCachedThemeConfig,
@@ -205,6 +212,7 @@ export default defineComponent({
 
     const form = reactive({
       systemName: '',
+      loginCaptchaEnabled: getCachedLoginCaptchaEnabled(),
       loginImg: '',
       browserLogo: '',
       theme: getCachedThemeConfig()
@@ -370,6 +378,7 @@ export default defineComponent({
         const res = await fetchAndCacheSystemInfo()
         if (res?.success) {
           form.systemName = getCachedSystemName()
+          form.loginCaptchaEnabled = res?.data?.loginCaptchaEnabled !== false
           form.loginImg = res?.data?.loginImg || ''
           form.browserLogo = res?.data?.browserLogo || ''
           setTheme(
@@ -402,6 +411,7 @@ export default defineComponent({
         const systemName = form.systemName.trim()
         const { data: res } = await setSystemInfo({
           SystemName: systemName,
+          LoginCaptchaEnabled: form.loginCaptchaEnabled,
           LoginImg: selectedLoginImgFile.value,
           BrowserLogo: selectedBrowserLogoFile.value,
           ThemeConfig: serializeThemeConfig(form.theme)
@@ -502,6 +512,13 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.switch-setting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 

@@ -167,6 +167,7 @@ const normalizeBase64Image = (value) => {
 export const getCachedSystemName = () => localStorage.getItem(STORAGE_KEYS.systemName) || ''
 export const getCachedLoginImg = () => localStorage.getItem(STORAGE_KEYS.loginImg) || ''
 export const getCachedLoginImgDataUrl = () => normalizeBase64Image(getCachedLoginImg())
+export const getCachedLoginCaptchaEnabled = () => localStorage.getItem(STORAGE_KEYS.loginCaptchaEnabled) !== 'false'
 export const getCachedBrowserLogo = () => localStorage.getItem(STORAGE_KEYS.browserLogo) || ''
 export const getCachedBrowserLogoDataUrl = () => normalizeBase64Image(getCachedBrowserLogo())
 
@@ -305,9 +306,12 @@ export const applyCachedSystemAppearance = () => {
   applyThemeConfig()
 }
 
-export const cacheSystemInfo = ({ systemName, loginImg, browserLogo, themeConfig }) => {
+export const cacheSystemInfo = ({ systemName, loginImg, loginCaptchaEnabled, browserLogo, themeConfig }) => {
   if (typeof systemName === 'string') localStorage.setItem(STORAGE_KEYS.systemName, systemName)
   if (typeof loginImg === 'string') localStorage.setItem(STORAGE_KEYS.loginImg, loginImg)
+  if (typeof loginCaptchaEnabled === 'boolean') {
+    localStorage.setItem(STORAGE_KEYS.loginCaptchaEnabled, String(loginCaptchaEnabled))
+  }
   if (typeof browserLogo === 'string') localStorage.setItem(STORAGE_KEYS.browserLogo, browserLogo)
   if (themeConfig !== undefined && themeConfig !== null) cacheThemeConfig(themeConfig)
   applyCachedSystemAppearance()
@@ -319,6 +323,7 @@ export const fetchAndCacheSystemInfo = async () => {
     const systemInfo = {
       systemName: res.data.systemName || '',
       loginImg: res.data.loginImg || '',
+      loginCaptchaEnabled: res.data.loginCaptchaEnabled !== false,
       browserLogo: res.data.browserLogo || ''
     }
     if (Object.prototype.hasOwnProperty.call(res.data, 'themeConfig')) {

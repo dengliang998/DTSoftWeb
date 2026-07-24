@@ -38,7 +38,7 @@
             ></el-input>
           </el-form-item>
           <!-- 验证码 -->
-          <el-form-item prop="captchaCode">
+          <el-form-item v-if="captchaEnabled" prop="captchaCode">
             <div class="captcha-row">
               <el-input
                 v-model="loginForm.captchaCode"
@@ -68,7 +68,7 @@
           </el-form-item>
         </el-form>
 
-        <div class="security_note">加密传输 · 验证码保护</div>
+        <div class="security_note">{{ securityNote }}</div>
       </section>
     </div>
   </div>
@@ -82,7 +82,12 @@ import { getCaptcha, getLoginToken, loadLoginEncryptionKey, login as loginApi } 
 import { getUserAvatarUrl } from '@/api/user'
 import { getData, getMessage, isSuccessPayload } from '@/core/response'
 import { setAuthSession } from '@/core/session'
-import { fetchAndCacheSystemInfo, getCachedLoginImgDataUrl, getCachedSystemName } from '@/utils/sysConfig'
+import {
+  fetchAndCacheSystemInfo,
+  getCachedLoginCaptchaEnabled,
+  getCachedLoginImgDataUrl,
+  getCachedSystemName
+} from '@/utils/sysConfig'
 
 export default defineComponent({
   name: 'Login',
@@ -92,6 +97,7 @@ export default defineComponent({
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
     const systemName = ref(getCachedSystemName() || 'DT Program')
+    const captchaEnabled = ref(getCachedLoginCaptchaEnabled())
     const captchaImage = ref('')
     const captchaLoading = ref(false)
     const loggingIn = ref(false)
@@ -112,11 +118,13 @@ export default defineComponent({
     let avatarDebounceTimer = null
 
     // 这是表单的验证规则
-    const loginFormRules = {
+    const loginFormRules = computed(() => ({
       username: [{ required: true, message: '请输入登录名称', trigger: 'blur' }],
       password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }],
-      captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
-    }
+      captchaCode: captchaEnabled.value ? [{ required: true, message: '请输入验证码', trigger: 'blur' }] : []
+    }))
+
+    const securityNote = computed(() => (captchaEnabled.value ? '加密传输 · 验证码保护' : '加密传输'))
 
     // 当头像加载失败时，使用默认头像
     const onAvatarError = () => {
@@ -146,6 +154,13 @@ export default defineComponent({
     }
 
     const loadCaptcha = () => {
+      if (!captchaEnabled.value) {
+        loginForm.captchaId = ''
+        loginForm.captchaCode = ''
+        captchaImage.value = ''
+        return Promise.resolve()
+      }
+
       if (captchaLoading.value) return Promise.resolve()
 
       captchaLoading.value = true
@@ -186,7 +201,7 @@ export default defineComponent({
           return
         }
 
-        if (!loginForm.captchaId) {
+        if (captchaEnabled.value && !loginForm.captchaId) {
           ElMessage.error('请先获取验证码')
           loadCaptcha()
           return
@@ -197,8 +212,8 @@ export default defineComponent({
         loginApi({
           username: loginForm.username,
           password: loginForm.password,
-          captchaId: loginForm.captchaId,
-          captchaCode: loginForm.captchaCode
+          captchaId: captchaEnabled.value ? loginForm.captchaId : '',
+          captchaCode: captchaEnabled.value ? loginForm.captchaCode : ''
         })
           .then(function (response) {
             if (isSuccessPayload(response)) {
@@ -206,7 +221,7 @@ export default defineComponent({
               const token = getLoginToken(response)
               if (!token) {
                 ElMessage.error('登录失败：服务端未返回有效令牌')
-                loadCaptcha()
+                if (captchaEnabled.value) loadCaptcha()
                 return
               }
               setAuthSession({ token, account: loginForm.username })
@@ -214,12 +229,12 @@ export default defineComponent({
               router.push(redirect || '/home')
             } else {
               ElMessage.error('登录失败：' + getMessage(response, '未知错误'))
-              loadCaptcha()
+              if (captchaEnabled.value) loadCaptcha()
             }
           })
           .catch(function (error) {
             ElMessage.error(getMessage(error.response || error, '登录失败，请稍后重试！'))
-            loadCaptcha()
+            if (captchaEnabled.value) loadCaptcha()
           })
           .finally(function () {
             loggingIn.value = false
@@ -231,18 +246,21 @@ export default defineComponent({
     onMounted(() => {
       loadUserAvatar()
       loadLoginEncryptionKey().catch(() => {})
-      loadCaptcha()
-      // 加载系统配置（系统名称、登录背景图）
+      // 加载系统配置（系统名称、登录背景图、登录验证码开关）
       fetchAndCacheSystemInfo()
         .then(() => {
           loginBgUrl.value = getCachedLoginImgDataUrl()
+          captchaEnabled.value = getCachedLoginCaptchaEnabled()
           const title = getCachedSystemName()
           if (title) {
             systemName.value = title
             document.title = title
           }
+          loadCaptcha()
         })
-        .catch(() => {})
+        .catch(() => {
+          loadCaptcha()
+        })
     })
 
     // 监听用户名变化，动态加载头像
@@ -269,9 +287,11 @@ export default defineComponent({
       loginForm,
       loginFormRules,
       avatarUrl,
+      captchaEnabled,
       captchaImage,
       captchaLoading,
       loggingIn,
+      securityNote,
       systemName,
       onAvatarError,
       loadCaptcha,

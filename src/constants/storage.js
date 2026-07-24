@@ -5,6 +5,7 @@ export const STORAGE_KEYS = Object.freeze({
   activePath: 'activePath',
   systemName: 'sysconfig.systemName',
   loginImg: 'sysconfig.loginImg',
+  loginCaptchaEnabled: 'sysconfig.loginCaptchaEnabled',
   browserLogo: 'sysconfig.browserLogo',
   themeConfig: 'sysconfig.themeConfig'
 })
