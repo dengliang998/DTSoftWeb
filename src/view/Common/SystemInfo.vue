@@ -255,9 +255,9 @@ export default {
   gap: 12px;
   min-height: 82px;
   padding: 14px;
-  border: 1px solid #e4e7ec;
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--dt-surface);
 }
 
 .info-work-panel {
@@ -308,7 +308,7 @@ export default {
 
 .summary-content strong {
   overflow: hidden;
-  color: #182230;
+  color: var(--dt-text);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.2;
@@ -317,7 +317,7 @@ export default {
 }
 
 .summary-content span {
-  color: #667085;
+  color: var(--dt-text-muted);
   font-size: 13px;
 }
 
@@ -329,9 +329,9 @@ export default {
 
 .info-panel {
   min-width: 0;
-  border: 1px solid #e4e7ec;
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--dt-surface);
 }
 
 .panel-header {
@@ -341,12 +341,12 @@ export default {
   gap: 12px;
   min-height: 48px;
   padding: 0 16px;
-  border-bottom: 1px solid #eef2f6;
-  color: #344054;
+  border-bottom: 1px solid var(--dt-border);
+  color: var(--dt-text-muted);
 }
 
 .panel-title {
-  color: #182230;
+  color: var(--dt-text);
   font-size: 15px;
   font-weight: 700;
 }
@@ -363,18 +363,18 @@ export default {
   min-height: 34px;
   margin: 0;
   padding: 8px 0;
-  border-bottom: 1px solid #f2f4f7;
+  border-bottom: 1px solid var(--dt-border);
   line-height: 18px;
 }
 
 .info-list dt {
-  color: #667085;
+  color: var(--dt-text-muted);
   font-size: 13px;
 }
 
 .info-list dd {
   overflow: hidden;
-  color: #182230;
+  color: var(--dt-text);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
