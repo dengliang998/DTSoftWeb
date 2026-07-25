@@ -34,6 +34,21 @@
       </div>
 
       <div class="header-right">
+        <button
+          type="button"
+          class="theme-toggle"
+          :class="{ 'is-animating': themeAnimating }"
+          :aria-label="currentAppearance === 'dark' ? '切换到日间模式' : '切换到夜间模式'"
+          :title="currentAppearance === 'dark' ? '切换到日间模式' : '切换到夜间模式'"
+          @click="toggleAppearance"
+        >
+          <transition name="theme-icon" mode="out-in">
+            <el-icon :key="currentAppearance" class="theme-toggle-icon">
+              <Sunny v-if="currentAppearance === 'dark'" />
+              <Moon v-else />
+            </el-icon>
+          </transition>
+        </button>
         <!-- 用户信息区域 -->
         <div class="header-user-info">
           <el-dropdown trigger="click" popper-class="user-menu-popper" @command="handleCommand">
@@ -172,7 +187,7 @@
 <script>
 import UserInfoComponents from '../components/user/UserInfoComponents.vue'
 import ModifyPwdDialog from '@/components/ModifyPwdDialog.vue'
-import { ArrowDown, Lock, SwitchButton, User } from '@element-plus/icons-vue'
+import { ArrowDown, Lock, Moon, Sunny, SwitchButton, User } from '@element-plus/icons-vue'
 import { getMenu } from '@/api/menu'
 import { getUserAccount } from '@/core/session'
 import {
@@ -194,13 +209,21 @@ import {
   upsertTab
 } from '@/modules/home/tabs'
 import { createModifyPwdForm, loadCurrentUserProfile, logoutAndClearSession } from '@/modules/home/userPanel'
-import { fetchAndCacheSystemInfo, getCachedBrowserLogoDataUrl, getCachedSystemName } from '@/utils/sysConfig'
+import {
+  fetchAndCacheSystemInfo,
+  getCachedAppearance,
+  getCachedBrowserLogoDataUrl,
+  getCachedSystemName,
+  toggleUserAppearance
+} from '@/utils/sysConfig'
 import defaultHomeLogo from '@/assets/imgs/homelogo.png'
 export default {
   name: 'Home',
   components: {
     ArrowDown,
     Lock,
+    Moon,
+    Sunny,
     UserInfoComponents,
     SwitchButton,
     User,
@@ -214,6 +237,9 @@ export default {
       LoginAcc: getUserAccount(),
       UserDisplayName: '',
       circleUrl: '',
+      currentAppearance: getCachedAppearance(),
+      themeAnimating: false,
+      themeAnimationTimer: null,
       //完整的菜单数据存放的位置
       menuList: [],
       //一级菜单数据存放的位置
@@ -268,6 +294,12 @@ export default {
     // 如果刷新时当前路由不是欢迎页，也加入标签并加入缓存
     if (this.$route && this.$route.path && this.$route.path !== '/welcome' && this.$route.path !== '/login') {
       this.addTab(this.$route.path)
+    }
+  },
+  beforeUnmount() {
+    if (this.themeAnimationTimer) {
+      window.clearTimeout(this.themeAnimationTimer)
+      this.themeAnimationTimer = null
     }
   },
   methods: {
@@ -362,6 +394,17 @@ export default {
       this.activeTopMenu = index
       // 获取选中菜单的子菜单
       this.getChildrenMenuList(index)
+    },
+    toggleAppearance(event) {
+      this.currentAppearance = toggleUserAppearance({ animate: true, sourceEvent: event })
+      this.themeAnimating = true
+      if (this.themeAnimationTimer) {
+        window.clearTimeout(this.themeAnimationTimer)
+      }
+      this.themeAnimationTimer = window.setTimeout(() => {
+        this.themeAnimating = false
+        this.themeAnimationTimer = null
+      }, 860)
     },
 
     // 点击按钮切换菜单折叠和展开
@@ -515,6 +558,70 @@ export default {
   align-items: center;
   gap: 16px;
   margin-left: auto;
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--dt-top-text);
+  background: color-mix(in srgb, var(--dt-top-text) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dt-top-text) 14%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 0.22s ease,
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--dt-top-hover-text);
+  background: var(--dt-top-hover-bg);
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 26%, transparent);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--dt-top-hover-text) 16%, transparent);
+  outline: none;
+}
+
+.theme-toggle-icon {
+  font-size: 18px;
+  line-height: 1;
+  transition:
+    transform 0.32s ease,
+    opacity 0.22s ease;
+}
+
+.theme-toggle-icon svg {
+  width: 1em;
+  height: 1em;
+  display: block;
+}
+
+.theme-toggle.is-animating .theme-toggle-icon {
+  transform: rotate(180deg) scale(0.9);
+}
+
+.theme-icon-enter-active,
+.theme-icon-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.theme-icon-enter-from {
+  opacity: 0;
+  transform: translateY(5px) rotate(-35deg) scale(0.78);
+}
+
+.theme-icon-leave-to {
+  opacity: 0;
+  transform: translateY(-5px) rotate(35deg) scale(0.78);
 }
 
 /* 折叠按钮 */
@@ -1871,5 +1978,108 @@ export default {
 :global(.user-menu-popper .el-dropdown-menu__item--divided) {
   margin-top: 6px;
   border-top-color: #edf1f6;
+}
+
+:global(html[data-theme='dark']) .home-container {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--dt-primary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--dt-primary) 5%, transparent) 1px, transparent 1px), var(--dt-bg);
+  background-size: 32px 32px;
+}
+
+:global(html[data-theme='dark']) .main-container {
+  border-color: var(--dt-border);
+  background: color-mix(in srgb, var(--dt-surface) 92%, transparent);
+  box-shadow: var(--dt-shadow);
+}
+
+:global(html[data-theme='dark']) .tabs-container {
+  border-bottom-color: var(--dt-border);
+  background: var(--dt-surface-soft);
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__nav-scroll::-webkit-scrollbar-thumb) {
+  background: var(--dt-border-strong);
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__item) {
+  color: var(--dt-text-muted);
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface);
+  box-shadow: none;
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__item:hover) {
+  color: var(--dt-primary-light);
+  background: var(--dt-primary-subtle);
+  border-color: var(--dt-primary-border) !important;
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__item.is-active) {
+  color: var(--dt-primary-light);
+  background: color-mix(in srgb, var(--dt-primary) 18%, var(--dt-surface));
+  border-color: var(--dt-primary-border) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-primary) 18%, transparent);
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__item.is-active .el-tabs__close-icon) {
+  color: var(--dt-primary-light);
+  background: color-mix(in srgb, var(--dt-primary) 18%, transparent);
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__close-icon) {
+  color: var(--dt-text-muted);
+}
+
+:global(html[data-theme='dark']) .tabs-container :deep(.el-tabs__close-icon:hover) {
+  color: var(--dt-danger);
+  background: var(--dt-danger-soft);
+}
+
+:global(html[data-theme='dark']) .content-wrapper {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--dt-primary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--dt-primary) 5%, transparent) 1px, transparent 1px), var(--dt-bg);
+  background-size: 28px 28px;
+}
+
+:global(html[data-theme='dark']) .sidebar-container :deep(.el-sub-menu .el-menu) {
+  background: color-mix(in srgb, var(--dt-side-bg) 82%, var(--dt-surface) 18%) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper.el-popper) {
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+  box-shadow: var(--dt-shadow) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-popper__arrow::before) {
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu) {
+  background: var(--dt-surface) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item) {
+  color: var(--dt-text) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item .el-icon) {
+  color: var(--dt-text-muted);
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item:not(.is-disabled):hover) {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item:not(.is-disabled):hover .el-icon) {
+  color: var(--dt-primary-light);
+}
+
+:global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item--divided) {
+  border-top-color: var(--dt-border);
 }
 </style>

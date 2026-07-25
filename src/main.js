@@ -5,7 +5,7 @@ import http from './api/http'
 import { installElementPlus } from './plugins/elementPlus'
 import { installResizeObserverPatch } from './plugins/resizeObserverPatch'
 import { formatDateTime } from './utils/date'
-import { applyCachedSystemAppearance } from './utils/sysConfig'
+import { applyCachedSystemAppearance, warmThemeTransition } from './utils/sysConfig'
 
 /*导入字体图标*/
 import './assets/fonts/iconfont.css'
@@ -34,3 +34,4 @@ app.config.globalProperties.$filters = {
 
 // 挂载应用
 app.mount('#app')
+warmThemeTransition()

@@ -130,6 +130,37 @@ export const DEFAULT_THEME_CONFIG = Object.freeze({
   colors: THEME_PRESETS[0].colors
 })
 
+export const DEFAULT_APPEARANCE = 'light'
+
+const APPEARANCE_PALETTES = Object.freeze({
+  light: {
+    bg: '#f5f7fa',
+    surface: '#ffffff',
+    surfaceSoft: '#f8fafc',
+    border: '#dde5ef',
+    borderStrong: '#c9d5e4',
+    text: '#182230',
+    textMuted: '#667085',
+    danger: '#e5484d',
+    dangerSoft: '#feecec',
+    shadow: '0 14px 36px rgba(18, 38, 63, 0.1)',
+    shadowSoft: '0 8px 22px rgba(18, 38, 63, 0.06)'
+  },
+  dark: {
+    bg: '#0b1220',
+    surface: '#111827',
+    surfaceSoft: '#172033',
+    border: '#263244',
+    borderStrong: '#3b4a60',
+    text: '#e5eef8',
+    textMuted: '#9aa8ba',
+    danger: '#ff6b6f',
+    dangerSoft: '#3a1f28',
+    shadow: '0 18px 44px rgba(0, 0, 0, 0.34)',
+    shadowSoft: '0 10px 28px rgba(0, 0, 0, 0.24)'
+  }
+})
+
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/
 const THEME_COLOR_KEYS = [
   'primary',
@@ -170,6 +201,11 @@ export const getCachedLoginImgDataUrl = () => normalizeBase64Image(getCachedLogi
 export const getCachedLoginCaptchaEnabled = () => localStorage.getItem(STORAGE_KEYS.loginCaptchaEnabled) !== 'false'
 export const getCachedBrowserLogo = () => localStorage.getItem(STORAGE_KEYS.browserLogo) || ''
 export const getCachedBrowserLogoDataUrl = () => normalizeBase64Image(getCachedBrowserLogo())
+export const normalizeAppearance = (appearance) => (appearance === 'dark' ? 'dark' : DEFAULT_APPEARANCE)
+export const getCachedAppearance = () => normalizeAppearance(localStorage.getItem(STORAGE_KEYS.appearance))
+export const cacheAppearance = (appearance) => {
+  localStorage.setItem(STORAGE_KEYS.appearance, normalizeAppearance(appearance))
+}
 
 const cloneColors = (colors = DEFAULT_THEME_CONFIG.colors) => ({ ...DEFAULT_THEME_CONFIG.colors, ...colors })
 
@@ -195,6 +231,25 @@ const normalizeLegacyThemeColors = (colors = {}) => {
 }
 
 export const getThemePreset = (presetKey) => THEME_PRESETS.find((item) => item.key === presetKey) || THEME_PRESETS[0]
+export const getAppearancePalette = (appearance) =>
+  appearance === 'dark' ? APPEARANCE_PALETTES.dark : APPEARANCE_PALETTES.light
+
+const getDarkShellColors = (colors) => ({
+  topBg: '#0f172a',
+  topBorder: '#233047',
+  topText: '#dbe7f3',
+  topHoverBg: `color-mix(in srgb, ${colors.primary} 18%, #111827)`,
+  topHoverText: colors.primaryLight,
+  topActiveBg: colors.primary,
+  topActiveText: '#ffffff',
+  sideBg: '#0b1220',
+  sideBorder: '#233047',
+  sideText: '#cbd5e1',
+  sideHoverBg: `color-mix(in srgb, ${colors.primary} 16%, #111827)`,
+  sideHoverText: colors.primaryLight,
+  sideActiveBg: colors.primary,
+  sideActiveText: '#ffffff'
+})
 
 export const normalizeThemeConfig = (value) => {
   let parsed = value
@@ -222,6 +277,25 @@ export const normalizeThemeConfig = (value) => {
     mode,
     preset: preset.key,
     colors
+  }
+}
+
+export const resolveThemeRuntime = (themeConfig = getCachedThemeConfig(), appearance = getCachedAppearance()) => {
+  const normalized = normalizeThemeConfig(themeConfig)
+  const resolvedAppearance = normalizeAppearance(appearance)
+  const palette = getAppearancePalette(resolvedAppearance)
+  const shellColors = resolvedAppearance === 'dark' ? getDarkShellColors(normalized.colors) : normalized.colors
+  const runtimeColors = {
+    ...normalized.colors,
+    ...shellColors,
+    pageBg: resolvedAppearance === 'dark' ? palette.bg : normalized.colors.pageBg
+  }
+
+  return {
+    normalized,
+    appearance: resolvedAppearance,
+    palette,
+    runtimeColors
   }
 }
 
@@ -257,53 +331,267 @@ export const applyBrowserLogo = (browserLogo = getCachedBrowserLogo()) => {
   setDocumentFavicon(browserLogo)
 }
 
-export const applyThemeConfig = (themeConfig = getCachedThemeConfig()) => {
+let themeTransitionTimer = null
+let themeTransitionWarmed = false
+const THEME_COVER_DURATION = 860
+const THEME_COVER_FADE_DURATION = 260
+
+const getThemeTransitionPoint = (options = {}) => {
+  const sourceEvent = options.sourceEvent
+  if (sourceEvent && Number.isFinite(sourceEvent.clientX) && Number.isFinite(sourceEvent.clientY)) {
+    return {
+      x: sourceEvent.clientX,
+      y: sourceEvent.clientY
+    }
+  }
+
+  return {
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2
+  }
+}
+
+const getThemeTransitionRadius = ({ x, y }) =>
+  Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + 96
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+const finishThemeTransition = () => {
   if (typeof document === 'undefined') return
-  const normalized = normalizeThemeConfig(themeConfig)
+  document.documentElement.classList.remove('theme-switching')
+  if (themeTransitionTimer) {
+    window.clearTimeout(themeTransitionTimer)
+    themeTransitionTimer = null
+  }
+}
+
+const runFallbackThemeCover = (applyTheme, options = {}) => {
+  const point = getThemeTransitionPoint(options)
+  const radius = getThemeTransitionRadius(point)
+  const overlay = document.createElement('div')
+
+  document.querySelectorAll('.theme-cover-overlay').forEach((node) => node.remove())
+  overlay.className = 'theme-cover-overlay'
+  overlay.setAttribute('aria-hidden', 'true')
+  overlay.style.setProperty('--theme-cover-x', `${point.x}px`)
+  overlay.style.setProperty('--theme-cover-y', `${point.y}px`)
+  overlay.style.setProperty('--theme-cover-radius', `${radius}px`)
+  overlay.style.setProperty('--theme-cover-bg', getAppearancePalette(options.appearance).bg)
+
+  document.body.appendChild(overlay)
+
+  window.requestAnimationFrame(() => {
+    overlay.classList.add('is-expanding')
+  })
+
+  themeTransitionTimer = window.setTimeout(() => {
+    applyTheme()
+    themeTransitionWarmed = true
+    window.requestAnimationFrame(() => {
+      overlay.classList.add('is-fading')
+      window.setTimeout(() => {
+        overlay.remove()
+        finishThemeTransition()
+      }, THEME_COVER_FADE_DURATION)
+    })
+  }, THEME_COVER_DURATION)
+}
+
+const startThemeTransition = (applyTheme, options = {}) => {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+
+  if (prefersReducedMotion()) {
+    applyTheme()
+    return
+  }
+
+  if (themeTransitionTimer) {
+    window.clearTimeout(themeTransitionTimer)
+  }
+
+  if (typeof document.startViewTransition !== 'function' || !themeTransitionWarmed) {
+    runFallbackThemeCover(applyTheme, options)
+    return
+  }
+
+  const point = getThemeTransitionPoint(options)
+  const radius = getThemeTransitionRadius(point)
+  const transition = document.startViewTransition(() => {
+    applyTheme()
+  })
+
+  transition.ready
+    .then(() => {
+      root.animate(
+        {
+          clipPath: [`circle(0px at ${point.x}px ${point.y}px)`, `circle(${radius}px at ${point.x}px ${point.y}px)`]
+        },
+        {
+          duration: THEME_COVER_DURATION,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          fill: 'both',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      )
+    })
+    .catch(() => {})
+
+  transition.finished.finally(() => {
+    themeTransitionWarmed = true
+    finishThemeTransition()
+  })
+}
+
+export const warmThemeTransition = () => {
+  if (
+    typeof document === 'undefined' ||
+    typeof window === 'undefined' ||
+    typeof document.startViewTransition !== 'function' ||
+    prefersReducedMotion() ||
+    themeTransitionWarmed
+  ) {
+    return
+  }
+
+  const runWarmup = () => {
+    if (themeTransitionWarmed || themeTransitionTimer || document.querySelector('.theme-cover-overlay')) return
+    try {
+      const transition = document.startViewTransition(() => {})
+      transition.finished.finally(() => {
+        themeTransitionWarmed = true
+      })
+    } catch {
+      themeTransitionWarmed = true
+    }
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(runWarmup, { timeout: 1200 })
+  } else {
+    window.setTimeout(runWarmup, 300)
+  }
+}
+
+export const applyThemeConfig = (themeConfig = getCachedThemeConfig(), appearance = getCachedAppearance()) => {
+  if (typeof document === 'undefined') return
+  const { appearance: resolvedAppearance, palette, runtimeColors } = resolveThemeRuntime(themeConfig, appearance)
   const rootStyle = document.documentElement.style
-  rootStyle.setProperty('--dt-primary', normalized.colors.primary)
-  rootStyle.setProperty('--dt-primary-light', normalized.colors.primaryLight)
-  rootStyle.setProperty('--dt-primary-dark', normalized.colors.primaryDark)
-  rootStyle.setProperty('--dt-primary-hover', normalized.colors.primaryDark)
-  rootStyle.setProperty('--dt-primary-soft', `color-mix(in srgb, ${normalized.colors.primary} 12%, #ffffff)`)
-  rootStyle.setProperty('--dt-primary-subtle', `color-mix(in srgb, ${normalized.colors.primary} 6%, #ffffff)`)
-  rootStyle.setProperty('--dt-primary-border', `color-mix(in srgb, ${normalized.colors.primary} 28%, #ffffff)`)
-  rootStyle.setProperty('--dt-primary-focus', `color-mix(in srgb, ${normalized.colors.primary} 14%, transparent)`)
-  rootStyle.setProperty('--dt-accent', normalized.colors.primaryLight)
-  rootStyle.setProperty('--dt-accent-soft', `color-mix(in srgb, ${normalized.colors.primaryLight} 14%, #ffffff)`)
-  rootStyle.setProperty('--dt-top-bg', normalized.colors.topBg)
-  rootStyle.setProperty('--dt-top-border', normalized.colors.topBorder)
-  rootStyle.setProperty('--dt-top-text', normalized.colors.topText)
-  rootStyle.setProperty('--dt-top-hover-bg', normalized.colors.topHoverBg)
-  rootStyle.setProperty('--dt-top-hover-text', normalized.colors.topHoverText)
-  rootStyle.setProperty('--dt-top-active-bg', normalized.colors.topActiveBg)
-  rootStyle.setProperty('--dt-top-active-text', normalized.colors.topActiveText)
-  rootStyle.setProperty('--dt-side-bg', normalized.colors.sideBg)
-  rootStyle.setProperty('--dt-side-border', normalized.colors.sideBorder)
-  rootStyle.setProperty('--dt-side-text', normalized.colors.sideText)
-  rootStyle.setProperty('--dt-side-hover-bg', normalized.colors.sideHoverBg)
-  rootStyle.setProperty('--dt-side-hover-text', normalized.colors.sideHoverText)
-  rootStyle.setProperty('--dt-side-active-bg', normalized.colors.sideActiveBg)
-  rootStyle.setProperty('--dt-side-active-text', normalized.colors.sideActiveText)
-  rootStyle.setProperty('--dt-nav-bg', normalized.colors.sideBg)
-  rootStyle.setProperty('--dt-nav-border', normalized.colors.sideBorder)
-  rootStyle.setProperty('--dt-nav-text', normalized.colors.sideText)
-  rootStyle.setProperty('--dt-page-bg', normalized.colors.pageBg)
-  rootStyle.setProperty('--dt-bg', normalized.colors.pageBg)
-  rootStyle.setProperty('--el-color-primary', normalized.colors.primary)
-  rootStyle.setProperty('--el-color-primary-light-3', normalized.colors.primaryLight)
-  rootStyle.setProperty('--el-color-primary-light-5', `color-mix(in srgb, ${normalized.colors.primary} 50%, #ffffff)`)
-  rootStyle.setProperty('--el-color-primary-light-7', `color-mix(in srgb, ${normalized.colors.primary} 30%, #ffffff)`)
-  rootStyle.setProperty('--el-color-primary-light-8', `color-mix(in srgb, ${normalized.colors.primary} 20%, #ffffff)`)
-  rootStyle.setProperty('--el-color-primary-light-9', `color-mix(in srgb, ${normalized.colors.primary} 10%, #ffffff)`)
-  rootStyle.setProperty('--el-color-primary-dark-2', normalized.colors.primaryDark)
-  rootStyle.setProperty('--el-menu-active-color', normalized.colors.primary)
-  rootStyle.setProperty('--el-menu-hover-text-color', normalized.colors.primary)
+  const primaryMixBase = palette.surface
+
+  document.documentElement.dataset.theme = resolvedAppearance
+  document.documentElement.classList.toggle('dark', resolvedAppearance === 'dark')
+  rootStyle.setProperty('color-scheme', resolvedAppearance)
+  rootStyle.setProperty('--dt-primary', runtimeColors.primary)
+  rootStyle.setProperty('--dt-primary-light', runtimeColors.primaryLight)
+  rootStyle.setProperty('--dt-primary-dark', runtimeColors.primaryDark)
+  rootStyle.setProperty('--dt-primary-hover', runtimeColors.primaryDark)
+  rootStyle.setProperty('--dt-primary-soft', `color-mix(in srgb, ${runtimeColors.primary} 14%, ${primaryMixBase})`)
+  rootStyle.setProperty('--dt-primary-subtle', `color-mix(in srgb, ${runtimeColors.primary} 8%, ${primaryMixBase})`)
+  rootStyle.setProperty('--dt-primary-border', `color-mix(in srgb, ${runtimeColors.primary} 38%, ${palette.border})`)
+  rootStyle.setProperty('--dt-primary-focus', `color-mix(in srgb, ${runtimeColors.primary} 18%, transparent)`)
+  rootStyle.setProperty('--dt-accent', runtimeColors.primaryLight)
+  rootStyle.setProperty('--dt-accent-soft', `color-mix(in srgb, ${runtimeColors.primaryLight} 14%, ${primaryMixBase})`)
+  rootStyle.setProperty('--dt-top-bg', runtimeColors.topBg)
+  rootStyle.setProperty('--dt-top-border', runtimeColors.topBorder)
+  rootStyle.setProperty('--dt-top-text', runtimeColors.topText)
+  rootStyle.setProperty('--dt-top-hover-bg', runtimeColors.topHoverBg)
+  rootStyle.setProperty('--dt-top-hover-text', runtimeColors.topHoverText)
+  rootStyle.setProperty('--dt-top-active-bg', runtimeColors.topActiveBg)
+  rootStyle.setProperty('--dt-top-active-text', runtimeColors.topActiveText)
+  rootStyle.setProperty('--dt-side-bg', runtimeColors.sideBg)
+  rootStyle.setProperty('--dt-side-border', runtimeColors.sideBorder)
+  rootStyle.setProperty('--dt-side-text', runtimeColors.sideText)
+  rootStyle.setProperty('--dt-side-hover-bg', runtimeColors.sideHoverBg)
+  rootStyle.setProperty('--dt-side-hover-text', runtimeColors.sideHoverText)
+  rootStyle.setProperty('--dt-side-active-bg', runtimeColors.sideActiveBg)
+  rootStyle.setProperty('--dt-side-active-text', runtimeColors.sideActiveText)
+  rootStyle.setProperty('--dt-nav-bg', runtimeColors.sideBg)
+  rootStyle.setProperty('--dt-nav-border', runtimeColors.sideBorder)
+  rootStyle.setProperty('--dt-nav-text', runtimeColors.sideText)
+  rootStyle.setProperty('--dt-page-bg', runtimeColors.pageBg)
+  rootStyle.setProperty('--dt-bg', runtimeColors.pageBg)
+  rootStyle.setProperty('--dt-surface', palette.surface)
+  rootStyle.setProperty('--dt-surface-soft', palette.surfaceSoft)
+  rootStyle.setProperty('--dt-border', palette.border)
+  rootStyle.setProperty('--dt-border-strong', palette.borderStrong)
+  rootStyle.setProperty('--dt-text', palette.text)
+  rootStyle.setProperty('--dt-text-muted', palette.textMuted)
+  rootStyle.setProperty('--dt-danger', palette.danger)
+  rootStyle.setProperty('--dt-danger-soft', palette.dangerSoft)
+  rootStyle.setProperty('--dt-shadow', palette.shadow)
+  rootStyle.setProperty('--dt-shadow-soft', palette.shadowSoft)
+  rootStyle.setProperty('--el-color-primary', runtimeColors.primary)
+  rootStyle.setProperty('--el-color-primary-light-3', runtimeColors.primaryLight)
+  rootStyle.setProperty(
+    '--el-color-primary-light-5',
+    `color-mix(in srgb, ${runtimeColors.primary} 50%, ${primaryMixBase})`
+  )
+  rootStyle.setProperty(
+    '--el-color-primary-light-7',
+    `color-mix(in srgb, ${runtimeColors.primary} 30%, ${primaryMixBase})`
+  )
+  rootStyle.setProperty(
+    '--el-color-primary-light-8',
+    `color-mix(in srgb, ${runtimeColors.primary} 20%, ${primaryMixBase})`
+  )
+  rootStyle.setProperty(
+    '--el-color-primary-light-9',
+    `color-mix(in srgb, ${runtimeColors.primary} 10%, ${primaryMixBase})`
+  )
+  rootStyle.setProperty('--el-color-primary-dark-2', runtimeColors.primaryDark)
+  rootStyle.setProperty('--el-menu-active-color', runtimeColors.primary)
+  rootStyle.setProperty('--el-menu-hover-text-color', runtimeColors.primary)
+  rootStyle.setProperty('--el-bg-color', palette.surface)
+  rootStyle.setProperty('--el-bg-color-page', runtimeColors.pageBg)
+  rootStyle.setProperty('--el-bg-color-overlay', palette.surface)
+  rootStyle.setProperty('--el-fill-color-blank', palette.surface)
+  rootStyle.setProperty('--el-fill-color-extra-light', palette.surfaceSoft)
+  rootStyle.setProperty('--el-fill-color-lighter', palette.surfaceSoft)
+  rootStyle.setProperty('--el-fill-color-light', palette.surfaceSoft)
+  rootStyle.setProperty('--el-border-color', palette.border)
+  rootStyle.setProperty('--el-border-color-light', palette.border)
+  rootStyle.setProperty('--el-border-color-lighter', palette.border)
+  rootStyle.setProperty('--el-border-color-extra-light', palette.border)
+  rootStyle.setProperty('--el-border-color-dark', palette.borderStrong)
+  rootStyle.setProperty('--el-text-color-primary', palette.text)
+  rootStyle.setProperty('--el-text-color-regular', palette.text)
+  rootStyle.setProperty('--el-text-color-secondary', palette.textMuted)
+  rootStyle.setProperty('--el-text-color-placeholder', palette.textMuted)
+  rootStyle.setProperty('--el-disabled-bg-color', palette.surfaceSoft)
+  rootStyle.setProperty('--el-disabled-border-color', palette.border)
+  rootStyle.setProperty('--el-disabled-text-color', palette.textMuted)
+  rootStyle.setProperty(
+    '--el-mask-color',
+    resolvedAppearance === 'dark' ? 'rgba(0, 0, 0, 0.68)' : 'rgba(255, 255, 255, 0.8)'
+  )
+  rootStyle.setProperty('--el-box-shadow', palette.shadow)
+  rootStyle.setProperty('--el-box-shadow-light', palette.shadowSoft)
+}
+
+export const setUserAppearance = (appearance, options = {}) => {
+  const resolvedAppearance = normalizeAppearance(appearance)
+  const themeConfig = options.themeConfig || getCachedThemeConfig()
+  const applyResolvedTheme = () => applyThemeConfig(themeConfig, resolvedAppearance)
+
+  cacheAppearance(resolvedAppearance)
+  if (options.animate) {
+    startThemeTransition(applyResolvedTheme, { ...options, appearance: resolvedAppearance })
+  } else {
+    applyResolvedTheme()
+  }
+  return resolvedAppearance
+}
+
+export const toggleUserAppearance = (options = {}) => {
+  const nextAppearance = getCachedAppearance() === 'dark' ? 'light' : 'dark'
+  return setUserAppearance(nextAppearance, options)
 }
 
 export const applyCachedSystemAppearance = () => {
   applyBrowserLogo()
-  applyThemeConfig()
+  applyThemeConfig(getCachedThemeConfig(), getCachedAppearance())
 }
 
 export const cacheSystemInfo = ({ systemName, loginImg, loginCaptchaEnabled, browserLogo, themeConfig }) => {
