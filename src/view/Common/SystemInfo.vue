@@ -137,31 +137,20 @@ export default {
       const server = this.info.Server || {}
       const memory = this.info.Memory || {}
       const database = this.info.Database || {}
+      const license = this.info.License || {}
       const resource = this.resource
 
       return [
         {
-          title: '服务器资源',
-          icon: 'Cpu',
-          rows: [
-            { label: 'CPU 占用', value: this.formatPercent(this.serverCpuPercent) },
-            { label: '内存占用', value: this.formatPercent(this.serverMemoryPercent) },
-            { label: '内存总量', value: this.formatBytes(resource.TotalMemoryBytes) },
-            { label: '可用内存', value: this.formatBytes(resource.AvailableMemoryBytes) },
-            { label: '处理器数量', value: this.formatValue(server.ProcessorCount) },
-            { label: '采集时间', value: this.formatValue(resource.CollectedAt) }
-          ]
-        },
-        {
-          title: '程序资源',
+          title: '资源信息',
           icon: 'Histogram',
           rows: [
-            { label: 'CPU 占用', value: this.formatPercent(this.processCpuPercent) },
-            { label: '内存占用', value: this.formatPercent(this.processMemoryPercent) },
+            { label: '内存总量', value: this.formatBytes(resource.TotalMemoryBytes) },
+            { label: '可用内存', value: this.formatBytes(resource.AvailableMemoryBytes) },
             { label: '工作集内存', value: this.formatBytes(memory.WorkingSetBytes) },
             { label: '私有内存', value: this.formatBytes(memory.PrivateMemoryBytes) },
             { label: 'GC 托管内存', value: this.formatBytes(memory.GCTotalMemoryBytes) },
-            { label: '运行时长', value: this.formatDuration(server.UptimeSeconds) }
+            { label: '采集时间', value: this.formatValue(resource.CollectedAt) }
           ]
         },
         {
@@ -171,8 +160,21 @@ export default {
             { label: '应用名称', value: this.formatValue(application.Name) },
             { label: '应用版本', value: this.formatValue(application.Version) },
             { label: '运行环境', value: this.formatValue(application.EnvironmentName) },
+            { label: '运行时长', value: this.formatDuration(server.UptimeSeconds) },
             { label: '应用目录', value: this.formatValue(application.BaseDirectory) },
             { label: '资源目录', value: this.formatValue(application.RootPath) }
+          ]
+        },
+        {
+          title: '许可授权',
+          icon: 'Tickets',
+          rows: [
+            { label: '授权状态', value: this.formatValue(license.Status) },
+            { label: '授权类型', value: this.formatValue(license.LicenseTypeName) },
+            { label: '客户名称', value: this.formatValue(license.Customer) },
+            { label: '有效期至', value: this.formatValue(license.ExpireAtText) },
+            { label: '并发用户数', value: this.formatValue(license.MaxConcurrentUsersText) },
+            ...(license.Message ? [{ label: '授权信息', value: this.formatValue(license.Message) }] : [])
           ]
         },
         {
@@ -193,9 +195,7 @@ export default {
             { label: '主机名', value: this.formatValue(server.MachineName) },
             { label: '处理器数量', value: this.formatValue(server.ProcessorCount) },
             { label: '时区', value: this.formatValue(server.TimeZone) },
-            { label: '启动时间', value: this.formatValue(server.StartedAt) },
-            { label: '当前时间', value: this.formatValue(server.CurrentTime) },
-            { label: '最近刷新', value: this.formatValue(this.lastRefreshTime) }
+            { label: '启动时间', value: this.formatValue(server.StartedAt) }
           ]
         },
         {
@@ -204,7 +204,8 @@ export default {
           rows: [
             { label: '数据库驱动', value: this.formatValue(database.ProviderName) },
             { label: '数据源', value: this.formatValue(database.DataSource) },
-            { label: '数据库', value: this.formatValue(database.Database) }
+            { label: '数据库', value: this.formatValue(database.Database) },
+            { label: '数据库版本', value: this.formatValue(database.Version) }
           ]
         }
       ]
