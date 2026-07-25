@@ -381,16 +381,15 @@
       </el-form>
     </div>
     <template #footer>
-      <span class="dialog-footer">
-        <span class="footer-status">
-          必填 {{ completedRequiredFieldCount }}/{{ requiredFieldCount }}
-          <template v-if="orderedSubTables.length > 0">，明细 {{ totalSubTableRows }} 行</template>
-        </span>
-        <span class="footer-actions">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">保存</el-button>
-        </span>
-      </span>
+      <MicroAppFormFooter
+        :completed-required-field-count="completedRequiredFieldCount"
+        :required-field-count="requiredFieldCount"
+        :sub-table-count="orderedSubTables.length"
+        :total-sub-table-rows="totalSubTableRows"
+        :submit-loading="submitLoading"
+        @cancel="dialogVisible = false"
+        @submit="submitForm"
+      />
     </template>
   </el-dialog>
 
@@ -418,6 +417,7 @@ import { getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
 import MicroAppAttachmentField from './MicroAppAttachmentField.vue'
+import MicroAppFormFooter from './MicroAppFormFooter.vue'
 import MicroAppLookupDialog from './MicroAppLookupDialog.vue'
 import {
   getDateDisplayFormat,
@@ -435,6 +435,7 @@ export default {
   name: 'MicroAppFormDialog',
   components: {
     MicroAppAttachmentField,
+    MicroAppFormFooter,
     MicroAppLookupDialog,
     Search
   },
@@ -1432,34 +1433,6 @@ export default {
   background: #0f67dc;
 }
 
-.dialog-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.footer-status {
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 20px;
-}
-
-.footer-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-actions :deep(.el-button),
-.dialog-footer > :deep(.el-button) {
-  min-width: 104px;
-  height: 38px;
-  border-radius: 8px;
-  font-weight: 700;
-}
-
 .subtable-form-sections {
   display: flex;
   flex-direction: column;
@@ -1801,15 +1774,9 @@ export default {
 
   .form-section-head,
   .subtable-group-heading,
-  .subtable-panel-header,
-  .dialog-footer {
+  .subtable-panel-header {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .footer-actions,
-  .footer-actions :deep(.el-button) {
-    width: 100%;
   }
 
   .subtable-actions {
@@ -1834,7 +1801,6 @@ html[data-theme='dark'] .subtable-panel {
 
 html[data-theme='dark'] .form-section-head,
 html[data-theme='dark'] .subtable-panel-header,
-html[data-theme='dark'] .dialog-footer,
 html[data-theme='dark'] .rail-card__header {
   background: var(--dt-surface-soft) !important;
   border-color: var(--dt-border) !important;
