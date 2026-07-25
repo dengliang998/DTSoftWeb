@@ -428,55 +428,22 @@
     </template>
   </el-dialog>
 
-  <el-dialog
+  <MicroAppLookupDialog
     v-model="lookupDialogVisible"
     :title="lookupDialogTitle"
-    width="760px"
-    append-to-body
-    :close-on-click-modal="false"
-  >
-    <el-table
-      v-loading="lookupLoading"
-      :data="lookupRows"
-      border
-      stripe
-      height="360"
-      @selection-change="handleLookupSelectionChange"
-      @row-dblclick="handleLookupRowDoubleClick"
-    >
-      <el-table-column v-if="lookupDialogMode === 'subTable'" type="selection" width="48"></el-table-column>
-      <el-table-column
-        v-for="column in activeLookupColumns"
-        :key="column.field"
-        :prop="column.field"
-        :label="column.label"
-        :width="column.width || undefined"
-        show-overflow-tooltip
-      ></el-table-column>
-      <el-table-column v-if="lookupDialogMode === 'field'" label="操作" width="80" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" size="small" @click="selectLookupRow(row)">选择</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <div class="lookup-pagination">
-      <el-pagination
-        layout="total, prev, pager, next"
-        :total="lookupTotal"
-        :page-size="lookupQuery.pageSize"
-        :current-page="lookupQuery.pageNum"
-        @current-change="handleLookupPageChange"
-      ></el-pagination>
-    </div>
-    <template v-if="lookupDialogMode === 'subTable'" #footer>
-      <span class="dialog-footer">
-        <el-button @click="lookupDialogVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="lookupSelectedRows.length === 0" @click="confirmSubTableLookupRows">
-          确定选择
-        </el-button>
-      </span>
-    </template>
-  </el-dialog>
+    :loading="lookupLoading"
+    :rows="lookupRows"
+    :columns="activeLookupColumns"
+    :mode="lookupDialogMode"
+    :total="lookupTotal"
+    :query="lookupQuery"
+    :selected-count="lookupSelectedRows.length"
+    @selection-change="handleLookupSelectionChange"
+    @row-dblclick="handleLookupRowDoubleClick"
+    @select-row="selectLookupRow"
+    @page-change="handleLookupPageChange"
+    @confirm="confirmSubTableLookupRows"
+  />
 </template>
 
 <script>
@@ -484,6 +451,7 @@ import { Search } from '@element-plus/icons-vue'
 import { getFileDownloadUrl, getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
+import MicroAppLookupDialog from './MicroAppLookupDialog.vue'
 import {
   getAttachmentFileId,
   getAttachmentKey,
@@ -502,6 +470,7 @@ import {
 export default {
   name: 'MicroAppFormDialog',
   components: {
+    MicroAppLookupDialog,
     Search
   },
   props: {
@@ -1541,12 +1510,6 @@ export default {
   height: 38px;
   border-radius: 8px;
   font-weight: 700;
-}
-
-.lookup-pagination {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 12px;
 }
 
 .subtable-form-sections {
