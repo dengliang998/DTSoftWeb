@@ -374,6 +374,83 @@ export default {
   border-top: 1px solid #e8edf3;
   background: #fff;
 }
+html[data-theme='dark'] .menu-auth-title {
+  color: var(--dt-text);
+}
+html[data-theme='dark'] .menu-auth-subtitle,
+html[data-theme='dark'] .menu-auth-meta,
+html[data-theme='dark'] .menu-auth-footer {
+  color: var(--dt-text-muted);
+}
+html[data-theme='dark'] .menu-auth-clear-button {
+  color: var(--dt-danger);
+  border-color: color-mix(in srgb, var(--dt-danger) 34%, var(--dt-border));
+  background: var(--dt-danger-soft);
+}
+html[data-theme='dark'] .menu-auth-clear-button:hover,
+html[data-theme='dark'] .menu-auth-clear-button:focus {
+  color: #fff;
+  border-color: var(--dt-danger);
+  background: var(--dt-danger);
+}
+html[data-theme='dark'] .menu-tree-scrollbar {
+  border-color: var(--dt-border);
+  background: var(--dt-surface);
+  box-shadow: var(--dt-shadow-soft);
+}
+html[data-theme='dark'] .menu-tree-surface {
+  background: var(--dt-surface);
+}
+html[data-theme='dark'] .menu-auth-tree {
+  color: var(--dt-text);
+  background: transparent !important;
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node__content) {
+  color: var(--dt-text) !important;
+  background: transparent !important;
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node__content:hover) {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+  box-shadow: inset 3px 0 0 var(--dt-primary);
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node__label) {
+  color: inherit !important;
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node__expand-icon) {
+  color: var(--dt-text-muted);
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree-node__expand-icon.is-leaf) {
+  color: transparent;
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-checkbox__inner) {
+  border-color: var(--dt-border-strong);
+  background: var(--dt-surface-soft);
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-checkbox__input.is-focus .el-checkbox__inner),
+html[data-theme='dark'] .menu-auth-tree :deep(.el-checkbox__inner:hover) {
+  border-color: var(--dt-primary);
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-checkbox__input.is-checked .el-checkbox__inner),
+html[data-theme='dark'] .menu-auth-tree :deep(.el-checkbox__input.is-indeterminate .el-checkbox__inner) {
+  border-color: var(--dt-primary);
+  background: var(--dt-primary);
+}
+html[data-theme='dark'] .menu-auth-tree :deep(.el-tree__empty-text) {
+  color: var(--dt-text-muted);
+}
+:global(html[data-theme='dark'] .menu-auth-dialog .el-dialog__header),
+:global(html[data-theme='dark'] .menu-auth-dialog .el-dialog__footer) {
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface-soft) !important;
+}
+:global(html[data-theme='dark'] .menu-auth-dialog .el-dialog__body) {
+  background: var(--dt-surface) !important;
+}
 @media (max-width: 900px) {
   :deep(.menu-auth-dialog) {
     width: calc(100vw - 32px) !important;
