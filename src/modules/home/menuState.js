@@ -56,6 +56,25 @@ export const flattenMenus = (menus = []) => {
 
 export const getRootMenus = (menus = []) => menus.filter((item) => item.pid === 0)
 
+export const toRoutePath = (menuPath = '') => {
+  const path = String(menuPath || '').trim()
+  if (!path) return ''
+
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+export const findFirstNavigableMenu = (menus = []) => {
+  for (const menu of menus || []) {
+    const childMatch = findFirstNavigableMenu(menu?.children || [])
+    if (childMatch) return childMatch
+
+    const routePath = toRoutePath(menu?.path)
+    if (routePath) return menu
+  }
+
+  return null
+}
+
 export const getMenuTitleByPath = (menus = [], path = '') => {
   const cleanPath = path.startsWith('/') ? path.substring(1) : path
 

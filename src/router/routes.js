@@ -31,7 +31,6 @@ export const routes = [
     path: '/home',
     name: 'Home',
     component: Home,
-    redirect: '/welcome',
     meta: { requiresAuth: true },
     children: [
       { path: '/welcome', name: 'Welcome', component: Welcome, meta: withCache('Welcome', { title: '首页' }) },

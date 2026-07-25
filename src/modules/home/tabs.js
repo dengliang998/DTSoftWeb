@@ -1,16 +1,6 @@
 import { STORAGE_KEYS } from '@/constants/storage'
 
-export const HOME_TAB_PATH = '/welcome'
-
-export const createDefaultTabs = () => [
-  {
-    path: HOME_TAB_PATH,
-    title: '首页',
-    cacheName: 'Welcome'
-  }
-]
-
-export const shouldSkipTab = (path) => path === HOME_TAB_PATH || path === '/login'
+export const shouldSkipTab = (path) => path === '/login' || path === '/home'
 
 export const getCacheNameByPath = (router, path) => {
   try {
@@ -55,9 +45,6 @@ export const upsertTab = ({ tabs, path, title, cacheName }) => {
 export const refreshTabTitles = ({ tabs, getTitle, getCacheName }) =>
   tabs.map((tab) => {
     if (!tab || !tab.path) return tab
-    if (tab.path === HOME_TAB_PATH) {
-      return { ...tab, title: tab.title || '首页', cacheName: tab.cacheName || 'Welcome' }
-    }
 
     const title = getTitle(tab.path)
     return {

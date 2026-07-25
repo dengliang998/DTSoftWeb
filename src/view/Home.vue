@@ -146,7 +146,7 @@
             @tab-click="handleTabClick"
             @tab-remove="handleTabRemove"
           >
-            <el-tab-pane v-for="tab in openedTabs" :key="tab.path" :name="tab.path" :closable="tab.path !== '/welcome'">
+            <el-tab-pane v-for="tab in openedTabs" :key="tab.path" :name="tab.path" :closable="openedTabs.length > 1">
               <template #label>
                 <span class="tab-label" :title="tab.title">{{ tab.title }}</span>
               </template>
@@ -192,15 +192,16 @@ import { getMenu } from '@/api/menu'
 import { getUserAccount } from '@/core/session'
 import {
   filterHiddenMenus,
+  findFirstNavigableMenu,
   findChildrenByMenuId,
   getIconComponent,
   getMenuTitleByPath,
   getRootMenus,
+  toRoutePath,
   resolveInitialMenuState
 } from '@/modules/home/menuState'
 import {
   buildCachedViews,
-  createDefaultTabs,
   getCacheNameByPath,
   getNextTabAfterRemove,
   refreshTabTitles,
@@ -289,10 +290,8 @@ export default {
     //this.activePath = window.sessionStorage.getItem('activePath')
     this.loadUserProfile()
 
-    // 初始化默认标签页
-    this.initDefaultTab()
-    // 如果刷新时当前路由不是欢迎页，也加入标签并加入缓存
-    if (this.$route && this.$route.path && this.$route.path !== '/welcome' && this.$route.path !== '/login') {
+    // 如果刷新时当前路由已是具体页面，先加入标签；/home 等待菜单加载后决定入口
+    if (this.$route && this.$route.path && !shouldSkipTab(this.$route.path)) {
       this.addTab(this.$route.path)
     }
   },
@@ -363,17 +362,24 @@ export default {
           // 提取一级菜单（pid为0的菜单项）
           me.fatherMenuList = getRootMenus(me.menuList)
 
-          // 首页初次打开时不默认选中第一个一级菜单：
-          // - 如果当前路由属于某个一级菜单下，则选中对应的一级菜单并加载其子菜单
-          // - 否则仅加载第一个一级菜单的子菜单（不高亮任何一级菜单）
+          // 当前路由属于某个菜单时选中对应一级菜单；否则先展示第一个一级菜单的子菜单。
           const menuState = resolveInitialMenuState(me.menuList, me.$route?.path || '')
           me.activeTopMenu = menuState.activeTopMenu
           me.childrenMenuList = menuState.childrenMenuList
 
           // 菜单加载完成后，修正已打开标签页的标题（刷新时避免显示“页面”）
           me.$nextTick(() => {
+            const defaultRoutePath = me.getDefaultMenuRoutePath()
+            if (me.$route?.path === '/home' && defaultRoutePath) {
+              const defaultMenuState = resolveInitialMenuState(me.menuList, defaultRoutePath)
+              me.activeTopMenu = defaultMenuState.activeTopMenu
+              me.childrenMenuList = defaultMenuState.childrenMenuList
+              me.$router.replace(defaultRoutePath)
+              return
+            }
+
             me.refreshOpenedTabsTitles()
-            if (me.$route && me.$route.path && me.$route.path !== '/welcome' && me.$route.path !== '/login') {
+            if (me.$route && me.$route.path && !shouldSkipTab(me.$route.path)) {
               me.addTab(me.$route.path)
               me.refreshOpenedTabsTitles()
             }
@@ -388,12 +394,25 @@ export default {
       this.childrenMenuList = findChildrenByMenuId(this.menuList, menuId)
       this.$nextTick(() => {})
     },
+    getDefaultMenuRoutePath() {
+      const menu = findFirstNavigableMenu(this.menuList)
+      return toRoutePath(menu?.path)
+    },
 
     // 处理顶部菜单选择
     handleTopMenuSelect(index) {
       this.activeTopMenu = index
-      // 获取选中菜单的子菜单
-      this.getChildrenMenuList(index)
+      const topMenu = this.fatherMenuList.find((item) => String(item.id) === String(index))
+      const children = findChildrenByMenuId(this.menuList, index)
+      this.childrenMenuList = children
+
+      if ((!children || children.length === 0) && topMenu?.path) {
+        const routePath = toRoutePath(topMenu.path)
+        if (routePath && this.$route.path !== routePath) {
+          this.saveNavState(routePath)
+          this.$router.push(routePath)
+        }
+      }
     },
     toggleAppearance(event) {
       this.currentAppearance = toggleUserAppearance({ animate: true, sourceEvent: event })
@@ -421,7 +440,7 @@ export default {
 
     // 添加标签页
     addTab(path) {
-      // 如果是欢迎页面或登录页面，不添加标签
+      // 登录页和布局页不添加标签，具体页面由菜单驱动。
       if (shouldSkipTab(path)) {
         this.activeTab = path
         return
@@ -478,14 +497,6 @@ export default {
       this.openedTabs.splice(targetIndex, 1)
 
       // 重建缓存：只保留仍有标签页打开的组件名
-      this.rebuildCachedViews()
-    },
-
-    // 初始化默认标签页
-    initDefaultTab() {
-      // 添加欢迎页标签
-      this.openedTabs = createDefaultTabs()
-      this.activeTab = '/welcome'
       this.rebuildCachedViews()
     }
   }
