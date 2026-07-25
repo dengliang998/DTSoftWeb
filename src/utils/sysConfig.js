@@ -183,7 +183,7 @@ const THEME_COLOR_KEYS = [
   'pageBg'
 ]
 
-const normalizeBase64Image = (value) => {
+export const normalizeBase64Image = (value) => {
   if (!value) return ''
   const trimmed = String(value).trim()
   if (!trimmed) return ''
@@ -195,6 +195,27 @@ const normalizeBase64Image = (value) => {
   return `data:${mime};base64,${trimmed}`
 }
 
+const isStorageQuotaError = (error) =>
+  error instanceof DOMException &&
+  (error.name === 'QuotaExceededError' ||
+    error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    error.code === 22 ||
+    error.code === 1014)
+
+const safeSetLocalStorage = (key, value, options = {}) => {
+  try {
+    localStorage.setItem(key, value)
+    return true
+  } catch (error) {
+    if (options.removeOnQuotaExceeded && isStorageQuotaError(error)) {
+      try {
+        localStorage.removeItem(key)
+      } catch {}
+    }
+    return false
+  }
+}
+
 export const getCachedSystemName = () => localStorage.getItem(STORAGE_KEYS.systemName) || ''
 export const getCachedLoginImg = () => localStorage.getItem(STORAGE_KEYS.loginImg) || ''
 export const getCachedLoginImgDataUrl = () => normalizeBase64Image(getCachedLoginImg())
@@ -204,7 +225,7 @@ export const getCachedBrowserLogoDataUrl = () => normalizeBase64Image(getCachedB
 export const normalizeAppearance = (appearance) => (appearance === 'dark' ? 'dark' : DEFAULT_APPEARANCE)
 export const getCachedAppearance = () => normalizeAppearance(localStorage.getItem(STORAGE_KEYS.appearance))
 export const cacheAppearance = (appearance) => {
-  localStorage.setItem(STORAGE_KEYS.appearance, normalizeAppearance(appearance))
+  safeSetLocalStorage(STORAGE_KEYS.appearance, normalizeAppearance(appearance))
 }
 
 const cloneColors = (colors = DEFAULT_THEME_CONFIG.colors) => ({ ...DEFAULT_THEME_CONFIG.colors, ...colors })
@@ -304,7 +325,7 @@ export const serializeThemeConfig = (themeConfig) => JSON.stringify(normalizeThe
 export const getCachedThemeConfig = () => normalizeThemeConfig(localStorage.getItem(STORAGE_KEYS.themeConfig))
 
 export const cacheThemeConfig = (themeConfig) => {
-  localStorage.setItem(STORAGE_KEYS.themeConfig, serializeThemeConfig(themeConfig))
+  safeSetLocalStorage(STORAGE_KEYS.themeConfig, serializeThemeConfig(themeConfig))
 }
 
 const setDocumentFavicon = (href) => {
@@ -595,14 +616,19 @@ export const applyCachedSystemAppearance = () => {
 }
 
 export const cacheSystemInfo = ({ systemName, loginImg, loginCaptchaEnabled, browserLogo, themeConfig }) => {
-  if (typeof systemName === 'string') localStorage.setItem(STORAGE_KEYS.systemName, systemName)
-  if (typeof loginImg === 'string') localStorage.setItem(STORAGE_KEYS.loginImg, loginImg)
-  if (typeof loginCaptchaEnabled === 'boolean') {
-    localStorage.setItem(STORAGE_KEYS.loginCaptchaEnabled, String(loginCaptchaEnabled))
+  if (typeof systemName === 'string') safeSetLocalStorage(STORAGE_KEYS.systemName, systemName)
+  if (typeof loginImg === 'string') {
+    safeSetLocalStorage(STORAGE_KEYS.loginImg, loginImg, { removeOnQuotaExceeded: true })
   }
-  if (typeof browserLogo === 'string') localStorage.setItem(STORAGE_KEYS.browserLogo, browserLogo)
+  if (typeof loginCaptchaEnabled === 'boolean') {
+    safeSetLocalStorage(STORAGE_KEYS.loginCaptchaEnabled, String(loginCaptchaEnabled))
+  }
+  if (typeof browserLogo === 'string') {
+    safeSetLocalStorage(STORAGE_KEYS.browserLogo, browserLogo, { removeOnQuotaExceeded: true })
+  }
   if (themeConfig !== undefined && themeConfig !== null) cacheThemeConfig(themeConfig)
-  applyCachedSystemAppearance()
+  applyBrowserLogo(typeof browserLogo === 'string' ? browserLogo : getCachedBrowserLogo())
+  applyThemeConfig(themeConfig || getCachedThemeConfig(), getCachedAppearance())
 }
 
 export const fetchAndCacheSystemInfo = async () => {

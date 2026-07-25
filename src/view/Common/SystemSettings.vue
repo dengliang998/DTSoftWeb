@@ -50,12 +50,13 @@
                   :show-file-list="false"
                   accept="image/*"
                   :on-change="handleLoginImgChange"
+                  :before-upload="beforeLoginImgUpload"
                 >
                   <el-button type="primary">选择图片</el-button>
                 </el-upload>
 
                 <el-button :disabled="!selectedLoginImgFile" @click="clearSelectedLoginImg">清除已选</el-button>
-                <span class="hint">支持常见图片格式；不选则保留当前背景图</span>
+                <span class="hint">支持 JPG、PNG、WebP；不超过 {{ loginImgLimitText }}，不选则保留当前背景图</span>
               </div>
 
               <div class="preview">
@@ -76,12 +77,13 @@
                     :show-file-list="false"
                     accept="image/png,image/jpeg,image/svg+xml,image/x-icon,image/webp"
                     :on-change="handleBrowserLogoChange"
+                    :before-upload="beforeBrowserLogoUpload"
                   >
                     <el-button type="primary">选择图片</el-button>
                   </el-upload>
 
                   <el-button :disabled="!selectedBrowserLogoFile" @click="clearSelectedBrowserLogo">清除已选</el-button>
-                  <span class="hint">建议使用正方形 PNG、ICO 或 SVG</span>
+                  <span class="hint">建议使用正方形 PNG、ICO、SVG 或 WebP；不超过 {{ browserLogoLimitText }}</span>
                 </div>
 
                 <div class="favicon-preview">
@@ -204,6 +206,18 @@ import {
   serializeThemeConfig
 } from '@/utils/sysConfig'
 
+const LOGIN_IMG_MAX_SIZE = 1024 * 1024
+const BROWSER_LOGO_MAX_SIZE = 256 * 1024
+const LOGIN_IMG_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const BROWSER_LOGO_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/svg+xml',
+  'image/x-icon',
+  'image/vnd.microsoft.icon'
+]
+
 export default defineComponent({
   name: 'SystemSettings',
   setup() {
@@ -223,6 +237,8 @@ export default defineComponent({
     const selectedLoginPreviewUrl = ref('')
     const selectedBrowserLogoFile = ref(null)
     const selectedBrowserLogoPreviewUrl = ref('')
+    const loginImgLimitText = '1MB'
+    const browserLogoLimitText = '256KB'
 
     const colorGroups = [
       {
@@ -312,6 +328,47 @@ export default defineComponent({
       urlRef.value = ''
     }
 
+    const validateImageFile = ({ rawFile, allowedTypes, maxSize, maxSizeText, label }) => {
+      if (!rawFile) return false
+      const fileType = rawFile.type || ''
+
+      if (!allowedTypes.includes(fileType)) {
+        proxy.$message.error(
+          `${label}格式不支持，请上传 JPG、PNG、WebP${label === 'Tab 小 Logo' ? '、ICO 或 SVG' : ''}`
+        )
+        return false
+      }
+
+      if (rawFile.size > maxSize) {
+        proxy.$message.error(`${label}不能超过 ${maxSizeText}，请压缩后再上传`)
+        return false
+      }
+
+      return true
+    }
+
+    const validateLoginImgFile = (rawFile) =>
+      validateImageFile({
+        rawFile,
+        allowedTypes: LOGIN_IMG_TYPES,
+        maxSize: LOGIN_IMG_MAX_SIZE,
+        maxSizeText: loginImgLimitText,
+        label: '登录背景图'
+      })
+
+    const validateBrowserLogoFile = (rawFile) =>
+      validateImageFile({
+        rawFile,
+        allowedTypes: BROWSER_LOGO_TYPES,
+        maxSize: BROWSER_LOGO_MAX_SIZE,
+        maxSizeText: browserLogoLimitText,
+        label: 'Tab 小 Logo'
+      })
+
+    const beforeLoginImgUpload = (rawFile) => validateLoginImgFile(rawFile)
+
+    const beforeBrowserLogoUpload = (rawFile) => validateBrowserLogoFile(rawFile)
+
     const assignFilePreview = (file, fileRef, previewRef) => {
       revokeObjectUrl(previewRef)
       fileRef.value = file?.raw || null
@@ -321,10 +378,18 @@ export default defineComponent({
     }
 
     const handleLoginImgChange = (file) => {
+      if (!validateLoginImgFile(file?.raw)) {
+        clearSelectedLoginImg()
+        return
+      }
       assignFilePreview(file, selectedLoginImgFile, selectedLoginPreviewUrl)
     }
 
     const handleBrowserLogoChange = (file) => {
+      if (!validateBrowserLogoFile(file?.raw)) {
+        clearSelectedBrowserLogo()
+        return
+      }
       assignFilePreview(file, selectedBrowserLogoFile, selectedBrowserLogoPreviewUrl)
       if (selectedBrowserLogoPreviewUrl.value) {
         applyBrowserLogo(selectedBrowserLogoPreviewUrl.value)
@@ -415,6 +480,9 @@ export default defineComponent({
         return
       }
 
+      if (selectedLoginImgFile.value && !validateLoginImgFile(selectedLoginImgFile.value)) return
+      if (selectedBrowserLogoFile.value && !validateBrowserLogoFile(selectedBrowserLogoFile.value)) return
+
       saving.value = true
       try {
         const systemName = form.systemName.trim()
@@ -431,10 +499,11 @@ export default defineComponent({
           clearSelectedBrowserLogo()
           await loadSystemInfo()
         } else {
-          proxy.$message.error('保存失败')
+          proxy.$message.error(res?.Msg || res?.msg || res?.message || '保存失败')
         }
       } catch (e) {
-        proxy.$message.error('保存失败：' + (e?.message || e))
+        const errorData = e?.response?.data
+        proxy.$message.error('保存失败：' + (errorData?.Msg || errorData?.msg || errorData?.message || e?.message || e))
       } finally {
         saving.value = false
       }
@@ -460,6 +529,8 @@ export default defineComponent({
       saving,
       selectedLoginImgFile,
       selectedBrowserLogoFile,
+      loginImgLimitText,
+      browserLogoLimitText,
       loginPreviewUrl,
       browserLogoPreviewUrl,
       loginPreviewStyle,
@@ -467,6 +538,8 @@ export default defineComponent({
       themePresets: THEME_PRESETS,
       colorGroups,
       getPresetSwatches,
+      beforeLoginImgUpload,
+      beforeBrowserLogoUpload,
       handleLoginImgChange,
       handleBrowserLogoChange,
       clearSelectedLoginImg,

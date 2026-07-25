@@ -2,9 +2,10 @@
   <div class="login_container" :style="loginContainerStyle">
     <div class="login_shell">
       <section class="login_brand" aria-label="系统信息">
-        <div class="brand_copy">
-          <div class="login_brand-title">{{ systemName }}</div>
-          <div class="login_brand-subtitle">安全、清晰、高效的管理工作台</div>
+        <div class="brand_panel">
+          <div class="brand_copy">
+            <div class="login_brand-title">{{ systemName }}</div>
+          </div>
         </div>
       </section>
 
@@ -86,7 +87,8 @@ import {
   fetchAndCacheSystemInfo,
   getCachedLoginCaptchaEnabled,
   getCachedLoginImgDataUrl,
-  getCachedSystemName
+  getCachedSystemName,
+  normalizeBase64Image
 } from '@/utils/sysConfig'
 
 export default defineComponent({
@@ -96,7 +98,7 @@ export default defineComponent({
     const route = useRoute()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
-    const systemName = ref(getCachedSystemName() || 'DT Program')
+    const systemName = ref(getCachedSystemName() || '管理工作台')
     const captchaEnabled = ref(getCachedLoginCaptchaEnabled())
     const captchaImage = ref('')
     const captchaLoading = ref(false)
@@ -248,8 +250,8 @@ export default defineComponent({
       loadLoginEncryptionKey().catch(() => {})
       // 加载系统配置（系统名称、登录背景图、登录验证码开关）
       fetchAndCacheSystemInfo()
-        .then(() => {
-          loginBgUrl.value = getCachedLoginImgDataUrl()
+        .then((res) => {
+          loginBgUrl.value = normalizeBase64Image(res?.data?.loginImg) || getCachedLoginImgDataUrl()
           captchaEnabled.value = getCachedLoginCaptchaEnabled()
           const title = getCachedSystemName()
           if (title) {
@@ -318,6 +320,23 @@ export default defineComponent({
   background-color: #101828;
 }
 
+.login_container::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8, 20, 36, 0.52) 0%,
+      rgba(8, 20, 36, 0.34) 28%,
+      rgba(8, 20, 36, 0.12) 56%,
+      rgba(8, 20, 36, 0.02) 100%
+    ),
+    linear-gradient(180deg, rgba(8, 20, 36, 0.08) 0%, rgba(8, 20, 36, 0.2) 100%);
+  content: '';
+}
+
 .login_shell {
   position: relative;
   z-index: 1;
@@ -341,57 +360,48 @@ export default defineComponent({
   min-height: 100%;
 }
 
-.brand_copy {
+.brand_panel {
   position: relative;
   width: min(100%, 620px);
-  padding: 26px 34px 24px 30px;
+  padding: 0 0 0 34px;
+  color: #f8fafc;
   box-sizing: border-box;
 }
 
-.brand_copy::before {
+.brand_panel::before {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 36%, transparent 100%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    color-mix(in srgb, var(--dt-primary-light) 72%, transparent) 58%,
+    transparent 100%
+  );
   border-radius: 999px;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
-  backdrop-filter: blur(14px);
   content: '';
+  pointer-events: none;
 }
 
-.brand_copy::after {
-  position: absolute;
-  left: 18px;
-  top: 18px;
-  bottom: 18px;
-  width: 2px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.24) 100%);
-  content: '';
+.brand_copy {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
 }
 
 .login_brand-title {
   position: relative;
-  z-index: 1;
   color: rgba(255, 255, 255, 0.98);
-  font-size: clamp(34px, 5vw, 64px);
-  font-weight: 820;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-size: clamp(44px, 5.3vw, 72px);
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: 0;
   word-break: break-word;
-  text-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
-}
-
-.login_brand-subtitle {
-  position: relative;
-  z-index: 1;
-  margin-top: 18px;
-  padding-left: 2px;
-  color: rgba(248, 250, 252, 0.9);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  text-shadow:
+    0 1px 2px rgba(2, 6, 23, 0.88),
+    0 12px 34px rgba(2, 6, 23, 0.58);
 }
 
 .login_box {
@@ -566,6 +576,12 @@ export default defineComponent({
 }
 
 @media (max-width: 980px) {
+  .login_container::before {
+    background:
+      linear-gradient(180deg, rgba(8, 20, 36, 0.48) 0%, rgba(8, 20, 36, 0.22) 42%, rgba(8, 20, 36, 0.34) 100%),
+      rgba(8, 20, 36, 0.08);
+  }
+
   .login_shell {
     grid-template-columns: 1fr;
     width: min(460px, calc(100% - 48px));
@@ -579,23 +595,21 @@ export default defineComponent({
     text-align: center;
   }
 
-  .brand_copy {
-    width: 100%;
-    padding: 22px 24px 20px;
+  .brand_panel {
+    min-height: auto;
+    padding: 0;
   }
 
-  .brand_copy::after {
+  .brand_copy {
+    margin-top: 0;
+  }
+
+  .brand_panel::before {
     display: none;
   }
 
   .login_brand-title {
     font-size: 34px;
-  }
-
-  .login_brand-subtitle {
-    margin-top: 14px;
-    font-size: 16px;
-    padding-left: 0;
   }
 }
 
@@ -610,12 +624,16 @@ export default defineComponent({
     padding: 28px 24px 28px;
   }
 
-  .login_brand-title {
-    font-size: 30px;
+  .brand_panel {
+    padding: 0;
   }
 
-  .login_brand-subtitle {
-    font-size: 15px;
+  .brand_copy {
+    margin-top: 0;
+  }
+
+  .login_brand-title {
+    font-size: 30px;
   }
 
   .captcha-row {
@@ -630,25 +648,6 @@ html[data-theme='dark'] .login_container {
 
 html[data-theme='dark'] .login_brand-title {
   color: rgba(241, 245, 249, 0.96);
-}
-
-html[data-theme='dark'] .login_brand-subtitle {
-  color: rgba(203, 213, 225, 0.86);
-  text-shadow: 0 2px 12px rgba(2, 6, 23, 0.38);
-}
-
-html[data-theme='dark'] .brand_copy {
-  background: transparent;
-}
-
-html[data-theme='dark'] .brand_copy::before {
-  background: linear-gradient(90deg, rgba(2, 6, 23, 0.34) 0%, rgba(15, 23, 42, 0.22) 36%, transparent 100%);
-  border-color: rgba(148, 163, 184, 0.16);
-  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
-}
-
-html[data-theme='dark'] .brand_copy::after {
-  background: linear-gradient(180deg, rgba(241, 245, 249, 0.88) 0%, rgba(148, 163, 184, 0.2) 100%);
 }
 
 html[data-theme='dark'] .login_box {
