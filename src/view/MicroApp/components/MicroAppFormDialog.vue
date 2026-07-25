@@ -161,50 +161,16 @@
                         <el-icon><Search /></el-icon>
                       </button>
                     </div>
-                    <div v-else-if="field.fieldType === 'attachment'" class="attachment-field">
-                      <el-upload
-                        class="attachment-upload"
-                        :action="uploadActionUrl"
-                        name="Files"
-                        multiple
-                        :headers="uploadHeaders"
-                        :show-file-list="false"
-                        :disabled="dialogType === 'edit' && !field.editable"
-                        :on-success="(response, file) => handleAttachmentUploadSuccess(response, file, field)"
-                        :on-error="handleAttachmentUploadError"
-                      >
-                        <el-button
-                          type="primary"
-                          size="small"
-                          icon="Upload"
-                          :disabled="dialogType === 'edit' && !field.editable"
-                        >
-                          上传附件
-                        </el-button>
-                      </el-upload>
-                      <div v-if="getAttachmentList(field).length > 0" class="attachment-list">
-                        <div
-                          v-for="(attachment, attachmentIndex) in getAttachmentList(field)"
-                          :key="getAttachmentKey(attachment, attachmentIndex)"
-                          class="attachment-item"
-                        >
-                          <span class="attachment-name" :title="getAttachmentName(attachment)">
-                            {{ getAttachmentName(attachment) }}
-                          </span>
-                          <el-button
-                            v-if="!(dialogType === 'edit' && !field.editable)"
-                            class="attachment-remove-button"
-                            text
-                            type="danger"
-                            size="small"
-                            icon="Delete"
-                            title="移除附件"
-                            @click="removeAttachment(field, attachmentIndex)"
-                          ></el-button>
-                        </div>
-                      </div>
-                      <div v-else class="attachment-empty">暂无附件</div>
-                    </div>
+                    <MicroAppAttachmentField
+                      v-else-if="field.fieldType === 'attachment'"
+                      :upload-action-url="uploadActionUrl"
+                      :upload-headers="uploadHeaders"
+                      :attachments="getAttachmentList(field)"
+                      :disabled="dialogType === 'edit' && !field.editable"
+                      @upload-success="(response, file) => handleAttachmentUploadSuccess(response, file, field)"
+                      @upload-error="handleAttachmentUploadError"
+                      @remove="removeAttachment(field, $event)"
+                    />
                     <el-input
                       v-else
                       v-model="formData[field.fieldName]"
@@ -448,14 +414,12 @@
 
 <script>
 import { Search } from '@element-plus/icons-vue'
-import { getFileDownloadUrl, getFileUploadUrl, getUploadHeaders } from '@/api/file'
+import { getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
+import MicroAppAttachmentField from './MicroAppAttachmentField.vue'
 import MicroAppLookupDialog from './MicroAppLookupDialog.vue'
 import {
-  getAttachmentFileId,
-  getAttachmentKey,
-  getAttachmentName,
   getDateDisplayFormat,
   getDatePickerType,
   getDateValueFormat,
@@ -470,6 +434,7 @@ import {
 export default {
   name: 'MicroAppFormDialog',
   components: {
+    MicroAppAttachmentField,
     MicroAppLookupDialog,
     Search
   },
@@ -670,15 +635,6 @@ export default {
     getAttachmentList(field) {
       return this.normalizeAttachmentValue(this.formData[field.fieldName])
     },
-    getAttachmentKey(attachment, index) {
-      return getAttachmentKey(attachment, index)
-    },
-    getAttachmentFileId(attachment) {
-      return getAttachmentFileId(attachment)
-    },
-    getAttachmentName(attachment) {
-      return getAttachmentName(attachment)
-    },
     normalizeUploadedAttachment(item, file) {
       return {
         FileID: item.FileID || item.fileId || item.FileId || '',
@@ -715,14 +671,6 @@ export default {
       // eslint-disable-next-line vue/no-mutating-props
       this.formData[field.fieldName] = current
       this.$refs.formRef?.validateField(field.fieldName)
-    },
-    downloadAttachment(attachment) {
-      const fileId = this.getAttachmentFileId(attachment)
-      if (!fileId) {
-        this.$message.warning('无法获取文件编号')
-        return
-      }
-      window.location.href = getFileDownloadUrl(fileId)
     },
     parseLookupParams(value) {
       return parseJsonObject(value)
@@ -1813,61 +1761,6 @@ export default {
   justify-content: center;
 }
 
-.attachment-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.attachment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.attachment-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid #e6edf7;
-  border-radius: 8px;
-  background: #fbfdff;
-}
-
-.attachment-name {
-  min-width: 0;
-  overflow: hidden;
-  color: #344563;
-  font-size: 13px;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attachment-remove-button {
-  width: 32px !important;
-  height: 32px !important;
-  padding: 0 !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  color: #e5484d !important;
-}
-
-.attachment-remove-button:hover,
-.attachment-remove-button:focus {
-  background: #feecec !important;
-  color: #c73338 !important;
-}
-
-.attachment-empty {
-  color: #8a98aa;
-  font-size: 13px;
-  line-height: 20px;
-}
-
 @media (max-width: 1100px) {
   .form-workspace {
     grid-template-columns: 1fr;
@@ -1933,8 +1826,7 @@ html[data-theme='dark'] :deep(.micro-app-form-dialog) {
 html[data-theme='dark'] .dialog-form-container,
 html[data-theme='dark'] .rail-card,
 html[data-theme='dark'] .form-section,
-html[data-theme='dark'] .subtable-panel,
-html[data-theme='dark'] .attachment-item {
+html[data-theme='dark'] .subtable-panel {
   background: var(--dt-surface) !important;
   border-color: var(--dt-border) !important;
   box-shadow: var(--dt-shadow-soft);
@@ -1950,20 +1842,12 @@ html[data-theme='dark'] .rail-card__header {
 
 html[data-theme='dark'] .rail-card__title,
 html[data-theme='dark'] .form-section-title,
-html[data-theme='dark'] .subtable-group-title,
-html[data-theme='dark'] .attachment-name {
+html[data-theme='dark'] .subtable-group-title {
   color: var(--dt-text) !important;
 }
 
 html[data-theme='dark'] .rail-card__desc,
-html[data-theme='dark'] .form-section-desc,
-html[data-theme='dark'] .attachment-empty {
+html[data-theme='dark'] .form-section-desc {
   color: var(--dt-text-muted) !important;
-}
-
-html[data-theme='dark'] .attachment-remove-button:hover,
-html[data-theme='dark'] .attachment-remove-button:focus {
-  background: var(--dt-danger-soft) !important;
-  color: var(--dt-danger) !important;
 }
 </style>
