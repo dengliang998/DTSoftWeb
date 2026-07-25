@@ -5,6 +5,7 @@ module.exports = {
   publicPath: './',
   outputDir: 'dist',
   assetsDir: 'static',
+  productionSourceMap: false,
   runtimeCompiler: true,
   configureWebpack: {
     performance: {
