@@ -336,29 +336,62 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 560px;
+  justify-content: center;
+  max-width: 640px;
+  min-height: 100%;
 }
 
 .brand_copy {
-  width: 100%;
+  position: relative;
+  width: min(100%, 620px);
+  padding: 26px 34px 24px 30px;
+  box-sizing: border-box;
+}
+
+.brand_copy::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 36%, transparent 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(14px);
+  content: '';
+}
+
+.brand_copy::after {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.24) 100%);
+  content: '';
 }
 
 .login_brand-title {
-  color: rgba(255, 255, 255, 0.94);
-  font-size: clamp(30px, 4.5vw, 52px);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: 0;
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.98);
+  font-size: clamp(34px, 5vw, 64px);
+  font-weight: 820;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
   word-break: break-word;
+  text-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
 }
 
 .login_brand-subtitle {
+  position: relative;
+  z-index: 1;
   margin-top: 18px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 18px;
-  font-weight: 650;
-  letter-spacing: 0;
-  text-shadow: 0 1px 12px rgba(15, 23, 42, 0.22);
+  padding-left: 2px;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .login_box {
@@ -547,7 +580,12 @@ export default defineComponent({
   }
 
   .brand_copy {
-    padding: 0;
+    width: 100%;
+    padding: 22px 24px 20px;
+  }
+
+  .brand_copy::after {
+    display: none;
   }
 
   .login_brand-title {
@@ -557,6 +595,7 @@ export default defineComponent({
   .login_brand-subtitle {
     margin-top: 14px;
     font-size: 16px;
+    padding-left: 0;
   }
 }
 
@@ -583,5 +622,89 @@ export default defineComponent({
     grid-template-columns: 1fr 106px;
     gap: 10px;
   }
+}
+
+html[data-theme='dark'] .login_container {
+  background-color: #09111d;
+}
+
+html[data-theme='dark'] .login_brand-title {
+  color: rgba(241, 245, 249, 0.96);
+}
+
+html[data-theme='dark'] .login_brand-subtitle {
+  color: rgba(203, 213, 225, 0.86);
+  text-shadow: 0 2px 12px rgba(2, 6, 23, 0.38);
+}
+
+html[data-theme='dark'] .brand_copy {
+  background: transparent;
+}
+
+html[data-theme='dark'] .brand_copy::before {
+  background: linear-gradient(90deg, rgba(2, 6, 23, 0.34) 0%, rgba(15, 23, 42, 0.22) 36%, transparent 100%);
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
+}
+
+html[data-theme='dark'] .brand_copy::after {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.88) 0%, rgba(148, 163, 184, 0.2) 100%);
+}
+
+html[data-theme='dark'] .login_box {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: color-mix(in srgb, var(--dt-text) 14%, transparent);
+  box-shadow: 0 28px 90px rgba(2, 6, 23, 0.5);
+}
+
+html[data-theme='dark'] .login_box h1 {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .login_box p,
+html[data-theme='dark'] .security_note {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .avatar_box {
+  background: var(--dt-surface);
+  border-color: var(--dt-border);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.28);
+}
+
+html[data-theme='dark'] .avatar_box img {
+  background-color: var(--dt-surface-soft);
+}
+
+html[data-theme='dark'] .login_form :deep(.el-input__wrapper) {
+  background: color-mix(in srgb, var(--dt-surface-soft) 88%, #0f172a 12%);
+  box-shadow: 0 0 0 1px var(--dt-border) inset !important;
+}
+
+html[data-theme='dark'] .login_form :deep(.el-input__wrapper:hover),
+html[data-theme='dark'] .login_form :deep(.el-input__wrapper.is-focus) {
+  background: var(--dt-surface);
+}
+
+html[data-theme='dark'] .login_form :deep(.el-input__inner),
+html[data-theme='dark'] .login_form :deep(.el-input__prefix-inner),
+html[data-theme='dark'] .login_form :deep(.el-input__suffix-inner) {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .login_form :deep(.el-input__inner::placeholder) {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .captcha-image {
+  color: var(--dt-text-muted);
+  background: var(--dt-surface-soft);
+  border-color: var(--dt-border);
+}
+
+html[data-theme='dark'] .captcha-image:hover,
+html[data-theme='dark'] .captcha-image:focus-visible {
+  background: var(--dt-surface);
+  border-color: var(--dt-primary);
 }
 </style>

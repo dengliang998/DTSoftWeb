@@ -1484,4 +1484,88 @@ export default {
     align-items: stretch;
   }
 }
+
+html[data-theme='dark'] .menus-container {
+  color: var(--dt-text);
+  background: transparent;
+}
+
+html[data-theme='dark'] .menu-commandbar,
+html[data-theme='dark'] .menu-toolbar,
+html[data-theme='dark'] .menu-table-panel {
+  background: var(--dt-surface);
+  border-color: var(--dt-border);
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] .menu-title h1,
+html[data-theme='dark'] .table-panel__header strong,
+html[data-theme='dark'] .filter-tab.is-active {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .menu-title p,
+html[data-theme='dark'] .table-panel__header span,
+html[data-theme='dark'] .filter-tab,
+html[data-theme='dark'] .table-wrapper :deep(.el-table__expand-icon) {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .menu-search :deep(.el-input__wrapper),
+html[data-theme='dark'] .filter-tabs,
+html[data-theme='dark'] .metric-chip,
+html[data-theme='dark'] .ghost-action {
+  background: var(--dt-surface-soft);
+  border-color: var(--dt-border);
+  color: var(--dt-text);
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .filter-tab.is-active {
+  background: var(--dt-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+html[data-theme='dark'] .table-panel__header {
+  border-bottom-color: var(--dt-border);
+  background: linear-gradient(180deg, var(--dt-surface) 0%, var(--dt-surface-soft) 100%);
+}
+
+html[data-theme='dark'] .table-wrapper :deep(.el-table__header-wrapper th) {
+  border-bottom-color: var(--dt-border);
+  background: var(--dt-surface-soft) !important;
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .table-wrapper :deep(.el-table__body-wrapper) {
+  background: var(--dt-surface);
+}
+
+html[data-theme='dark'] .table-wrapper :deep(.el-table__row td) {
+  border-bottom-color: var(--dt-border);
+}
+
+html[data-theme='dark'] .table-wrapper :deep(.el-table__row:hover > td) {
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .icon-action--edit {
+  border-color: color-mix(in srgb, var(--dt-primary) 34%, var(--dt-border));
+  color: var(--dt-primary-light);
+  background: var(--dt-primary-subtle);
+}
+
+html[data-theme='dark'] .icon-action--danger,
+html[data-theme='dark'] .metric-chip--warning {
+  border-color: #6b4a1f;
+  color: #ffd28a !important;
+  background: #332816;
+}
+
+html[data-theme='dark'] .menus-container :deep(.el-button.is-disabled),
+html[data-theme='dark'] .menus-container :deep(.el-button.is-disabled:hover) {
+  color: color-mix(in srgb, var(--dt-text-muted) 74%, transparent);
+  border-color: var(--dt-border);
+  background: var(--dt-surface-soft);
+}
 </style>

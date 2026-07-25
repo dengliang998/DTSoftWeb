@@ -200,6 +200,7 @@ import {
   getCachedThemeConfig,
   getThemePreset,
   normalizeThemeConfig,
+  resolveThemeRuntime,
   serializeThemeConfig
 } from '@/utils/sysConfig'
 
@@ -278,23 +279,31 @@ export default defineComponent({
       }
     })
 
-    const themePreviewStyle = computed(() => ({
-      '--preview-primary': form.theme.colors.primary,
-      '--preview-primary-light': form.theme.colors.primaryLight,
-      '--preview-top-bg': form.theme.colors.topBg,
-      '--preview-top-border': form.theme.colors.topBorder,
-      '--preview-top-text': form.theme.colors.topText,
-      '--preview-top-active-bg': form.theme.colors.topActiveBg,
-      '--preview-top-active-text': form.theme.colors.topActiveText,
-      '--preview-side-bg': form.theme.colors.sideBg,
-      '--preview-side-border': form.theme.colors.sideBorder,
-      '--preview-side-text': form.theme.colors.sideText,
-      '--preview-side-hover-bg': form.theme.colors.sideHoverBg,
-      '--preview-side-hover-text': form.theme.colors.sideHoverText,
-      '--preview-side-active-bg': form.theme.colors.sideActiveBg,
-      '--preview-side-active-text': form.theme.colors.sideActiveText,
-      '--preview-page-bg': form.theme.colors.pageBg
-    }))
+    const themePreviewStyle = computed(() => {
+      const { palette, runtimeColors } = resolveThemeRuntime(form.theme)
+      return {
+        '--preview-primary': runtimeColors.primary,
+        '--preview-primary-light': runtimeColors.primaryLight,
+        '--preview-top-bg': runtimeColors.topBg,
+        '--preview-top-border': runtimeColors.topBorder,
+        '--preview-top-text': runtimeColors.topText,
+        '--preview-top-active-bg': runtimeColors.topActiveBg,
+        '--preview-top-active-text': runtimeColors.topActiveText,
+        '--preview-side-bg': runtimeColors.sideBg,
+        '--preview-side-border': runtimeColors.sideBorder,
+        '--preview-side-text': runtimeColors.sideText,
+        '--preview-side-hover-bg': runtimeColors.sideHoverBg,
+        '--preview-side-hover-text': runtimeColors.sideHoverText,
+        '--preview-side-active-bg': runtimeColors.sideActiveBg,
+        '--preview-side-active-text': runtimeColors.sideActiveText,
+        '--preview-page-bg': runtimeColors.pageBg,
+        '--preview-surface': palette.surface,
+        '--preview-surface-soft': palette.surfaceSoft,
+        '--preview-border': palette.border,
+        '--preview-text': palette.text,
+        '--preview-text-muted': palette.textMuted
+      }
+    })
 
     const revokeObjectUrl = (urlRef) => {
       if (urlRef.value && urlRef.value.startsWith('blob:')) {
@@ -498,12 +507,12 @@ export default defineComponent({
 
 .settings-section + .settings-section {
   padding-top: 22px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--dt-border);
 }
 
 .section-title {
   margin: 0 0 18px;
-  color: #1f2937;
+  color: var(--dt-text);
   font-size: 15px;
   font-weight: 700;
 }
@@ -515,7 +524,8 @@ export default defineComponent({
   flex-wrap: wrap;
 }
 
-.switch-setting {
+.switch-setting,
+.appearance-setting {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -523,7 +533,7 @@ export default defineComponent({
 }
 
 .hint {
-  color: #6b7280;
+  color: var(--dt-text-muted);
   font-size: 12px;
 }
 
@@ -533,7 +543,7 @@ export default defineComponent({
 }
 
 .preview-title {
-  color: #374151;
+  color: var(--dt-text-muted);
   font-size: 12px;
   margin-bottom: 6px;
 }
@@ -543,7 +553,8 @@ export default defineComponent({
   max-width: 900px;
   height: 240px;
   border-radius: 10px;
-  border: 1px dashed #d1d5db;
+  border: 1px dashed var(--dt-border-strong);
+  background-color: var(--dt-surface-soft);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -554,7 +565,7 @@ export default defineComponent({
 }
 
 .preview-empty {
-  color: #9ca3af;
+  color: var(--dt-text-muted);
   font-size: 12px;
 }
 
@@ -573,8 +584,8 @@ export default defineComponent({
   gap: 8px;
   height: 46px;
   padding: 0 10px;
-  background: #eef2f7;
-  border: 1px solid #d8dee8;
+  background: var(--dt-surface-soft);
+  border: 1px solid var(--dt-border);
   border-radius: 8px 8px 0 0;
   box-sizing: border-box;
 }
@@ -582,7 +593,7 @@ export default defineComponent({
 .favicon-dot {
   width: 8px;
   height: 8px;
-  background: #c3cad6;
+  background: var(--dt-border-strong);
   border-radius: 50%;
 }
 
@@ -594,9 +605,9 @@ export default defineComponent({
   height: 32px;
   padding: 0 12px;
   margin-left: 4px;
-  background: #ffffff;
-  border: 1px solid #d8dee8;
-  border-bottom-color: #ffffff;
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
+  border-bottom-color: var(--dt-surface);
   border-radius: 8px 8px 0 0;
 }
 
@@ -625,7 +636,7 @@ export default defineComponent({
   min-width: 0;
   max-width: 270px;
   overflow: hidden;
-  color: #475467;
+  color: var(--dt-text);
   font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -649,8 +660,8 @@ export default defineComponent({
   justify-content: space-between;
   min-height: 64px;
   padding: 12px;
-  background: #ffffff;
-  border: 1px solid #d8dee8;
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
   cursor: pointer;
   transition:
@@ -670,7 +681,7 @@ export default defineComponent({
 }
 
 .preset-name {
-  color: #1f2937;
+  color: var(--dt-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -684,7 +695,7 @@ export default defineComponent({
   width: 18px;
   height: 18px;
   margin-left: -4px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--dt-surface);
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.08);
 }
@@ -697,14 +708,14 @@ export default defineComponent({
 
 .custom-color-group {
   padding: 12px;
-  background: #ffffff;
-  border: 1px solid #e4e7ed;
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
 }
 
 .custom-color-title {
   margin-bottom: 10px;
-  color: #1f2937;
+  color: var(--dt-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -721,11 +732,11 @@ export default defineComponent({
   justify-content: space-between;
   min-height: 42px;
   padding: 0 12px;
-  color: #475467;
+  color: var(--dt-text);
   font-size: 13px;
   font-weight: 600;
-  background: #f8fafc;
-  border: 1px solid #e4e7ed;
+  background: var(--dt-surface-soft);
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
 }
 
@@ -736,7 +747,7 @@ export default defineComponent({
   margin-top: 16px;
   overflow: hidden;
   background: var(--preview-page-bg);
-  border: 1px solid #d8dee8;
+  border: 1px solid var(--preview-border);
   border-radius: 8px;
 }
 
@@ -803,12 +814,14 @@ export default defineComponent({
 
 .theme-preview-main {
   padding: 18px;
+  background: var(--preview-page-bg);
 }
 
 .theme-preview-header {
   height: 20px;
   width: 46%;
-  background: #ffffff;
+  background: var(--preview-surface);
+  border: 1px solid var(--preview-border);
   border-radius: 6px;
 }
 
@@ -828,7 +841,7 @@ export default defineComponent({
 
 .theme-preview-lines span {
   height: 10px;
-  background: #d8dee8;
+  background: color-mix(in srgb, var(--preview-text-muted) 34%, var(--preview-surface));
   border-radius: 999px;
 }
 

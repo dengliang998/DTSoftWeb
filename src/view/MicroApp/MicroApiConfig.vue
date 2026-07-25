@@ -2860,4 +2860,110 @@ export default {
     grid-column: auto;
   }
 }
+
+html[data-theme='dark'] .crud-config-container .visual-config-container,
+html[data-theme='dark'] .crud-config-container .field-sidebar,
+html[data-theme='dark'] .crud-config-container .field-detail,
+html[data-theme='dark'] .crud-config-container .field-card,
+html[data-theme='dark'] .crud-config-container .config-card,
+html[data-theme='dark'] .crud-config-container .empty-inline,
+html[data-theme='dark'] .crud-config-container .no-selection {
+  background: var(--dt-surface) !important;
+  border-color: var(--dt-border) !important;
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] :deep(.visual-config-dialog .el-dialog__body) {
+  background: var(--dt-bg) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .workspace-panel,
+html[data-theme='dark'] .crud-config-container .subtable-config-card,
+html[data-theme='dark'] .crud-config-container .metric-item,
+html[data-theme='dark'] .crud-config-container .switch-tile {
+  background: var(--dt-surface) !important;
+  border-color: var(--dt-border) !important;
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] .crud-config-container .metric-item {
+  background: linear-gradient(180deg, var(--dt-surface-soft) 0%, var(--dt-surface) 100%) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .metric-item::before {
+  background: var(--dt-primary) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-tree :deep(.el-tree-node__content:hover),
+html[data-theme='dark'] .crud-config-container .field-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background-color: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-tree :deep(.el-tree-node.is-current > .el-tree-node__content) {
+  box-shadow: inset 3px 0 0 var(--dt-primary) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-editor-head {
+  border-bottom-color: var(--dt-border) !important;
+  background: color-mix(in srgb, var(--dt-surface) 92%, #0f172a 8%) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .config-section,
+html[data-theme='dark'] .crud-config-container .subtable-sidebar,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-config {
+  border-color: var(--dt-border) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-card.is-active,
+html[data-theme='dark'] .crud-config-container .field-row.is-active,
+html[data-theme='dark'] .crud-config-container .option-item.is-active {
+  background: var(--dt-primary-subtle) !important;
+  box-shadow: inset 3px 0 0 var(--dt-primary) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-name,
+html[data-theme='dark'] .crud-config-container .config-title,
+html[data-theme='dark'] .crud-config-container .no-selection-title,
+html[data-theme='dark'] .crud-config-container .section-title,
+html[data-theme='dark'] .crud-config-container .metric-value,
+html[data-theme='dark'] .crud-config-container .field-tree-node__label,
+html[data-theme='dark'] .crud-config-container .field-editor-title,
+html[data-theme='dark'] .crud-config-container .config-section-title,
+html[data-theme='dark'] .crud-config-container .subtable-config-card__head,
+html[data-theme='dark'] .crud-config-container .subtable-field-actions,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-switch {
+  color: var(--dt-text) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .field-meta,
+html[data-theme='dark'] .crud-config-container .config-subtitle,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-title,
+html[data-theme='dark'] .crud-config-container .empty-inline,
+html[data-theme='dark'] .crud-config-container .no-selection-subtitle,
+html[data-theme='dark'] .crud-config-container .section-kicker,
+html[data-theme='dark'] .crud-config-container .metric-label,
+html[data-theme='dark'] .crud-config-container .field-tree-node__meta,
+html[data-theme='dark'] .crud-config-container .field-tree-node__drag,
+html[data-theme='dark'] .crud-config-container .field-editor-meta,
+html[data-theme='dark'] .crud-config-container .compact-form :deep(.el-form-item__label),
+html[data-theme='dark'] .crud-config-container .field-config-form :deep(.el-form-item__label),
+html[data-theme='dark'] .crud-config-container .esb-variable-title {
+  color: var(--dt-text-muted) !important;
+}
+
+html[data-theme='dark'] .crud-config-container .option-delete-button,
+html[data-theme='dark'] .crud-config-container .subtable-icon-button,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-delete-button {
+  background: var(--dt-danger) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='dark'] .crud-config-container .option-delete-button:hover,
+html[data-theme='dark'] .crud-config-container .option-delete-button:focus,
+html[data-theme='dark'] .crud-config-container .subtable-icon-button:hover,
+html[data-theme='dark'] .crud-config-container .subtable-icon-button:focus,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-delete-button:hover,
+html[data-theme='dark'] .crud-config-container .subtable-lookup-delete-button:focus {
+  background: color-mix(in srgb, var(--dt-danger) 84%, #000000 16%) !important;
+}
 </style>

@@ -1961,4 +1961,46 @@ export default {
     flex-wrap: wrap;
   }
 }
+
+html[data-theme='dark'] :deep(.micro-app-form-dialog) {
+  background: var(--dt-surface) !important;
+  box-shadow: var(--dt-shadow) !important;
+}
+
+html[data-theme='dark'] .dialog-form-container,
+html[data-theme='dark'] .rail-card,
+html[data-theme='dark'] .form-section,
+html[data-theme='dark'] .subtable-panel,
+html[data-theme='dark'] .attachment-item {
+  background: var(--dt-surface) !important;
+  border-color: var(--dt-border) !important;
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] .form-section-head,
+html[data-theme='dark'] .subtable-panel-header,
+html[data-theme='dark'] .dialog-footer,
+html[data-theme='dark'] .rail-card__header {
+  background: var(--dt-surface-soft) !important;
+  border-color: var(--dt-border) !important;
+}
+
+html[data-theme='dark'] .rail-card__title,
+html[data-theme='dark'] .form-section-title,
+html[data-theme='dark'] .subtable-group-title,
+html[data-theme='dark'] .attachment-name {
+  color: var(--dt-text) !important;
+}
+
+html[data-theme='dark'] .rail-card__desc,
+html[data-theme='dark'] .form-section-desc,
+html[data-theme='dark'] .attachment-empty {
+  color: var(--dt-text-muted) !important;
+}
+
+html[data-theme='dark'] .attachment-remove-button:hover,
+html[data-theme='dark'] .attachment-remove-button:focus {
+  background: var(--dt-danger-soft) !important;
+  color: var(--dt-danger) !important;
+}
 </style>

@@ -1937,4 +1937,39 @@ export default {
 :deep(.el-overlay) {
   overflow: hidden;
 }
+
+html[data-theme='dark'] .dynamic-app-container .advanced-query,
+html[data-theme='dark'] .dynamic-app-container .attachment-cell-item,
+html[data-theme='dark'] .dynamic-app-container .data-detail-card,
+html[data-theme='dark'] .dynamic-app-container .detail-section,
+html[data-theme='dark'] .dynamic-app-container .subtable-card {
+  background: var(--dt-surface) !important;
+  border-color: var(--dt-border) !important;
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] .dynamic-app-container .detail-section__header,
+html[data-theme='dark'] .dynamic-app-container .subtable-card__header {
+  border-bottom-color: var(--dt-border) !important;
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .dynamic-app-container .attachment-type-badge {
+  background: var(--dt-primary-subtle);
+  color: var(--dt-primary-light);
+}
+
+html[data-theme='dark'] .dynamic-app-container .attachment-download-link,
+html[data-theme='dark'] .dynamic-app-container .attachment-preview-link {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .dynamic-app-container .attachment-download-link:hover,
+html[data-theme='dark'] .dynamic-app-container .attachment-preview-link:hover {
+  color: var(--dt-primary-light);
+}
+
+html[data-theme='dark'] .dynamic-app-container .attachment-empty-cell {
+  color: var(--dt-text-muted);
+}
 </style>

@@ -936,4 +936,64 @@ export default {
     height: 148px;
   }
 }
+
+html[data-theme='dark'] .welcome-container {
+  color: var(--dt-text);
+  background:
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--dt-primary) 14%, transparent), transparent 28%),
+    linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+}
+
+html[data-theme='dark'] .hero-section {
+  border-color: color-mix(in srgb, var(--dt-text) 14%, transparent);
+  box-shadow: var(--dt-shadow);
+}
+
+html[data-theme='dark'] .dashboard-panel {
+  background: var(--dt-surface);
+  border-color: var(--dt-border);
+  box-shadow: var(--dt-shadow-soft);
+}
+
+html[data-theme='dark'] .panel-header h3,
+html[data-theme='dark'] .chart-labels strong,
+html[data-theme='dark'] .bar-value,
+html[data-theme='dark'] .info-item strong,
+html[data-theme='dark'] .recent-item strong {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .panel-header p,
+html[data-theme='dark'] .chart-labels small,
+html[data-theme='dark'] .bar-column small,
+html[data-theme='dark'] .info-item span,
+html[data-theme='dark'] .recent-item small,
+html[data-theme='dark'] .recent-item > span {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .chart-grid-lines line {
+  stroke: var(--dt-border);
+}
+
+html[data-theme='dark'] .trend-line {
+  stroke: var(--dt-primary-light);
+  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--dt-primary) 22%, transparent));
+}
+
+html[data-theme='dark'] .trend-dot {
+  fill: var(--dt-surface);
+  stroke: var(--dt-primary-light);
+}
+
+html[data-theme='dark'] .bar-track,
+html[data-theme='dark'] .info-item,
+html[data-theme='dark'] .recent-item {
+  background: var(--dt-surface-soft);
+  border-color: var(--dt-border);
+}
+
+html[data-theme='dark'] .bar-fill {
+  background: linear-gradient(180deg, var(--dt-primary-light) 0%, var(--dt-primary) 100%);
+}
 </style>

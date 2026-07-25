@@ -850,4 +850,48 @@ export default {
     max-width: none;
   }
 }
+
+html[data-theme='dark'] .dictionary-page .type-filter-bar,
+html[data-theme='dark'] .dictionary-page .item-toolbar {
+  border-bottom-color: var(--dt-border);
+  background: var(--dt-surface);
+}
+
+html[data-theme='dark'] .dictionary-page .type-list {
+  background: transparent;
+}
+
+html[data-theme='dark'] .dictionary-page .type-item {
+  border-color: var(--dt-border);
+  background: var(--dt-surface);
+}
+
+html[data-theme='dark'] .dictionary-page .type-item:hover,
+html[data-theme='dark'] .dictionary-page .type-item.active {
+  border-color: var(--dt-primary-border);
+  background: var(--dt-primary-subtle);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--dt-primary) 12%, transparent);
+}
+
+html[data-theme='dark'] .dictionary-page .type-item.drag-over {
+  border-color: var(--dt-primary-border);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dt-primary) 40%, transparent);
+}
+
+html[data-theme='dark'] .dictionary-page .type-drag-handle,
+html[data-theme='dark'] .dictionary-page .item-drag-handle {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .dictionary-page .type-name {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .dictionary-page .type-code {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .dictionary-page .item-panel :deep(.dictionary-item-row.drag-over > td) {
+  background-color: var(--dt-primary-subtle) !important;
+}
 </style>

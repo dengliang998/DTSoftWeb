@@ -385,4 +385,28 @@ export default {
     flex-direction: column;
   }
 }
+
+html[data-theme='dark'] .user-info-panel {
+  background: transparent;
+}
+
+html[data-theme='dark'] .user-info-form :deep(.el-form-item__label) {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .avatar-uploader .el-upload {
+  border-color: var(--dt-primary-border);
+  background: linear-gradient(135deg, var(--dt-surface-soft) 0%, var(--dt-surface) 100%);
+}
+
+html[data-theme='dark'] .avatar-uploader .el-upload:hover {
+  border-color: var(--dt-primary);
+  background: linear-gradient(135deg, var(--dt-primary-subtle) 0%, var(--dt-surface-soft) 100%);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--dt-primary) 20%, transparent);
+}
+
+html[data-theme='dark'] .avatar-uploader-icon,
+html[data-theme='dark'] .upload-text {
+  color: var(--dt-primary-light);
+}
 </style>

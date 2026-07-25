@@ -460,4 +460,43 @@ export default {
     padding: 12px 16px;
   }
 }
+
+html[data-theme='dark'] :deep(.menu-form-dialog .el-dialog__body) {
+  background: var(--dt-surface) !important;
+}
+
+html[data-theme='dark'] .menu-form,
+html[data-theme='dark'] .route-summary {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .route-summary {
+  background: var(--dt-surface-soft);
+  border-color: var(--dt-border);
+}
+
+html[data-theme='dark'] .route-summary span {
+  color: var(--dt-text-muted);
+}
+
+html[data-theme='dark'] .route-summary code {
+  color: var(--dt-text);
+}
+
+html[data-theme='dark'] .dialog-footer {
+  background: var(--dt-surface-soft);
+  border-top: 1px solid var(--dt-border);
+}
+
+html[data-theme='dark'] .dialog-footer :deep(.el-button--default) {
+  color: var(--dt-text);
+  border-color: var(--dt-border);
+  background: var(--dt-surface);
+}
+
+html[data-theme='dark'] .dialog-footer :deep(.el-button--default:hover) {
+  color: var(--dt-primary-light);
+  border-color: var(--dt-primary-border);
+  background: var(--dt-primary-subtle);
+}
 </style>
