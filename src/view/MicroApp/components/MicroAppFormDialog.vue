@@ -57,129 +57,24 @@
           </aside>
 
           <main class="form-canvas">
-            <section
+            <MicroAppMainFields
               v-show="activeWorkSection === 'main'"
               ref="mainFieldsSection"
-              class="form-section form-section--main"
-            >
-              <div class="form-section-head">
-                <div>
-                  <div class="section-kicker">主表</div>
-                  <h3 class="form-section-title">基础信息</h3>
-                </div>
-                <span class="section-pill">{{ completedRequiredFieldCount }}/{{ requiredFieldCount }} 必填</span>
-              </div>
-              <el-row class="main-field-grid" :gutter="16">
-                <el-col v-for="(field, index) in orderedFields" :key="index" :span="formFieldSpan">
-                  <el-form-item
-                    class="main-form-item"
-                    :label="field.label || field.fieldName"
-                    :prop="field.fieldName"
-                    :rules="getFieldRules(field)"
-                  >
-                    <el-input
-                      v-if="field.fieldType === 'string'"
-                      v-model="formData[field.fieldName]"
-                      :placeholder="'请输入' + (field.label || field.fieldName)"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-input>
-                    <el-input-number
-                      v-else-if="field.fieldType === 'number'"
-                      v-model="formData[field.fieldName]"
-                      style="width: 100%"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-input-number>
-                    <el-date-picker
-                      v-else-if="field.fieldType === 'datetime'"
-                      v-model="formData[field.fieldName]"
-                      :type="getDatePickerType(field)"
-                      :value-format="getDateValueFormat(field)"
-                      :format="getDateDisplayFormat(field)"
-                      style="width: 100%"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-date-picker>
-                    <el-switch
-                      v-else-if="field.fieldType === 'boolean'"
-                      v-model="formData[field.fieldName]"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-switch>
-                    <el-input
-                      v-else-if="field.fieldType === 'textarea'"
-                      v-model="formData[field.fieldName]"
-                      type="textarea"
-                      :rows="4"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-input>
-                    <el-select
-                      v-else-if="field.fieldType === 'select'"
-                      v-model="formData[field.fieldName]"
-                      style="width: 100%"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    >
-                      <el-option
-                        v-for="opt in field.options || []"
-                        :key="opt.value"
-                        :label="opt.label"
-                        :value="opt.value"
-                      ></el-option>
-                    </el-select>
-                    <el-radio-group
-                      v-else-if="field.fieldType === 'radio'"
-                      v-model="formData[field.fieldName]"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    >
-                      <el-radio v-for="opt in field.options || []" :key="opt.value" :label="opt.value">
-                        {{ opt.label }}
-                      </el-radio>
-                    </el-radio-group>
-                    <el-checkbox-group
-                      v-else-if="field.fieldType === 'checkbox'"
-                      v-model="formData[field.fieldName]"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    >
-                      <el-checkbox v-for="opt in field.options || []" :key="opt.value" :label="opt.value">
-                        {{ opt.label }}
-                      </el-checkbox>
-                    </el-checkbox-group>
-                    <div
-                      v-else-if="field.fieldType === 'lookup'"
-                      class="lookup-field"
-                      :class="{ 'is-disabled': dialogType === 'edit' && !field.editable }"
-                    >
-                      <el-input
-                        v-model="formData[field.fieldName]"
-                        readonly
-                        :placeholder="'请选择' + (field.label || field.fieldName)"
-                        :disabled="dialogType === 'edit' && !field.editable"
-                      ></el-input>
-                      <button
-                        class="lookup-field__button"
-                        type="button"
-                        :disabled="dialogType === 'edit' && !field.editable"
-                        @click="openLookupDialog(field)"
-                      >
-                        <el-icon><Search /></el-icon>
-                      </button>
-                    </div>
-                    <MicroAppAttachmentField
-                      v-else-if="field.fieldType === 'attachment'"
-                      :upload-action-url="uploadActionUrl"
-                      :upload-headers="uploadHeaders"
-                      :attachments="getAttachmentList(field)"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                      @upload-success="(response, file) => handleAttachmentUploadSuccess(response, file, field)"
-                      @upload-error="handleAttachmentUploadError"
-                      @remove="removeAttachment(field, $event)"
-                    />
-                    <el-input
-                      v-else
-                      v-model="formData[field.fieldName]"
-                      :disabled="dialogType === 'edit' && !field.editable"
-                    ></el-input>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-            </section>
+              :form-data="formData"
+              :ordered-fields="orderedFields"
+              :form-field-span="formFieldSpan"
+              :dialog-type="dialogType"
+              :required-field-count="requiredFieldCount"
+              :completed-required-field-count="completedRequiredFieldCount"
+              :upload-action-url="uploadActionUrl"
+              :upload-headers="uploadHeaders"
+              :get-field-rules="getFieldRules"
+              :get-attachment-list="getAttachmentList"
+              @open-lookup="openLookupDialog"
+              @attachment-upload-success="handleAttachmentUploadSuccess"
+              @attachment-upload-error="handleAttachmentUploadError"
+              @remove-attachment="removeAttachment"
+            />
 
             <MicroAppSubTableEditor
               v-if="orderedSubTables.length > 0"
@@ -234,18 +129,14 @@
 </template>
 
 <script>
-import { Search } from '@element-plus/icons-vue'
 import { getFileUploadUrl, getUploadHeaders } from '@/api/file'
 import { executeEsbDataSource } from '@/api/esb'
 import { createMicroRuntimeData, updateMicroRuntimeData } from '@/api/microApp'
-import MicroAppAttachmentField from './MicroAppAttachmentField.vue'
 import MicroAppFormFooter from './MicroAppFormFooter.vue'
 import MicroAppLookupDialog from './MicroAppLookupDialog.vue'
+import MicroAppMainFields from './MicroAppMainFields.vue'
 import MicroAppSubTableEditor from './MicroAppSubTableEditor.vue'
 import {
-  getDateDisplayFormat,
-  getDatePickerType,
-  getDateValueFormat,
   getRowValue,
   normalizeAttachmentValue,
   normalizeFieldOrder,
@@ -257,11 +148,10 @@ import {
 export default {
   name: 'MicroAppFormDialog',
   components: {
-    MicroAppAttachmentField,
     MicroAppFormFooter,
     MicroAppLookupDialog,
-    MicroAppSubTableEditor,
-    Search
+    MicroAppMainFields,
+    MicroAppSubTableEditor
   },
   props: {
     modelValue: { type: Boolean, default: false },
@@ -633,15 +523,6 @@ export default {
       }
       this.lookupDialogVisible = false
       this.lookupSelectedRows = []
-    },
-    getDatePickerType(field) {
-      return getDatePickerType(field)
-    },
-    getDateValueFormat(field) {
-      return getDateValueFormat(field)
-    },
-    getDateDisplayFormat(field) {
-      return getDateDisplayFormat(field)
     },
     ensureSubTablesModel() {
       if (!this.formData.__subTables || typeof this.formData.__subTables !== 'object') {
@@ -1021,173 +902,8 @@ export default {
   overflow: hidden;
 }
 
-.form-section {
-  border: 1px solid #dfe7f2;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(26, 42, 68, 0.05);
-}
-
-.form-section--main {
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.form-section + .form-section {
-  margin-top: 14px;
-}
-
-.form-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 18px 4px;
-}
-
-.form-section-title {
-  margin: 2px 0 0;
-  color: #172033;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 26px;
-}
-
-.section-pill {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #fff7ed;
-  color: #a85116;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 18px;
-}
-
-.main-field-grid {
-  padding: 10px 18px 8px;
-}
-
 .runtime-form :deep(.el-form-item) {
   margin-bottom: 12px;
-}
-
-.main-form-item {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
-  margin-bottom: 12px !important;
-}
-
-.main-form-item :deep(.el-form-item__label) {
-  justify-content: flex-start;
-  min-height: 32px !important;
-  padding: 0 !important;
-  line-height: 32px !important;
-}
-
-.main-form-item :deep(.el-form-item__content) {
-  min-width: 0;
-  min-height: 32px;
-  line-height: 32px;
-}
-
-.main-form-item :deep(.el-select),
-.main-form-item :deep(.el-date-editor),
-.main-form-item :deep(.el-input-number),
-.main-form-item :deep(.el-input),
-.main-form-item :deep(.el-textarea) {
-  width: 100%;
-}
-
-.lookup-field {
-  display: grid;
-  width: 100%;
-  height: 32px;
-  max-height: 32px;
-  box-sizing: border-box;
-  grid-template-columns: minmax(0, 1fr) 40px;
-  align-items: center;
-  border: 1px solid #d7deea;
-  border-radius: 4px;
-  background: #ffffff;
-  overflow: hidden;
-  line-height: 32px;
-}
-
-.lookup-field:hover {
-  border-color: #9fb0c8;
-}
-
-.lookup-field:focus-within {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.12);
-}
-
-.lookup-field :deep(.el-input) {
-  height: 30px;
-  max-height: 30px;
-  line-height: 30px;
-}
-
-.lookup-field :deep(.el-input__wrapper) {
-  height: 30px !important;
-  min-height: 30px !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-.lookup-field :deep(.el-input__inner) {
-  height: 30px;
-  line-height: 30px;
-}
-
-.lookup-field__button {
-  appearance: none;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 40px !important;
-  min-width: 40px !important;
-  height: 30px !important;
-  min-height: 30px !important;
-  max-height: 30px !important;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0 !important;
-  border: 0;
-  border-radius: 0 !important;
-  background: #1677ff;
-  color: #ffffff;
-  cursor: pointer;
-  line-height: 30px !important;
-}
-
-.lookup-field__button:hover,
-.lookup-field__button:focus {
-  background: #0f67dc;
-  outline: none;
-}
-
-.lookup-field__button:disabled {
-  background: #a8c7f7;
-  cursor: not-allowed;
-}
-
-.lookup-field__button .el-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-  line-height: 16px;
-}
-
-.lookup-field.is-disabled .lookup-field__button {
-  cursor: not-allowed;
 }
 
 .runtime-form :deep(.el-form-item__label) {
@@ -1285,20 +1001,6 @@ export default {
   .dialog-form-container {
     padding: 12px;
   }
-
-  .main-form-item {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
-  .main-form-item :deep(.el-form-item__label) {
-    padding-top: 0 !important;
-  }
-
-  .form-section-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
 
 html[data-theme='dark'] :deep(.micro-app-form-dialog) {
@@ -1307,21 +1009,18 @@ html[data-theme='dark'] :deep(.micro-app-form-dialog) {
 }
 
 html[data-theme='dark'] .dialog-form-container,
-html[data-theme='dark'] .rail-card,
-html[data-theme='dark'] .form-section {
+html[data-theme='dark'] .rail-card {
   background: var(--dt-surface) !important;
   border-color: var(--dt-border) !important;
   box-shadow: var(--dt-shadow-soft);
 }
 
-html[data-theme='dark'] .form-section-head,
 html[data-theme='dark'] .rail-card__header {
   background: var(--dt-surface-soft) !important;
   border-color: var(--dt-border) !important;
 }
 
-html[data-theme='dark'] .rail-card__title,
-html[data-theme='dark'] .form-section-title {
+html[data-theme='dark'] .rail-card__title {
   color: var(--dt-text) !important;
 }
 
