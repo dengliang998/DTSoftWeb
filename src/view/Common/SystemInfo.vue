@@ -62,7 +62,7 @@
 
 <script>
 import { getSystemRuntimeInfo } from '@/api/sysconfig'
-import { Clock, Coin, Cpu, FolderOpened, Monitor, Refresh, Tickets } from '@element-plus/icons-vue'
+import { Clock, Coin, Cpu, FolderOpened, Histogram, Monitor, Refresh, Tickets } from '@element-plus/icons-vue'
 import { markRaw } from 'vue'
 
 export default {
@@ -72,6 +72,7 @@ export default {
     Coin,
     Cpu,
     FolderOpened,
+    Histogram,
     Monitor,
     Tickets
   },
@@ -88,36 +89,47 @@ export default {
       return Object.keys(this.info || {}).length > 0
     },
     summaryCards() {
-      const server = this.info.Server || {}
-      const memory = this.info.Memory || {}
-      const runtime = this.info.Runtime || {}
-
       return [
         {
-          label: '运行时长',
-          value: this.formatDuration(server.UptimeSeconds),
-          icon: 'Clock',
+          label: '服务器 CPU',
+          value: this.formatPercent(this.serverCpuPercent),
+          icon: 'Cpu',
           tone: 'blue'
         },
         {
-          label: '工作集内存',
-          value: this.formatBytes(memory.WorkingSetBytes),
-          icon: 'Cpu',
+          label: '服务器内存',
+          value: this.formatPercent(this.serverMemoryPercent),
+          icon: 'Histogram',
           tone: 'green'
         },
         {
-          label: '处理器',
-          value: this.formatValue(server.ProcessorCount),
+          label: '程序 CPU',
+          value: this.formatPercent(this.processCpuPercent),
           icon: 'Monitor',
           tone: 'amber'
         },
         {
-          label: '运行架构',
-          value: this.formatValue(runtime.ProcessArchitecture),
-          icon: 'Tickets',
+          label: '程序内存',
+          value: this.formatPercent(this.processMemoryPercent),
+          icon: 'Clock',
           tone: 'slate'
         }
       ]
+    },
+    resource() {
+      return this.info.Resource || {}
+    },
+    serverCpuPercent() {
+      return this.normalizePercent(this.resource.ServerCpuUsagePercent ?? this.resource.CpuUsagePercent)
+    },
+    serverMemoryPercent() {
+      return this.normalizePercent(this.resource.ServerMemoryUsagePercent ?? this.resource.MemoryUsagePercent)
+    },
+    processCpuPercent() {
+      return this.normalizePercent(this.resource.ProcessCpuUsagePercent)
+    },
+    processMemoryPercent() {
+      return this.normalizePercent(this.resource.ProcessMemoryUsagePercent)
     },
     infoSections() {
       const application = this.info.Application || {}
@@ -125,8 +137,33 @@ export default {
       const server = this.info.Server || {}
       const memory = this.info.Memory || {}
       const database = this.info.Database || {}
+      const resource = this.resource
 
       return [
+        {
+          title: '服务器资源',
+          icon: 'Cpu',
+          rows: [
+            { label: 'CPU 占用', value: this.formatPercent(this.serverCpuPercent) },
+            { label: '内存占用', value: this.formatPercent(this.serverMemoryPercent) },
+            { label: '内存总量', value: this.formatBytes(resource.TotalMemoryBytes) },
+            { label: '可用内存', value: this.formatBytes(resource.AvailableMemoryBytes) },
+            { label: '处理器数量', value: this.formatValue(server.ProcessorCount) },
+            { label: '采集时间', value: this.formatValue(resource.CollectedAt) }
+          ]
+        },
+        {
+          title: '程序资源',
+          icon: 'Histogram',
+          rows: [
+            { label: 'CPU 占用', value: this.formatPercent(this.processCpuPercent) },
+            { label: '内存占用', value: this.formatPercent(this.processMemoryPercent) },
+            { label: '工作集内存', value: this.formatBytes(memory.WorkingSetBytes) },
+            { label: '私有内存', value: this.formatBytes(memory.PrivateMemoryBytes) },
+            { label: 'GC 托管内存', value: this.formatBytes(memory.GCTotalMemoryBytes) },
+            { label: '运行时长', value: this.formatDuration(server.UptimeSeconds) }
+          ]
+        },
         {
           title: '应用',
           icon: 'FolderOpened',
@@ -162,12 +199,9 @@ export default {
           ]
         },
         {
-          title: '资源与数据库',
+          title: '数据库',
           icon: 'Coin',
           rows: [
-            { label: '工作集内存', value: this.formatBytes(memory.WorkingSetBytes) },
-            { label: '私有内存', value: this.formatBytes(memory.PrivateMemoryBytes) },
-            { label: 'GC 托管内存', value: this.formatBytes(memory.GCTotalMemoryBytes) },
             { label: '数据库驱动', value: this.formatValue(database.ProviderName) },
             { label: '数据源', value: this.formatValue(database.DataSource) },
             { label: '数据库', value: this.formatValue(database.Database) }
@@ -199,6 +233,16 @@ export default {
     formatValue(value) {
       if (value === null || value === undefined || value === '') return '-'
       return String(value)
+    },
+    normalizePercent(value) {
+      const number = Number(value)
+      if (!Number.isFinite(number) || number < 0) return null
+      return Math.min(100, Math.max(0, number))
+    },
+    formatPercent(value) {
+      const number = this.normalizePercent(value)
+      if (number === null) return '-'
+      return `${number.toFixed(1)}%`
     },
     formatBytes(value) {
       const bytes = Number(value)

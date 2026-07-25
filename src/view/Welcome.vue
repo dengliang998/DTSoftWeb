@@ -13,128 +13,40 @@
             </span>
             <span class="status-chip" :class="{ 'is-error': dashboardError }">
               <el-icon><component :is="dashboardError ? 'Warning' : 'CircleCheck'" /></el-icon>
-              {{ dashboardError ? '数据获取异常' : '后台数据已同步' }}
+              {{ dashboardError ? '运行信息获取异常' : '运行信息已同步' }}
             </span>
           </div>
         </div>
 
-        <div class="runtime-summary">
-          <div v-for="item in runtimeCards" :key="item.label" class="runtime-card">
-            <span class="runtime-icon" :class="item.tone">
-              <el-icon><component :is="item.icon" /></el-icon>
-            </span>
-            <span>
-              <strong>{{ item.value }}</strong>
-              <small>{{ item.label }}</small>
-            </span>
+        <div class="hero-actions">
+          <div class="refresh-box">
+            <small>最近刷新</small>
+            <strong>{{ lastRefreshTime || '-' }}</strong>
           </div>
+          <el-button class="refresh-button" :loading="loading" @click="loadRuntimeInfo">
+            <el-icon><Refresh /></el-icon>
+            <span>刷新</span>
+          </el-button>
         </div>
       </section>
 
-      <section class="dashboard-grid">
-        <div class="dashboard-panel log-trend-panel">
-          <div class="panel-header">
-            <div>
-              <h3>近7日操作日志</h3>
-              <p>按后端日志接口日期条件统计 Total</p>
-            </div>
-            <el-icon><DataLine /></el-icon>
-          </div>
-          <div class="line-chart" :class="{ 'is-ready': chartReady }" aria-label="近7日操作日志折线图">
-            <svg viewBox="0 0 420 150" preserveAspectRatio="none" role="img">
-              <defs>
-                <linearGradient id="logTrendArea" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#1890ff" stop-opacity="0.24" />
-                  <stop offset="100%" stop-color="#1890ff" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <g class="chart-grid-lines">
-                <line x1="0" y1="28" x2="420" y2="28" />
-                <line x1="0" y1="78" x2="420" y2="78" />
-                <line x1="0" y1="128" x2="420" y2="128" />
-              </g>
-              <polygon class="trend-area" :points="trendAreaPoints" fill="url(#logTrendArea)" />
-              <polyline class="trend-line" :points="trendPolyline" />
-              <circle
-                v-for="point in trendDotPoints"
-                :key="point.key"
-                class="trend-dot"
-                :cx="point.x"
-                :cy="point.y"
-                r="4"
-              />
-            </svg>
-            <div class="chart-labels">
-              <span v-for="item in logTrendData" :key="item.date">
-                <strong>{{ item.total }}</strong>
-                <small>{{ item.label }}</small>
-              </span>
-            </div>
-          </div>
+      <section class="metric-grid">
+        <div v-for="item in metricCards" :key="item.label" class="metric-card">
+          <span class="metric-icon" :class="item.tone">
+            <el-icon><component :is="item.icon" /></el-icon>
+          </span>
+          <span class="metric-content">
+            <strong>{{ item.value }}</strong>
+            <span>{{ item.label }}</span>
+            <small>{{ item.note }}</small>
+          </span>
         </div>
+      </section>
 
-        <div class="dashboard-panel resource-panel">
-          <div class="panel-header">
-            <div>
-              <h3>内存资源</h3>
-              <p>来自系统运行信息接口</p>
-            </div>
-            <el-icon><Histogram /></el-icon>
-          </div>
-          <div class="bar-chart" :class="{ 'is-ready': chartReady }" aria-label="内存资源柱状图">
-            <div
-              v-for="item in memoryBars"
-              :key="item.label"
-              class="bar-column"
-              :style="{ '--bar-height': (chartReady ? item.percent : 0) + '%' }"
-            >
-              <span class="bar-value">{{ item.value }}</span>
-              <span class="bar-track">
-                <span class="bar-fill"></span>
-              </span>
-              <small>{{ item.label }}</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboard-panel info-panel">
-          <div class="panel-header">
-            <div>
-              <h3>系统信息</h3>
-              <p>当前服务端运行环境</p>
-            </div>
-            <el-icon><Monitor /></el-icon>
-          </div>
-          <div class="info-list">
-            <div v-for="item in systemInfoRows" :key="item.label" class="info-item">
-              <span>{{ item.label }}</span>
-              <strong :title="item.value">{{ item.value }}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboard-panel recent-panel">
-          <div class="panel-header">
-            <div>
-              <h3>最近操作</h3>
-              <p>来自操作日志最新分页</p>
-            </div>
-            <el-icon><Document /></el-icon>
-          </div>
-          <div v-if="recentLogs.length" class="recent-list">
-            <div
-              v-for="log in recentLogs"
-              :key="`${log.LogDate}-${log.ActionName}-${log.ClientIP}`"
-              class="recent-item"
-            >
-              <div>
-                <strong :title="log.ActionName">{{ log.ActionName || '-' }}</strong>
-                <small>{{ log.UserAcc || '-' }} / {{ log.ClientIP || '-' }}</small>
-              </div>
-              <span>{{ formatLogTime(log.LogDate) }}</span>
-            </div>
-          </div>
-          <el-empty v-else :image-size="72" description="暂无操作日志" />
+      <section class="overview-panel">
+        <div v-for="item in overviewRows" :key="item.label" class="overview-item">
+          <span>{{ item.label }}</span>
+          <strong :title="item.value">{{ item.value }}</strong>
         </div>
       </section>
 
@@ -146,19 +58,8 @@
 </template>
 
 <script>
-import { getLogActionList } from '@/api/log'
 import { getSystemRuntimeInfo } from '@/api/sysconfig'
-import {
-  CircleCheck,
-  Clock,
-  Cpu,
-  DataLine,
-  Document,
-  Histogram,
-  Monitor,
-  Tickets,
-  Warning
-} from '@element-plus/icons-vue'
+import { CircleCheck, Clock, Cpu, Histogram, Monitor, Refresh, Warning } from '@element-plus/icons-vue'
 
 export default {
   name: 'Welcome',
@@ -166,11 +67,9 @@ export default {
     CircleCheck,
     Clock,
     Cpu,
-    DataLine,
-    Document,
     Histogram,
     Monitor,
-    Tickets,
+    Refresh,
     Warning
   },
   data() {
@@ -178,167 +77,118 @@ export default {
       greetingTitle: '',
       greetingSubtitle: '',
       currentTime: '',
+      lastRefreshTime: '',
       loading: false,
-      chartReady: false,
       dashboardError: '',
       timers: [],
-      chartTimer: null,
-      runtimeInfo: {},
-      recentLogs: [],
-      logTrendData: this.buildInitialTrendData()
+      runtimeInfo: {}
     }
   },
   computed: {
-    runtimeCards() {
-      const server = this.runtimeInfo.Server || {}
-      const memory = this.runtimeInfo.Memory || {}
-      const runtime = this.runtimeInfo.Runtime || {}
-
+    resource() {
+      return this.runtimeInfo.Resource || {}
+    },
+    server() {
+      return this.runtimeInfo.Server || {}
+    },
+    memory() {
+      return this.runtimeInfo.Memory || {}
+    },
+    runtime() {
+      return this.runtimeInfo.Runtime || {}
+    },
+    application() {
+      return this.runtimeInfo.Application || {}
+    },
+    database() {
+      return this.runtimeInfo.Database || {}
+    },
+    serverCpuPercent() {
+      return this.normalizePercent(this.resource.ServerCpuUsagePercent ?? this.resource.CpuUsagePercent)
+    },
+    serverMemoryPercent() {
+      return this.normalizePercent(this.resource.ServerMemoryUsagePercent ?? this.resource.MemoryUsagePercent)
+    },
+    processCpuPercent() {
+      return this.normalizePercent(this.resource.ProcessCpuUsagePercent)
+    },
+    processMemoryPercent() {
+      return this.normalizePercent(this.resource.ProcessMemoryUsagePercent)
+    },
+    metricCards() {
       return [
         {
-          label: '运行时长',
-          value: this.formatDuration(server.UptimeSeconds),
-          icon: 'Clock',
+          label: '服务器 CPU',
+          value: this.formatPercent(this.serverCpuPercent),
+          note: `${this.formatValue(this.server.ProcessorCount)} 核心`,
+          icon: 'Cpu',
           tone: 'is-blue'
         },
         {
-          label: '工作集内存',
-          value: this.formatBytes(memory.WorkingSetBytes),
-          icon: 'Cpu',
+          label: '服务器内存',
+          value: this.formatPercent(this.serverMemoryPercent),
+          note: `总计 ${this.formatBytes(this.resource.TotalMemoryBytes)}`,
+          icon: 'Histogram',
           tone: 'is-green'
         },
         {
-          label: '处理器',
-          value: this.formatValue(server.ProcessorCount),
+          label: '程序 CPU',
+          value: this.formatPercent(this.processCpuPercent),
+          note: '当前服务进程',
           icon: 'Monitor',
           tone: 'is-amber'
         },
         {
-          label: '运行架构',
-          value: this.formatValue(runtime.ProcessArchitecture),
-          icon: 'Tickets',
+          label: '程序内存',
+          value: this.formatPercent(this.processMemoryPercent),
+          note: `工作集 ${this.formatBytes(this.memory.WorkingSetBytes)}`,
+          icon: 'Clock',
           tone: 'is-slate'
         }
       ]
     },
-    memoryBars() {
-      const memory = this.runtimeInfo.Memory || {}
-      const rows = [
-        { label: '工作集', bytes: Number(memory.WorkingSetBytes) },
-        { label: '私有内存', bytes: Number(memory.PrivateMemoryBytes) },
-        { label: 'GC 托管', bytes: Number(memory.GCTotalMemoryBytes) }
-      ]
-      const max = Math.max(...rows.map((item) => (Number.isFinite(item.bytes) ? item.bytes : 0)), 1)
-
-      return rows.map((item) => {
-        const bytes = Number.isFinite(item.bytes) ? item.bytes : 0
-        return {
-          label: item.label,
-          value: this.formatBytes(bytes),
-          percent: Math.max(8, Math.round((bytes / max) * 100))
-        }
-      })
-    },
-    systemInfoRows() {
-      const application = this.runtimeInfo.Application || {}
-      const runtime = this.runtimeInfo.Runtime || {}
-      const server = this.runtimeInfo.Server || {}
-      const database = this.runtimeInfo.Database || {}
-
+    overviewRows() {
       return [
-        { label: '应用名称', value: this.formatValue(application.Name) },
-        { label: '应用版本', value: this.formatValue(application.Version) },
-        { label: '运行环境', value: this.formatValue(application.EnvironmentName) },
-        { label: '主机名', value: this.formatValue(server.MachineName) },
-        { label: '当前时间', value: this.formatValue(server.CurrentTime) },
-        { label: '启动时间', value: this.formatValue(server.StartedAt) },
-        { label: '框架', value: this.formatValue(runtime.FrameworkDescription) },
-        { label: '操作系统', value: this.formatValue(runtime.OSDescription) },
-        { label: '数据库驱动', value: this.formatValue(database.ProviderName) },
-        { label: '数据库', value: this.formatValue(database.Database) }
+        { label: '应用', value: this.formatValue(this.application.Name) },
+        { label: '环境', value: this.formatValue(this.application.EnvironmentName) },
+        { label: '运行时长', value: this.formatDuration(this.server.UptimeSeconds) },
+        { label: '启动时间', value: this.formatValue(this.server.StartedAt) },
+        { label: '操作系统', value: this.formatValue(this.runtime.OSDescription) },
+        { label: '数据库', value: this.formatValue(this.database.Database) }
       ]
-    },
-    trendDotPoints() {
-      const values = this.logTrendData.map((item) => Number(item.total) || 0)
-      return this.toSvgPoints(values).map((point, index) => ({
-        key: `${this.logTrendData[index].date}-${index}`,
-        x: point.x,
-        y: point.y
-      }))
-    },
-    trendPolyline() {
-      return this.trendDotPoints.map((point) => `${point.x},${point.y}`).join(' ')
-    },
-    trendAreaPoints() {
-      return `0,150 ${this.trendPolyline} 420,150`
     }
   },
   created() {
     this.updateGreeting()
     this.updateTime()
-    this.loadDashboardData()
+    this.loadRuntimeInfo()
     this.timers = [
       setInterval(this.updateTime, 1000),
       setInterval(this.updateGreeting, 60000),
-      setInterval(this.loadDashboardData, 300000)
+      setInterval(this.loadRuntimeInfo, 300000)
     ]
   },
   beforeUnmount() {
     this.timers.forEach((timer) => clearInterval(timer))
-    if (this.chartTimer) {
-      clearTimeout(this.chartTimer)
-    }
   },
   methods: {
-    async loadDashboardData() {
+    async loadRuntimeInfo() {
       this.loading = true
-      this.chartReady = false
       this.dashboardError = ''
-      if (this.chartTimer) {
-        clearTimeout(this.chartTimer)
-      }
 
       try {
-        const [runtimeRes, logRes, trendData] = await Promise.all([
-          getSystemRuntimeInfo(),
-          getLogActionList({ PageNum: 1, PageSize: 6 }),
-          this.loadLogTrendData()
-        ])
-
-        if (runtimeRes.data?.success) {
-          this.runtimeInfo = runtimeRes.data.data || {}
+        const { data: res } = await getSystemRuntimeInfo()
+        if (res?.success) {
+          this.runtimeInfo = res.data || {}
+          this.lastRefreshTime = this.formatNow()
+        } else {
+          this.dashboardError = '运行信息获取失败：' + (res?.Msg || res?.message || '未知错误')
         }
-
-        this.recentLogs = Array.isArray(logRes.data?.data) ? logRes.data.data : []
-        this.logTrendData = trendData
-        this.chartTimer = setTimeout(() => {
-          this.chartReady = true
-          this.chartTimer = null
-        }, 180)
       } catch (error) {
-        this.dashboardError = '首页数据获取失败：' + (error?.message || error)
-        this.chartReady = true
+        this.dashboardError = '运行信息获取失败：' + (error?.message || error)
       } finally {
         this.loading = false
       }
-    },
-    async loadLogTrendData() {
-      const days = this.getRecentDays(7)
-      const responses = await Promise.all(
-        days.map((day) =>
-          getLogActionList({
-            PageNum: 1,
-            PageSize: 1,
-            LogDateStart: day.date,
-            LogDateEnd: day.date
-          })
-        )
-      )
-
-      return days.map((day, index) => ({
-        ...day,
-        total: Number(responses[index].data?.Total) || 0
-      }))
     },
     updateTime() {
       const now = new Date()
@@ -349,54 +199,38 @@ export default {
       const hours = String(now.getHours()).padStart(2, '0')
       const minutes = String(now.getMinutes()).padStart(2, '0')
       const seconds = String(now.getSeconds()).padStart(2, '0')
-      const weekDay = weekDays[now.getDay()]
 
-      this.currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekDay}`
+      this.currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekDays[now.getDay()]}`
     },
     updateGreeting() {
       const hour = new Date().getHours()
 
       if (hour >= 5 && hour < 11) {
-        this.greetingTitle = '上午好，查看后台实时数据'
-        this.greetingSubtitle = '首页数据来自系统运行、用户、角色、微应用和操作日志接口。'
+        this.greetingTitle = '上午好，今天从系统状态开始'
+        this.greetingSubtitle = '首页保留关键资源指标，详细运行信息可在系统信息页查看。'
       } else if (hour >= 11 && hour < 14) {
-        this.greetingTitle = '中午好，关注接口与日志'
-        this.greetingSubtitle = '近7日日志趋势和最近操作记录会按后端数据刷新。'
+        this.greetingTitle = '中午好，服务状态保持可见'
+        this.greetingSubtitle = '快速查看 CPU、内存和运行时长，判断当前负载。'
       } else if (hour >= 14 && hour < 18) {
-        this.greetingTitle = '下午好，业务数据已汇总'
-        this.greetingSubtitle = '统计卡片、系统信息和图表都基于后台接口返回结果。'
+        this.greetingTitle = '下午好，继续保持系统稳定'
+        this.greetingSubtitle = '关键指标已汇总，页面保持简洁便于扫读。'
       } else if (hour >= 18 && hour < 22) {
-        this.greetingTitle = '晚上好，检查系统收尾状态'
-        this.greetingSubtitle = '建议关注最近操作、内存资源和系统启动时间。'
+        this.greetingTitle = '晚上好，适合做一次状态确认'
+        this.greetingSubtitle = '关注资源占用和服务运行状态，详细信息进入系统信息页。'
       } else {
-        this.greetingTitle = '夜间巡检，查看系统运行信息'
-        this.greetingSubtitle = '低峰时段可重点观察日志趋势、在线用户和运行时长。'
+        this.greetingTitle = '夜间巡检，系统运行信息已准备'
+        this.greetingSubtitle = '低峰时段可重点查看服务器和程序资源占用。'
       }
     },
-    buildInitialTrendData() {
-      return this.getRecentDays(7).map((day) => ({
-        ...day,
-        total: 0
-      }))
+    normalizePercent(value) {
+      const number = Number(value)
+      if (!Number.isFinite(number) || number < 0) return null
+      return Math.min(100, Math.max(0, number))
     },
-    getRecentDays(count) {
-      const days = []
-      const now = new Date()
-      for (let index = count - 1; index >= 0; index -= 1) {
-        const day = new Date(now)
-        day.setDate(now.getDate() - index)
-        days.push({
-          date: this.formatDate(day),
-          label: `${day.getMonth() + 1}/${day.getDate()}`
-        })
-      }
-      return days
-    },
-    formatDate(date) {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
+    formatPercent(value) {
+      const number = this.normalizePercent(value)
+      if (number === null) return '-'
+      return `${number.toFixed(1)}%`
     },
     formatValue(value) {
       if (value === null || value === undefined || value === '') return '-'
@@ -404,7 +238,7 @@ export default {
     },
     formatBytes(value) {
       const bytes = Number(value)
-      if (!Number.isFinite(bytes) || bytes < 0) return '-'
+      if (!Number.isFinite(bytes) || bytes <= 0) return '-'
 
       const units = ['B', 'KB', 'MB', 'GB', 'TB']
       let current = bytes
@@ -429,28 +263,10 @@ export default {
       if (hours > 0) return `${hours} 小时 ${minutes} 分钟`
       return `${minutes} 分钟`
     },
-    formatLogTime(value) {
-      if (!value) return '-'
-      const text = String(value)
-      return text.length > 16 ? text.slice(5, 16) : text
-    },
-    toSvgPoints(values) {
-      const width = 420
-      const minY = 18
-      const maxY = 128
-      const max = Math.max(...values)
-      const min = Math.min(...values)
-      const range = max - min || 1
-
-      return values.map((value, index) => {
-        const x = values.length === 1 ? width : (index / (values.length - 1)) * width
-        const y = maxY - ((value - min) / range) * (maxY - minY)
-
-        return {
-          x: Number(x.toFixed(2)),
-          y: Number(y.toFixed(2))
-        }
-      })
+    formatNow() {
+      const now = new Date()
+      const pad = (value) => String(value).padStart(2, '0')
+      return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
     }
   }
 }
@@ -462,36 +278,36 @@ export default {
   min-height: 0;
   padding: 0;
   overflow: hidden;
-  color: #182230;
+  color: var(--dt-text);
   background:
-    radial-gradient(circle at 0 0, rgba(24, 144, 255, 0.1), transparent 28%),
-    linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--dt-primary) 10%, transparent), transparent 30%),
+    linear-gradient(180deg, var(--dt-page-bg) 0%, var(--dt-primary-subtle) 100%);
 }
 
 .welcome-workbench {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 10px;
   height: 100%;
   min-height: 0;
-  padding: 6px;
-  overflow: auto;
+  padding: 10px;
+  overflow: hidden;
 }
 
 .hero-section {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  gap: 12px;
-  min-height: 214px;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
+  min-height: 150px;
   padding: 20px;
   overflow: hidden;
   color: #ffffff;
   background:
-    linear-gradient(120deg, rgba(15, 23, 42, 0.96) 0%, rgba(24, 39, 70, 0.96) 58%, rgba(0, 96, 90, 0.92) 100%),
-    linear-gradient(135deg, #101828 0%, #1890ff 100%);
+    linear-gradient(120deg, rgba(15, 23, 42, 0.97) 0%, rgba(24, 39, 70, 0.96) 60%, rgba(9, 105, 96, 0.94) 100%),
+    linear-gradient(135deg, #101828 0%, var(--dt-primary) 100%);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
-  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.16);
+  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.15);
 }
 
 .hero-copy {
@@ -502,7 +318,7 @@ export default {
 }
 
 .page-kicker {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: #7dd3c7;
   font-size: 12px;
   font-weight: 800;
@@ -510,25 +326,25 @@ export default {
 
 .hero-copy h2 {
   margin: 0;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 850;
   line-height: 1.2;
   letter-spacing: 0;
 }
 
 .hero-copy p {
-  max-width: 660px;
-  margin: 12px 0 0;
+  max-width: 620px;
+  margin: 10px 0 0;
   color: rgba(226, 232, 240, 0.88);
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .hero-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .time-chip,
@@ -562,333 +378,159 @@ export default {
   border-color: rgba(251, 191, 36, 0.36);
 }
 
-.runtime-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: 10px;
 }
 
-.runtime-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 84px;
-  padding: 14px;
+.refresh-box {
+  padding: 12px;
   background: rgba(15, 23, 42, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
 }
 
-.runtime-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  color: #ffffff;
-  border-radius: 8px;
-  flex: 0 0 auto;
-}
-
-.runtime-card strong {
+.refresh-box small {
   display: block;
-  color: #ffffff;
-  font-size: 18px;
-  line-height: 1.1;
-}
-
-.runtime-card small {
-  display: block;
-  margin-top: 6px;
   color: rgba(226, 232, 240, 0.72);
   font-size: 12px;
 }
 
-.is-blue {
-  background: linear-gradient(135deg, #1890ff, #40a9ff);
-}
-
-.is-green {
-  background: linear-gradient(135deg, #0f766e, #2dd4bf);
-}
-
-.is-amber {
-  background: linear-gradient(135deg, #d97706, #fbbf24);
-}
-
-.is-slate {
-  background: linear-gradient(135deg, #475467, #98a2b3);
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(310px, 0.9fr);
-  gap: 6px;
-  min-height: 0;
-}
-
-.dashboard-panel {
-  min-width: 0;
-  padding: 14px;
-  background: #ffffff;
-  border: 1px solid #dbe5ef;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(18, 38, 63, 0.06);
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.panel-header h3 {
-  margin: 0;
-  color: #182230;
-  font-size: 15px;
-  font-weight: 850;
-  line-height: 1.2;
-}
-
-.panel-header p {
-  margin: 6px 0 0;
-  color: #667085;
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.4;
-}
-
-.panel-header > .el-icon {
-  color: #1890ff;
-  font-size: 21px;
-}
-
-.log-trend-panel,
-.resource-panel {
-  min-height: 286px;
-}
-
-.line-chart svg {
+.refresh-box strong {
   display: block;
+  margin-top: 6px;
+  color: #ffffff;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.refresh-button {
   width: 100%;
-  height: 156px;
-  overflow: visible;
+  min-height: 36px;
+  color: #0f172a;
+  font-weight: 750;
+  background: #ffffff;
+  border: 0;
+  border-radius: 8px;
 }
 
-.chart-grid-lines line {
-  stroke: #e5edf6;
-  stroke-width: 1;
-}
-
-.trend-area {
-  opacity: 0;
-  transition: opacity 0.4s ease 0.18s;
-}
-
-.trend-line {
-  fill: none;
-  stroke: #1890ff;
-  stroke-dasharray: 760;
-  stroke-dashoffset: 760;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 4;
-  filter: drop-shadow(0 6px 10px rgba(24, 144, 255, 0.18));
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.trend-dot {
-  opacity: 0;
-  fill: #ffffff;
-  stroke: #1890ff;
-  stroke-width: 3;
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: scale(0.72);
-  transition:
-    opacity 0.28s ease 0.72s,
-    transform 0.28s ease 0.72s;
-}
-
-.line-chart.is-ready .trend-area {
-  opacity: 1;
-}
-
-.line-chart.is-ready .trend-line {
-  stroke-dashoffset: 0;
-}
-
-.line-chart.is-ready .trend-dot {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.chart-labels {
+.metric-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.chart-labels span {
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 94px;
+  padding: 14px;
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  box-shadow: var(--dt-shadow-soft);
+}
+
+.metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  border-radius: 8px;
+}
+
+.metric-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 4px;
   min-width: 0;
 }
 
-.chart-labels strong {
-  color: #182230;
+.metric-content strong {
+  overflow: hidden;
+  color: var(--dt-text);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 23px;
+  font-weight: 850;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-content span {
+  color: var(--dt-text);
   font-size: 13px;
+  font-weight: 800;
 }
 
-.chart-labels small,
-.bar-column small {
-  color: #7a8699;
+.metric-content small {
+  overflow: hidden;
+  color: var(--dt-text-muted);
   font-size: 12px;
-  font-weight: 700;
-  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.bar-chart {
+.is-blue {
+  background: #2563eb;
+}
+
+.is-green {
+  background: #0f766e;
+}
+
+.is-amber {
+  background: #b45309;
+}
+
+.is-slate {
+  background: #475467;
+}
+
+.overview-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: end;
-  gap: 14px;
-  min-height: 202px;
-  padding-top: 4px;
-}
-
-.bar-column {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 9px;
-  height: 202px;
-  min-width: 0;
-}
-
-.bar-value {
-  color: #344054;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-  font-size: 12px;
-  font-weight: 800;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.bar-track {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  gap: 8px;
   min-height: 0;
-  background: #edf2f7;
+  padding: 14px;
+  background: var(--dt-surface);
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
-  overflow: hidden;
+  box-shadow: var(--dt-shadow-soft);
 }
 
-.bar-fill {
-  display: block;
-  width: 100%;
-  height: var(--bar-height);
-  background: linear-gradient(180deg, #40a9ff 0%, #1890ff 100%);
-  border-radius: 8px 8px 3px 3px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  transition: height 0.78s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.bar-chart.is-ready .bar-fill {
-  min-height: 8%;
-}
-
-.info-panel,
-.recent-panel {
-  min-height: 252px;
-}
-
-.info-list {
+.overview-item {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.recent-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 224px;
-  padding-right: 2px;
-  overflow-y: auto;
-}
-
-.info-item {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-columns: 70px minmax(0, 1fr);
   gap: 10px;
-  min-height: 34px;
-  padding: 0 9px;
   align-items: center;
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
+  min-height: 38px;
+  padding: 0 10px;
+  background: var(--dt-surface-soft);
+  border: 1px solid color-mix(in srgb, var(--dt-border) 75%, transparent);
   border-radius: 8px;
 }
 
-.info-item span {
-  color: #667085;
+.overview-item span {
+  color: var(--dt-text-muted);
   font-size: 12px;
   font-weight: 700;
 }
 
-.info-item strong {
+.overview-item strong {
   overflow: hidden;
-  color: #344054;
+  color: var(--dt-text);
   font-size: 12px;
   font-weight: 800;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recent-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  min-height: 42px;
-  padding: 7px 9px;
-  align-items: center;
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
-  border-radius: 8px;
-}
-
-.recent-item strong {
-  display: block;
-  overflow: hidden;
-  color: #344054;
-  font-size: 12px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recent-item small {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
-  color: #7a8699;
-  font-size: 11px;
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recent-item > span {
-  color: #667085;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-  font-size: 11px;
-  font-weight: 800;
   white-space: nowrap;
 }
 
@@ -896,104 +538,42 @@ export default {
   margin-top: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .trend-area,
-  .trend-line,
-  .trend-dot,
-  .bar-fill {
-    animation: none;
-    transition: none;
-  }
-}
-
 @media (max-width: 1180px) {
-  .hero-section,
-  .dashboard-grid {
+  .hero-section {
     grid-template-columns: 1fr;
+  }
+
+  .metric-grid,
+  .overview-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 760px) {
+  .welcome-container,
   .welcome-workbench {
-    padding: 10px;
+    overflow: auto;
   }
 
-  .hero-section {
-    padding: 16px;
+  .hero-section,
+  .metric-grid,
+  .overview-panel {
+    grid-template-columns: 1fr;
   }
 
   .hero-copy h2 {
     font-size: 22px;
   }
-
-  .runtime-summary,
-  .info-list,
-  .bar-chart {
-    grid-template-columns: 1fr;
-  }
-
-  .bar-column {
-    height: 148px;
-  }
 }
 
 html[data-theme='dark'] .welcome-container {
-  color: var(--dt-text);
   background:
-    radial-gradient(circle at 0 0, color-mix(in srgb, var(--dt-primary) 14%, transparent), transparent 28%),
+    radial-gradient(circle at 0 0, color-mix(in srgb, var(--dt-primary) 14%, transparent), transparent 30%),
     linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
 }
 
 html[data-theme='dark'] .hero-section {
   border-color: color-mix(in srgb, var(--dt-text) 14%, transparent);
   box-shadow: var(--dt-shadow);
-}
-
-html[data-theme='dark'] .dashboard-panel {
-  background: var(--dt-surface);
-  border-color: var(--dt-border);
-  box-shadow: var(--dt-shadow-soft);
-}
-
-html[data-theme='dark'] .panel-header h3,
-html[data-theme='dark'] .chart-labels strong,
-html[data-theme='dark'] .bar-value,
-html[data-theme='dark'] .info-item strong,
-html[data-theme='dark'] .recent-item strong {
-  color: var(--dt-text);
-}
-
-html[data-theme='dark'] .panel-header p,
-html[data-theme='dark'] .chart-labels small,
-html[data-theme='dark'] .bar-column small,
-html[data-theme='dark'] .info-item span,
-html[data-theme='dark'] .recent-item small,
-html[data-theme='dark'] .recent-item > span {
-  color: var(--dt-text-muted);
-}
-
-html[data-theme='dark'] .chart-grid-lines line {
-  stroke: var(--dt-border);
-}
-
-html[data-theme='dark'] .trend-line {
-  stroke: var(--dt-primary-light);
-  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--dt-primary) 22%, transparent));
-}
-
-html[data-theme='dark'] .trend-dot {
-  fill: var(--dt-surface);
-  stroke: var(--dt-primary-light);
-}
-
-html[data-theme='dark'] .bar-track,
-html[data-theme='dark'] .info-item,
-html[data-theme='dark'] .recent-item {
-  background: var(--dt-surface-soft);
-  border-color: var(--dt-border);
-}
-
-html[data-theme='dark'] .bar-fill {
-  background: linear-gradient(180deg, var(--dt-primary-light) 0%, var(--dt-primary) 100%);
 }
 </style>
