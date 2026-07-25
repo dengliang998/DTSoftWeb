@@ -1,5 +1,7 @@
 import http from './http'
 
+const API_KEY_BASE_URL = '/api/integration/api-keys'
+
 /**
  * API密钥管理接口服务
  */
@@ -12,7 +14,7 @@ import http from './http'
  * @returns {Promise}
  */
 export const getApiKeyList = (params = {}) => {
-  return http.post('/api/ApiKeyAuth/list', params)
+  return http.post(`${API_KEY_BASE_URL}/list`, params)
 }
 
 /**
@@ -24,7 +26,7 @@ export const getApiKeyList = (params = {}) => {
  * @returns {Promise}
  */
 export const createApiKey = (data) => {
-  return http.post('/api/ApiKeyAuth/create', data)
+  return http.post(`${API_KEY_BASE_URL}/create`, data)
 }
 
 /**
@@ -37,7 +39,7 @@ export const createApiKey = (data) => {
  * @returns {Promise}
  */
 export const updateApiKey = (data) => {
-  return http.put('/api/ApiKeyAuth/update', data)
+  return http.put(`${API_KEY_BASE_URL}/update`, data)
 }
 
 /**
@@ -46,7 +48,7 @@ export const updateApiKey = (data) => {
  * @returns {Promise}
  */
 export const deleteApiKey = (itemId) => {
-  return http.delete('/api/ApiKeyAuth/delete', {
+  return http.delete(`${API_KEY_BASE_URL}/delete`, {
     data: { ItemId: itemId }
   })
 }

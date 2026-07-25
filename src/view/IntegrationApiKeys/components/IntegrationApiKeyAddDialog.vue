@@ -1,23 +1,23 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog v-model="dialogVisible" title="修改API密钥" width="50%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" title="创建API密钥" width="50%" @close="handleClose">
     <el-form ref="formRef" :model="form" label-width="100px">
-      <el-form-item label="密钥名称">
-        <el-input v-model="form.KeyName" disabled></el-input>
+      <el-form-item
+        label="密钥名称"
+        prop="KeyName"
+        :rules="[
+          { required: true, message: '密钥名称不能为空', trigger: 'blur' },
+          { max: 100, message: '密钥名称最多100字符', trigger: 'blur' }
+        ]"
+      >
+        <el-input v-model="form.KeyName" placeholder="请填写密钥名称（唯一）"></el-input>
       </el-form-item>
       <el-form-item
         label="描述信息"
         prop="Description"
         :rules="[{ max: 500, message: '描述信息最多500字符', trigger: 'blur' }]"
       >
-        <el-input v-model="form.Description" type="textarea" :rows="3" placeholder="请填写描述信息"></el-input>
-      </el-form-item>
-      <el-form-item
-        label="启用状态"
-        prop="Enabled"
-        :rules="[{ required: true, message: '请选择启用状态', trigger: 'change' }]"
-      >
-        <el-switch v-model="form.Enabled" active-text="启用" inactive-text="禁用"></el-switch>
+        <el-input v-model="form.Description" type="textarea" :rows="3" placeholder="请填写描述信息（可选）"></el-input>
       </el-form-item>
       <el-form-item label="过期时间">
         <el-date-picker
@@ -40,15 +40,15 @@
 </template>
 
 <script>
-import { updateApiKey } from '@/api/apikey'
+import { createApiKey } from '@/api/integrationApiKeys'
 
 export default {
-  name: 'ApiKeyEditDialog',
+  name: 'IntegrationApiKeyAddDialog',
   props: {
     modelValue: { type: Boolean, default: false },
-    form: { type: Object, default: () => ({ ItemId: 0, KeyName: '', Description: '', Enabled: true, ExpireTime: '' }) }
+    form: { type: Object, default: () => ({ KeyName: '', Description: '', ExpireTime: '' }) }
   },
-  emits: ['update:modelValue', 'success'],
+  emits: ['update:modelValue', 'created'],
   computed: {
     dialogVisible: {
       get() {
@@ -67,19 +67,19 @@ export default {
       this.$refs.formRef.validate(async (valid) => {
         if (!valid) return
         try {
-          const data = { ItemId: this.form.ItemId, Enabled: this.form.Enabled }
+          const data = { KeyName: this.form.KeyName }
           if (this.form.Description) data.Description = this.form.Description
           if (this.form.ExpireTime) data.ExpireTime = this.form.ExpireTime
-          const response = await updateApiKey(data)
+          const response = await createApiKey(data)
           if (response.data.Code === 200) {
-            this.$message.success('更新成功')
+            this.$message.success('创建成功')
             this.dialogVisible = false
-            this.$emit('success')
+            this.$emit('created', response.data.Data)
           } else {
-            this.$message.error(response.data.Message || '更新失败')
+            this.$message.error(response.data.Message || '创建失败')
           }
         } catch (error) {
-          this.$message.error('更新失败：' + (error.response?.data?.Message || error.message))
+          this.$message.error('创建失败：' + (error.response?.data?.Message || error.message))
         }
       })
     }

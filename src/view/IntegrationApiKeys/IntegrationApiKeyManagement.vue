@@ -1,9 +1,9 @@
 <template>
-  <div class="apikey-container dt-page-shell">
+  <div class="integration-api-key-container dt-page-shell">
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>API Key 管理</h1>
+          <h1>集成管理</h1>
           <p>创建、禁用和维护外部系统访问密钥。</p>
         </div>
         <div class="dt-command-actions">
@@ -101,7 +101,7 @@
           </el-table-column>
           <el-table-column label="操作" width="108" fixed="right" align="right">
             <template #default="scope">
-              <div class="dt-operation-buttons apikey-actions">
+              <div class="dt-operation-buttons integration-api-key-actions">
                 <el-tooltip content="编辑密钥" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--edit"
@@ -124,13 +124,13 @@
     </section>
 
     <!-- 创建密钥对话框 -->
-    <ApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
+    <IntegrationApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
 
     <!-- 修改密钥对话框 -->
-    <ApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyList" />
+    <IntegrationApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyList" />
 
     <!-- 显示SecretKey对话框 -->
-    <ApiKeySecretDialog v-model="secretKeyDialogVisible" :data="secretKeyData" />
+    <IntegrationApiKeySecretDialog v-model="secretKeyDialogVisible" :data="secretKeyData" />
   </div>
 </template>
 
@@ -138,17 +138,17 @@
 import { computed, defineComponent, reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
-import { getApiKeyList, updateApiKey, deleteApiKey } from '@/api/apikey'
-import ApiKeyAddDialog from './components/ApiKeyAddDialog.vue'
-import ApiKeyEditDialog from './components/ApiKeyEditDialog.vue'
-import ApiKeySecretDialog from './components/ApiKeySecretDialog.vue'
+import { getApiKeyList, updateApiKey, deleteApiKey } from '@/api/integrationApiKeys'
+import IntegrationApiKeyAddDialog from './components/IntegrationApiKeyAddDialog.vue'
+import IntegrationApiKeyEditDialog from './components/IntegrationApiKeyEditDialog.vue'
+import IntegrationApiKeySecretDialog from './components/IntegrationApiKeySecretDialog.vue'
 
 export default defineComponent({
-  name: 'ApiKeyManagement',
+  name: 'IntegrationApiKeyManagement',
   components: {
-    ApiKeyAddDialog,
-    ApiKeyEditDialog,
-    ApiKeySecretDialog,
+    IntegrationApiKeyAddDialog,
+    IntegrationApiKeyEditDialog,
+    IntegrationApiKeySecretDialog,
     Search
   },
   setup() {
@@ -243,7 +243,7 @@ export default defineComponent({
     }
 
     // 添加对话框关闭
-    // addDialogClosed handled by ApiKeyAddDialog component
+    // addDialogClosed handled by IntegrationApiKeyAddDialog component
 
     // 创建API密钥
     const onApiKeyCreated = (resultData) => {
@@ -264,7 +264,7 @@ export default defineComponent({
     }
 
     // 编辑对话框关闭
-    // editDialogClosed handled by ApiKeyEditDialog component
+    // editDialogClosed handled by IntegrationApiKeyEditDialog component
 
     // 更新API密钥
 
@@ -321,7 +321,7 @@ export default defineComponent({
     }
 
     // 复制SecretKey
-    // copySecretKey handled by ApiKeySecretDialog component
+    // copySecretKey handled by IntegrationApiKeySecretDialog component
 
     // 格式化日期
     const formatDate = (dateStr) => {
@@ -376,7 +376,7 @@ export default defineComponent({
 </script>
 
 <style lang="less" scoped>
-.apikey-container {
+.integration-api-key-container {
   height: 100%;
   min-height: 0;
 }
@@ -386,7 +386,7 @@ export default defineComponent({
   min-height: 0;
 }
 
-.apikey-actions {
+.integration-api-key-actions {
   min-width: 70px;
   display: grid;
   grid-template-columns: repeat(2, 30px);
@@ -394,7 +394,7 @@ export default defineComponent({
   gap: 10px;
 }
 
-.apikey-actions :deep(.el-button + .el-button) {
+.integration-api-key-actions :deep(.el-button + .el-button) {
   margin-left: 0;
 }
 

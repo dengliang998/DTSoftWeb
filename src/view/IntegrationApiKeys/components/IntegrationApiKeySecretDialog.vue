@@ -33,7 +33,7 @@
 
 <script>
 export default {
-  name: 'ApiKeySecretDialog',
+  name: 'IntegrationApiKeySecretDialog',
   props: {
     modelValue: { type: Boolean, default: false },
     data: { type: Object, default: () => ({ KeyName: '', SecretKey: '' }) }

@@ -1,4 +1,5 @@
 const Login = () => import('../view/Login.vue')
+const SsoLogin = () => import('../view/SsoLogin.vue')
 const Home = () => import('../view/Home.vue')
 const Welcome = () => import('../view/Welcome.vue')
 const Organization = () => import('../view/user/Organization.vue')
@@ -16,7 +17,7 @@ const JumpPage = () => import('../view/Common/JumpPage.vue')
 const MicroApiConfig = () => import('../view/MicroApp/MicroApiConfig.vue')
 const MicroAppPage = () => import('../view/MicroApp/MicroAppPage.vue')
 const CustomPage = () => import('../view/CustomPage/CustomPage.vue')
-const ApiKeyManagement = () => import('../view/ApiKey/ApiKeyManagement.vue')
+const IntegrationApiKeyManagement = () => import('../view/IntegrationApiKeys/IntegrationApiKeyManagement.vue')
 
 const withCache = (cacheName, extraMeta = {}) => ({
   cacheName,
@@ -27,6 +28,7 @@ const withCache = (cacheName, extraMeta = {}) => ({
 export const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', name: 'Login', component: Login, meta: { requiresAuth: false } },
+  { path: '/sso', name: 'SsoLogin', component: SsoLogin, meta: { requiresAuth: false } },
   {
     path: '/home',
     name: 'Home',
@@ -92,10 +94,10 @@ export const routes = [
         meta: withCache('MicroApp')
       },
       {
-        path: '/apikey/management',
-        name: 'ApiKeyManagement',
-        component: ApiKeyManagement,
-        meta: withCache('ApiKeyManagement')
+        path: '/integration/api-keys',
+        name: 'IntegrationApiKeyManagement',
+        component: IntegrationApiKeyManagement,
+        meta: withCache('IntegrationApiKeyManagement')
       },
       { path: '/jumppage', name: 'JumpPage', component: JumpPage, props: true, meta: withCache('JumpPage') },
       {
