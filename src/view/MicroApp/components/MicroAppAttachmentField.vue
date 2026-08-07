@@ -11,7 +11,9 @@
       :on-success="handleUploadSuccess"
       :on-error="handleUploadError"
     >
-      <el-button type="primary" size="small" icon="Upload" :disabled="disabled">上传附件</el-button>
+      <el-button type="primary" size="small" icon="Upload" :disabled="disabled">
+        {{ $t('microRuntime.uploadAttachment') }}
+      </el-button>
     </el-upload>
     <div v-if="attachments.length > 0" class="attachment-list">
       <div
@@ -29,12 +31,12 @@
           type="danger"
           size="small"
           icon="Delete"
-          title="移除附件"
+          :title="$t('microRuntime.removeAttachment')"
           @click="$emit('remove', attachmentIndex)"
         ></el-button>
       </div>
     </div>
-    <div v-else class="attachment-empty">暂无附件</div>
+    <div v-else class="attachment-empty">{{ $t('microRuntime.noAttachment') }}</div>
   </div>
 </template>
 

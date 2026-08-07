@@ -8,5 +8,7 @@ export const STORAGE_KEYS = Object.freeze({
   loginCaptchaEnabled: 'sysconfig.loginCaptchaEnabled',
   browserLogo: 'sysconfig.browserLogo',
   themeConfig: 'sysconfig.themeConfig',
-  appearance: 'user.appearance'
+  appearance: 'user.appearance',
+  language: 'user.language',
+  enabledLanguages: 'sysconfig.enabledLanguages'
 })

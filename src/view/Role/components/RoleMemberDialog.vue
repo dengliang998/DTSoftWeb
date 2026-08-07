@@ -1,18 +1,18 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog v-model="dialogVisible" title="添加成员" width="50%" @close="dialogVisible = false">
+  <el-dialog v-model="dialogVisible" :title="$t('rolePage.addMember')" width="50%" @close="dialogVisible = false">
     <el-form :model="form" label-width="80px">
-      <el-form-item label="角色名称">
+      <el-form-item :label="$t('rolePage.roleName')">
         <el-input v-model="form.RoleName" disabled></el-input>
       </el-form-item>
-      <el-form-item label="选择用户">
-        <el-button type="primary" icon="Plus" @click="openUserSelector">选择</el-button>
+      <el-form-item :label="$t('rolePage.selectUser')">
+        <el-button type="primary" icon="Plus" @click="openUserSelector">{{ $t('user.form.select') }}</el-button>
       </el-form-item>
       <el-table :data="memberList" height="250" border stripe>
         <el-table-column label="#" type="index"></el-table-column>
-        <el-table-column label="账号" prop="Account"></el-table-column>
-        <el-table-column label="用户名" prop="DisplayName"></el-table-column>
-        <el-table-column label="操作" width="180px">
+        <el-table-column :label="$t('user.form.account')" prop="Account"></el-table-column>
+        <el-table-column :label="$t('user.form.username')" prop="DisplayName"></el-table-column>
+        <el-table-column :label="$t('common.actions')" width="180px">
           <template #default="scope">
             <el-button type="danger" size="small" icon="Delete" @click="removeMember(scope.$index)"></el-button>
           </template>
@@ -21,8 +21,8 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submit">确 定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submit">{{ $t('common.confirm') }}</el-button>
       </span>
     </template>
     <UserSelector v-model:visible="selUserDialogVisible" :selected-users="memberList" @confirm="handleUserSelected" />
@@ -77,7 +77,7 @@ export default {
         }
         flag = true
       }
-      this.$message.success('成功添加用户')
+      this.$message.success(this.$t('rolePage.userAdded'))
     },
     removeMember(index) {
       this.memberList.splice(index, 1)
@@ -91,7 +91,7 @@ export default {
       addRoleMember({ roleId: me.roleId, roleMembers: ParameJson })
         .then(function (response) {
           if (response.data.success) {
-            me.$message.success('操作成功')
+            me.$message.success(me.$t('rolePage.operationSuccess'))
             me.dialogVisible = false
             me.$emit('success')
           } else {
@@ -99,7 +99,7 @@ export default {
           }
         })
         .catch(function () {
-          me.$message.error('角色成员获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('rolePage.memberLoadFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     }
   }

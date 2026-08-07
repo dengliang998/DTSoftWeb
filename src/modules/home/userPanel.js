@@ -1,5 +1,6 @@
 import { getUserAvatarUrl, getUserDetailByAccount, modifyPassword } from '@/api/user'
 import { clearAuthSession, getUserAccount } from '@/core/session'
+import { translate } from '@/i18n'
 
 export const createModifyPwdForm = () => ({
   Account: '',
@@ -13,7 +14,7 @@ export const loadCurrentUserProfile = async () => {
   const response = await getUserDetailByAccount(account)
 
   if (!response.data.success) {
-    throw new Error(response.data.Msg || '用户信息初始化失败')
+    throw new Error(response.data.Msg || translate('user.loadFailed'))
   }
 
   return {

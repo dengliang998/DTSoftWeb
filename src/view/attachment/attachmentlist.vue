@@ -3,11 +3,11 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>附件管理</h1>
-          <p>维护系统上传文件，支持下载、图片预览、视频预览和删除。</p>
+          <h1>{{ $t('attachmentPage.title') }}</h1>
+          <p>{{ $t('attachmentPage.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="GetFileList">刷新</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="GetFileList">{{ $t('common.refresh') }}</el-button>
           <el-upload
             class="upload-demo"
             action="/api/File/Save"
@@ -21,7 +21,7 @@
             multiple
             name="Files"
           >
-            <el-button type="primary" :icon="Upload">上传文件</el-button>
+            <el-button type="primary" :icon="Upload">{{ $t('attachmentPage.upload') }}</el-button>
           </el-upload>
         </div>
       </div>
@@ -31,7 +31,7 @@
           v-model="queryInfo.query"
           class="dt-search"
           clearable
-          placeholder="搜索文件名称或路径"
+          :placeholder="$t('attachmentPage.searchPlaceholder')"
           @clear="GetFileList"
           @keyup.enter="GetFileList"
         >
@@ -52,13 +52,13 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>附件列表</strong>
-            <span>服务端总数 {{ total }}</span>
+            <strong>{{ $t('attachmentPage.listTitle') }}</strong>
+            <span>{{ $t('attachmentPage.serverTotal', { total }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">本页 {{ userList.length }}</span>
-            <span class="dt-chip dt-chip--success">图片 {{ fileStats.images }}</span>
-            <span class="dt-chip">视频 {{ fileStats.videos }}</span>
+            <span class="dt-chip">{{ $t('attachmentPage.currentPage', { count: userList.length }) }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('attachmentPage.images', { count: fileStats.images }) }}</span>
+            <span class="dt-chip">{{ $t('attachmentPage.videos', { count: fileStats.videos }) }}</span>
           </div>
         </div>
 
@@ -67,14 +67,14 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无附件"
+          :empty-text="$t('attachmentPage.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="文件" prop="FileName" min-width="240" show-overflow-tooltip>
+          <el-table-column :label="$t('attachmentPage.file')" prop="FileName" min-width="240" show-overflow-tooltip>
             <template #default="{ row }">
               <span class="dt-name-copy">
                 <strong>{{ row.FileName }}</strong>
@@ -82,43 +82,43 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="文件路径" prop="FilePath" min-width="260" show-overflow-tooltip>
+          <el-table-column :label="$t('attachmentPage.filePath')" prop="FilePath" min-width="260" show-overflow-tooltip>
             <template #default="{ row }">
               <code class="dt-code">{{ row.FilePath || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="大小" prop="Size" width="110">
+          <el-table-column :label="$t('attachmentPage.size')" prop="Size" width="110">
             <template #default="{ row }">
               <span class="dt-muted-pill">{{ row.Size || 0 }} MB</span>
             </template>
           </el-table-column>
-          <el-table-column label="创建人" prop="CreateUser" width="130">
+          <el-table-column :label="$t('attachmentPage.creator')" prop="CreateUser" width="130">
             <template #default="{ row }">
               <span class="dt-muted-pill">{{ row.CreateUser || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" prop="CreateDate" width="180">
+          <el-table-column :label="$t('attachmentPage.createTime')" prop="CreateDate" width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ row.CreateDate || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="156" fixed="right" align="right">
+          <el-table-column :label="$t('common.actions')" width="156" fixed="right" align="right">
             <template #default="{ row }">
               <div class="dt-operation-buttons attachment-actions">
-                <el-tooltip content="下载文件" placement="top">
+                <el-tooltip :content="$t('attachmentPage.download')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--add"
                     :icon="Download"
                     @click="FileDownload(row.FileID)"
                   />
                 </el-tooltip>
-                <el-tooltip v-if="isImageFile(row)" content="预览图片" placement="top">
+                <el-tooltip v-if="isImageFile(row)" :content="$t('attachmentPage.previewImage')" placement="top">
                   <el-button class="dt-icon-action" :icon="PictureIcon" @click="FilePreview(row.FileID)" />
                 </el-tooltip>
-                <el-tooltip v-if="isVideoFile(row)" content="预览视频" placement="top">
+                <el-tooltip v-if="isVideoFile(row)" :content="$t('attachmentPage.previewVideo')" placement="top">
                   <el-button class="dt-icon-action" :icon="VideoCamera" @click="VideoPreview(row.FileID)" />
                 </el-tooltip>
-                <el-tooltip content="删除文件" placement="top">
+                <el-tooltip :content="$t('attachmentPage.delete')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -223,10 +223,10 @@ export default {
       // 检查后端返回的状态
       if (response.success) {
         this.GetFileList()
-        this.$message.success('文件上传成功')
+        this.$message.success(this.$t('attachmentPage.uploadSuccess'))
       } else {
         // 显示后端返回的错误消息
-        const errorMsg = response.Msg || response.message || '文件上传失败'
+        const errorMsg = response.Msg || response.message || this.$t('attachmentPage.uploadFailed')
         this.$message.error(errorMsg)
       }
     },
@@ -235,7 +235,7 @@ export default {
       this.showUploadProgress = false
       this.uploadProgress = 0
 
-      let errorMessage = '文件上传失败'
+      let errorMessage = this.$t('attachmentPage.uploadFailed')
       // 尝试从错误对象中提取后端返回的错误消息
       if (err && err.response && err.response.data) {
         const responseData = err.response.data
@@ -261,7 +261,7 @@ export default {
       // 检查后端返回的状态
       if (response && !response.success) {
         // 显示后端返回的错误消息
-        const errorMsg = response.Msg || response.message || '文件上传失败'
+        const errorMsg = response.Msg || response.message || this.$t('attachmentPage.uploadFailed')
         this.$message.error(errorMsg)
       }
     },
@@ -281,7 +281,7 @@ export default {
           }
         })
         .catch(function () {
-          me.$message.error('文件列表获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('attachmentPage.listLoadFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     // 监听 pageSize 改变的事件
@@ -297,14 +297,18 @@ export default {
     },
 
     async RemoveFile(FileID) {
-      const confirmResult = await this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch((err) => err)
+      const confirmResult = await this.$confirm(
+        this.$t('attachmentPage.deleteConfirm'),
+        this.$t('organization.prompt'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      ).catch((err) => err)
 
       if (confirmResult !== 'confirm') {
-        return this.$message.info('已经取消了删除')
+        return this.$message.info(this.$t('organization.deleteCanceled'))
       }
 
       const me = this
@@ -312,13 +316,13 @@ export default {
         .then(function (response) {
           if (response.data.success) {
             me.GetFileList()
-            me.$message.success('删除文件成功')
+            me.$message.success(me.$t('attachmentPage.deleteSuccess'))
           } else {
-            me.$message.error('删除失败！' + response.data.Msg)
+            me.$message.error(`${me.$t('attachmentPage.deleteFailed')}！${response.data.Msg}`)
           }
         })
         .catch(function () {
-          me.$message.error('删除失败，请稍后重试！')
+          me.$message.error(`${me.$t('attachmentPage.deleteFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
 
@@ -355,11 +359,11 @@ export default {
             me.FilePreviewDialogVisible = true
             me.filehtml = response.data.html
           } else {
-            me.$message.error('预览失败:' + response.data.Msg)
+            me.$message.error(`${me.$t('attachmentPage.previewFailed')}: ${response.data.Msg}`)
           }
         })
         .catch(function () {
-          me.$message.error('预览失败，请稍后重试！')
+          me.$message.error(`${me.$t('attachmentPage.previewFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     showViewerClose() {

@@ -1,12 +1,12 @@
 <template>
   <span class="dialog-footer">
     <span class="footer-status">
-      必填 {{ completedRequiredFieldCount }}/{{ requiredFieldCount }}
-      <template v-if="subTableCount > 0">，明细 {{ totalSubTableRows }} 行</template>
+      {{ $t('microRuntime.footerRequired', { completed: completedRequiredFieldCount, total: requiredFieldCount }) }}
+      <template v-if="subTableCount > 0">{{ $t('microRuntime.footerDetails', { rows: totalSubTableRows }) }}</template>
     </span>
     <span class="footer-actions">
-      <el-button @click="$emit('cancel')">取消</el-button>
-      <el-button type="primary" :loading="submitLoading" @click="$emit('submit')">保存</el-button>
+      <el-button @click="$emit('cancel')">{{ $t('common.cancel') }}</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="$emit('submit')">{{ $t('common.save') }}</el-button>
     </span>
   </span>
 </template>

@@ -2,7 +2,7 @@
 <template>
   <el-dialog v-model="dialogVisible" class="menu-form-dialog" :title="title" width="760px" @close="handleClose">
     <el-form ref="formRef" :model="form" label-width="86px" :rules="formRules" class="menu-form">
-      <el-form-item label="菜单类型" prop="menuType" class="menu-type-row">
+      <el-form-item :label="$t('menuPage.form.menuType')" prop="menuType" class="menu-type-row">
         <el-radio-group v-model="form.menuType" class="menu-type-group" @change="handleMenuTypeChange">
           <el-radio-button v-for="type in typeOptions" :key="type.value" :value="type.value">
             <el-icon><component :is="ElementPlusIconsVue[type.icon]" /></el-icon>
@@ -12,37 +12,51 @@
       </el-form-item>
 
       <div class="field-grid">
-        <el-form-item label="上级菜单" prop="parentId">
+        <el-form-item :label="$t('menuPage.form.parent')" prop="parentId">
           <el-tree-select
             v-model="form.parentId"
             :data="menuOptions"
             node-key="id"
-            :props="{ label: 'menuName', children: 'children' }"
+            :props="{ label: 'displayName', children: 'children' }"
             value-key="id"
-            placeholder="请选择上级菜单"
+            :placeholder="$t('menuPage.form.parentPlaceholder')"
             check-strictly
             class="field-control"
           />
         </el-form-item>
 
-        <el-form-item label="菜单名称" prop="menuName">
-          <el-input v-model="form.menuName" placeholder="请输入菜单名称" class="field-control" />
+        <el-form-item :label="$t('menuPage.form.name')" prop="menuName">
+          <el-input v-model="form.menuName" :placeholder="$t('menuPage.form.namePlaceholder')" class="field-control" />
         </el-form-item>
 
-        <el-form-item v-if="form.menuType === '0'" label="内部路由" prop="path" class="is-wide">
-          <el-input v-model="form.path" placeholder="例如：common/menus" class="field-control">
+        <el-form-item :label="$t('menuPage.resourceKey')" prop="i18nKey">
+          <el-input v-model="form.i18nKey" :placeholder="$t('menuPage.form.keyPlaceholder')" class="field-control" />
+        </el-form-item>
+
+        <el-form-item
+          v-if="form.menuType === '0'"
+          :label="$t('menuPage.form.internalRoute')"
+          prop="path"
+          class="is-wide"
+        >
+          <el-input v-model="form.path" :placeholder="$t('menuPage.form.routePlaceholder')" class="field-control">
             <template #prefix>
               <el-icon><LinkIcon /></el-icon>
             </template>
           </el-input>
         </el-form-item>
 
-        <el-form-item v-if="form.menuType === '2'" label="扩展页面" prop="customPageRoute" class="is-wide">
+        <el-form-item
+          v-if="form.menuType === '2'"
+          :label="$t('menuPage.form.customPage')"
+          prop="customPageRoute"
+          class="is-wide"
+        >
           <el-select
             v-model="form.customPageRoute"
             clearable
             filterable
-            placeholder="选择 public/custom-pages 中的页面"
+            :placeholder="$t('menuPage.form.customPagePlaceholder')"
             class="field-control"
             @change="handleCustomPageChange"
           >
@@ -55,12 +69,17 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item v-if="form.menuType === '1'" label="微应用" prop="microAppPath" class="is-wide">
+        <el-form-item
+          v-if="form.menuType === '1'"
+          :label="$t('menuPage.form.microApp')"
+          prop="microAppPath"
+          class="is-wide"
+        >
           <el-select
             v-model="form.microAppPath"
             clearable
             filterable
-            placeholder="选择已创建微应用"
+            :placeholder="$t('menuPage.form.microAppPlaceholder')"
             class="field-control"
             @change="handleMicroAppPathChange"
           >
@@ -73,16 +92,27 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item v-if="form.menuType !== '0'" label="最终路由" prop="path" class="is-wide">
-          <el-input v-model="form.path" disabled placeholder="选择资源后自动生成" class="field-control">
+        <el-form-item v-if="form.menuType !== '0'" :label="$t('menuPage.form.finalRoute')" prop="path" class="is-wide">
+          <el-input
+            v-model="form.path"
+            disabled
+            :placeholder="$t('menuPage.form.autoRoutePlaceholder')"
+            class="field-control"
+          >
             <template #prefix>
               <el-icon><LinkIcon /></el-icon>
             </template>
           </el-input>
         </el-form-item>
 
-        <el-form-item label="菜单图标" prop="icon">
-          <el-select v-model="form.icon" filterable clearable placeholder="请选择图标" class="field-control">
+        <el-form-item :label="$t('menuPage.form.icon')" prop="icon">
+          <el-select
+            v-model="form.icon"
+            filterable
+            clearable
+            :placeholder="$t('menuPage.form.iconPlaceholder')"
+            class="field-control"
+          >
             <template #prefix>
               <el-icon v-if="form.icon && ElementPlusIconsVue[form.icon]">
                 <component :is="ElementPlusIconsVue[form.icon]" />
@@ -100,29 +130,29 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="是否可见" prop="visible">
+        <el-form-item :label="$t('menuPage.form.visibility')" prop="visible">
           <el-radio-group v-model="form.visible" class="visibility-group">
-            <el-radio-button :value="true">显示</el-radio-button>
-            <el-radio-button :value="false">隐藏</el-radio-button>
+            <el-radio-button :value="true">{{ $t('menuPage.visible') }}</el-radio-button>
+            <el-radio-button :value="false">{{ $t('menuPage.hidden') }}</el-radio-button>
           </el-radio-group>
         </el-form-item>
       </div>
 
       <div class="route-summary">
-        <span>最终路由</span>
+        <span>{{ $t('menuPage.form.finalRoute') }}</span>
         <code>{{ routePreview }}</code>
       </div>
 
-      <el-form-item v-show="false" label="组件路径" prop="component">
-        <el-input v-model="form.component" placeholder="请输入组件路径"></el-input>
+      <el-form-item v-show="false" :label="$t('menuPage.form.componentPath')" prop="component">
+        <el-input v-model="form.component" :placeholder="$t('menuPage.form.componentPlaceholder')"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
         <el-button type="primary" @click="submit">
           <el-icon><Check /></el-icon>
-          保存
+          {{ $t('common.save') }}
         </el-button>
       </div>
     </template>
@@ -145,7 +175,7 @@ export default {
   },
   props: {
     modelValue: { type: Boolean, default: false },
-    title: { type: String, default: '添加菜单' },
+    title: { type: String, default: '' },
     form: { type: Object, default: () => ({}) },
     formRules: { type: Object, default: () => ({}) },
     menuOptions: { type: Array, default: () => [] },
@@ -156,23 +186,6 @@ export default {
     return {
       microAppOptions: [],
       customPageOptions: [],
-      typeOptions: [
-        {
-          value: '1',
-          label: '微应用',
-          icon: 'Monitor'
-        },
-        {
-          value: '2',
-          label: '扩展页面',
-          icon: 'Files'
-        },
-        {
-          value: '0',
-          label: '自定义',
-          icon: 'Setting'
-        }
-      ],
       iconNames: Object.keys(ElementPlusIconsVue).filter((k) => k && k !== 'default'),
       ElementPlusIconsVue
     }
@@ -189,7 +202,26 @@ export default {
     routePreview() {
       if (this.form.menuType === '1' && this.form.microAppPath) return `app/${this.form.microAppPath}`
       if (this.form.menuType === '2' && this.form.customPageRoute) return this.form.customPageRoute
-      return this.form.path || '待设置'
+      return this.form.path || this.$t('menuPage.form.pendingRoute')
+    },
+    typeOptions() {
+      return [
+        {
+          value: '1',
+          label: this.$t('menuPage.microApp'),
+          icon: 'Monitor'
+        },
+        {
+          value: '2',
+          label: this.$t('menuPage.extensionPage'),
+          icon: 'Files'
+        },
+        {
+          value: '0',
+          label: this.$t('menuPage.custom'),
+          icon: 'Setting'
+        }
+      ]
     }
   },
   watch: {

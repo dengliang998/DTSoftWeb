@@ -3,12 +3,14 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>微应用配置</h1>
-          <p>配置动态 CRUD 页面、字段模型、查询条件和运行时能力。</p>
+          <h1>{{ $t('microConfig.title') }}</h1>
+          <p>{{ $t('microConfig.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="getMicroApps">刷新</el-button>
-          <el-button type="primary" :icon="Plus" @click="addMicroApp">创建微应用</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getMicroApps">
+            {{ $t('common.refresh') }}
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="addMicroApp">{{ $t('microConfig.create') }}</el-button>
         </div>
       </div>
 
@@ -17,7 +19,7 @@
           v-model="queryInfo.query"
           class="dt-search"
           clearable
-          placeholder="搜索配置名称、模型或路径"
+          :placeholder="$t('microConfig.searchPlaceholder')"
           @clear="getMicroApps"
           @keyup.enter="getMicroApps"
         >
@@ -30,13 +32,17 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>配置列表</strong>
-            <span>服务端总数 {{ total }}</span>
+            <strong>{{ $t('microConfig.configList') }}</strong>
+            <span>{{ $t('microRuntime.serverTotal', { count: total }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">本页 {{ MicroAppList.length }}</span>
-            <span class="dt-chip dt-chip--success">启用 {{ microAppStats.enabled }}</span>
-            <span class="dt-chip dt-chip--warning">禁用 {{ microAppStats.disabled }}</span>
+            <span class="dt-chip">{{ $t('microRuntime.currentPage', { count: MicroAppList.length }) }}</span>
+            <span class="dt-chip dt-chip--success">
+              {{ $t('organization.enabledCount', { count: microAppStats.enabled }) }}
+            </span>
+            <span class="dt-chip dt-chip--warning">
+              {{ $t('organization.disabledCount', { count: microAppStats.disabled }) }}
+            </span>
           </div>
         </div>
 
@@ -45,61 +51,61 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无微应用配置"
+          :empty-text="$t('microConfig.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="配置" prop="ConfigName" min-width="240" show-overflow-tooltip>
+          <el-table-column :label="$t('microConfig.config')" prop="ConfigName" min-width="240" show-overflow-tooltip>
             <template #default="{ row }">
               <span class="dt-name-copy">
                 <strong>{{ row.ConfigName }}</strong>
-                <small>{{ row.configDesc || row.ConfigDesc || '未设置描述' }}</small>
+                <small>{{ row.configDesc || row.ConfigDesc || $t('microConfig.noDescription') }}</small>
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="数据模型" prop="ModelName" min-width="180">
+          <el-table-column :label="$t('microConfig.modelName')" prop="ModelName" min-width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ row.ModelName || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="微应用路径" prop="MicroAppPath" min-width="180">
+          <el-table-column :label="$t('microConfig.microAppPath')" prop="MicroAppPath" min-width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ row.MicroAppPath || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="96" align="center">
+          <el-table-column :label="$t('common.status')" width="96" align="center">
             <template #default="{ row }">
               <span :class="['dt-badge', row.Status === 1 ? 'dt-badge--success' : 'dt-badge--warning']">
-                {{ row.Status === 1 ? '启用' : '禁用' }}
+                {{ row.Status === 1 ? $t('common.enabled') : $t('common.disabled') }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" width="180">
+          <el-table-column :label="$t('apiKey.createTime')" width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ $filters.dateFormat(row.CreateTime) }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="更新时间" width="180">
+          <el-table-column :label="$t('esb.updateTime')" width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ $filters.dateFormat(row.UpdateTime) }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="156" fixed="right" align="right">
+          <el-table-column :label="$t('common.actions')" width="156" fixed="right" align="right">
             <template #default="{ row }">
               <div class="dt-operation-buttons micro-actions">
-                <el-tooltip content="编辑配置" placement="top">
+                <el-tooltip :content="$t('microConfig.editConfig')" placement="top">
                   <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="editMicroApp(row)" />
                 </el-tooltip>
-                <el-tooltip content="可视化配置" placement="top">
+                <el-tooltip :content="$t('microConfig.visualConfig')" placement="top">
                   <el-button class="dt-icon-action" :icon="Setting" @click="visualConfig(row)" />
                 </el-tooltip>
-                <el-tooltip content="接口文档" placement="top">
+                <el-tooltip :content="$t('microConfig.apiDoc')" placement="top">
                   <el-button class="dt-icon-action dt-icon-action--add" :icon="Document" @click="generateApiDoc(row)" />
                 </el-tooltip>
-                <el-tooltip content="删除配置" placement="top">
+                <el-tooltip :content="$t('microConfig.deleteConfig')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -136,7 +142,7 @@
     <!-- 可视化配置对话框 -->
     <el-dialog
       v-model="visualConfigVisible"
-      title="可视化配置"
+      :title="$t('microConfig.visualConfig')"
       width="90%"
       :close-on-click-modal="false"
       fullscreen
@@ -146,24 +152,24 @@
         <aside class="field-sidebar">
           <div class="sidebar-head">
             <div>
-              <div class="section-kicker">字段模型</div>
-              <div class="section-title">主表字段配置</div>
+              <div class="section-kicker">{{ $t('microConfig.fieldModel') }}</div>
+              <div class="section-title">{{ $t('microConfig.mainFieldConfig') }}</div>
             </div>
-            <el-button type="primary" size="small" icon="Plus" @click="addField">新增</el-button>
+            <el-button type="primary" size="small" icon="Plus" @click="addField">{{ $t('common.add') }}</el-button>
           </div>
 
           <div class="field-metrics">
             <div class="metric-item">
               <span class="metric-value">{{ MicroAppForm.Fields.length }}</span>
-              <span class="metric-label">字段</span>
+              <span class="metric-label">{{ $t('microConfig.field') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-value">{{ queryConfigCount }}</span>
-              <span class="metric-label">查询</span>
+              <span class="metric-label">{{ $t('microConfig.query') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-value">{{ listConfigCount }}</span>
-              <span class="metric-label">列表</span>
+              <span class="metric-label">{{ $t('microConfig.list') }}</span>
             </div>
           </div>
 
@@ -185,7 +191,7 @@
                 <span class="field-tree-node__main">
                   <el-icon class="field-tree-node__drag"><Rank /></el-icon>
                   <span class="field-tree-node__text">
-                    <span class="field-tree-node__label">{{ data.label || '未命名字段' }}</span>
+                    <span class="field-tree-node__label">{{ data.label || $t('microConfig.unnamedField') }}</span>
                     <span class="field-tree-node__meta">{{ data.fieldName || 'field_name' }}</span>
                   </span>
                 </span>
@@ -195,7 +201,7 @@
                   </el-tag>
                   <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
                     <el-icon><Delete /></el-icon>
-                    <span>删除</span>
+                    <span>{{ $t('common.delete') }}</span>
                   </button>
                 </span>
               </div>
@@ -205,49 +211,55 @@
           <div class="subtable-sidebar">
             <div class="sidebar-head sidebar-head--subtable">
               <div>
-                <div class="section-kicker">明细模型</div>
-                <div class="section-title">子表配置</div>
+                <div class="section-kicker">{{ $t('microConfig.detailModel') }}</div>
+                <div class="section-title">{{ $t('microConfig.subTableConfig') }}</div>
               </div>
-              <el-button type="primary" size="small" icon="Plus" @click="addSubTable">新增</el-button>
+              <el-button type="primary" size="small" icon="Plus" @click="addSubTable">{{ $t('common.add') }}</el-button>
             </div>
-            <div v-if="MicroAppForm.SubTables.length === 0" class="empty-inline">暂无子表</div>
+            <div v-if="MicroAppForm.SubTables.length === 0" class="empty-inline">
+              {{ $t('microConfig.noSubTable') }}
+            </div>
             <div
               v-for="(subTable, subTableIndex) in MicroAppForm.SubTables"
               :key="subTable.tableName || subTableIndex"
               class="subtable-config-card"
             >
               <div class="subtable-config-card__head">
-                <span>{{ subTable.label || '未命名子表' }}</span>
+                <span>{{ subTable.label || $t('microConfig.unnamedSubTable') }}</span>
                 <button
                   class="subtable-icon-button"
                   type="button"
-                  title="删除子表"
+                  :title="$t('microConfig.deleteSubTable')"
                   @click="deleteSubTable(subTableIndex)"
                 >
                   <el-icon><Delete /></el-icon>
                 </button>
               </div>
               <div class="subtable-config-grid">
-                <el-input v-model="subTable.label" size="small" placeholder="子表名称"></el-input>
+                <el-input
+                  v-model="subTable.label"
+                  size="small"
+                  :placeholder="$t('microConfig.subTableName')"
+                ></el-input>
                 <el-input v-model="subTable.tableName" size="small" placeholder="sub_table"></el-input>
                 <el-input-number
                   v-model="subTable.minRows"
                   size="small"
                   :min="0"
                   :max="1000"
-                  placeholder="最小行"
+                  :placeholder="$t('microConfig.minRows')"
                 ></el-input-number>
                 <el-input-number
                   v-model="subTable.maxRows"
                   size="small"
                   :min="0"
                   :max="5000"
-                  placeholder="最大行"
+                  :placeholder="$t('microConfig.maxRows')"
                 ></el-input-number>
               </div>
               <div class="subtable-lookup-config">
                 <label class="subtable-lookup-switch">
-                  <span>开窗带入</span>
+                  <span>{{ $t('microConfig.lookupImport') }}</span>
                   <el-switch v-model="subTable.enableLookup"></el-switch>
                 </label>
                 <div v-if="subTable.enableLookup" class="subtable-lookup-body">
@@ -256,7 +268,7 @@
                     size="small"
                     clearable
                     filterable
-                    placeholder="选择 ESB 数据源"
+                    :placeholder="$t('microConfig.selectEsbDataSource')"
                   >
                     <el-option
                       v-for="source in esbDataSources"
@@ -271,23 +283,31 @@
                     :min="5"
                     :max="200"
                     :step="5"
-                    placeholder="分页"
+                    :placeholder="$t('microConfig.pageSize')"
                   ></el-input-number>
                   <el-input
                     v-model="subTable.lookupParams"
                     size="small"
                     type="textarea"
                     :rows="2"
-                    placeholder='静态参数 JSON，例如 {"status":1}'
+                    :placeholder="$t('microConfig.staticParamsJsonExample')"
                   ></el-input>
-                  <div class="subtable-lookup-title">弹窗显示列</div>
+                  <div class="subtable-lookup-title">{{ $t('microConfig.lookupColumns') }}</div>
                   <div
                     v-for="(column, columnIndex) in subTable.lookupColumns"
                     :key="columnIndex"
                     class="subtable-lookup-row subtable-lookup-row--columns"
                   >
-                    <el-input v-model="column.field" size="small" placeholder="返回字段"></el-input>
-                    <el-input v-model="column.label" size="small" placeholder="列标题"></el-input>
+                    <el-input
+                      v-model="column.field"
+                      size="small"
+                      :placeholder="$t('microConfig.returnField')"
+                    ></el-input>
+                    <el-input
+                      v-model="column.label"
+                      size="small"
+                      :placeholder="$t('microConfig.columnTitle')"
+                    ></el-input>
                     <el-button
                       class="subtable-lookup-delete-button"
                       size="small"
@@ -297,15 +317,26 @@
                       <el-icon><Delete /></el-icon>
                     </el-button>
                   </div>
-                  <el-button size="small" icon="Plus" @click="addSubTableLookupColumn(subTable)">显示列</el-button>
-                  <div class="subtable-lookup-title">字段回填映射</div>
+                  <el-button size="small" icon="Plus" @click="addSubTableLookupColumn(subTable)">
+                    {{ $t('microConfig.addDisplayColumn') }}
+                  </el-button>
+                  <div class="subtable-lookup-title">{{ $t('microConfig.lookupMappings') }}</div>
                   <div
                     v-for="(mapping, mappingIndex) in subTable.lookupMappings"
                     :key="mappingIndex"
                     class="subtable-lookup-row"
                   >
-                    <el-input v-model="mapping.sourceField" size="small" placeholder="返回字段"></el-input>
-                    <el-select v-model="mapping.targetField" size="small" filterable placeholder="明细字段">
+                    <el-input
+                      v-model="mapping.sourceField"
+                      size="small"
+                      :placeholder="$t('microConfig.returnField')"
+                    ></el-input>
+                    <el-select
+                      v-model="mapping.targetField"
+                      size="small"
+                      filterable
+                      :placeholder="$t('microConfig.detailField')"
+                    >
                       <el-option
                         v-for="field in subTable.fields"
                         :key="field.fieldName"
@@ -322,12 +353,16 @@
                       <el-icon><Delete /></el-icon>
                     </el-button>
                   </div>
-                  <el-button size="small" icon="Plus" @click="addSubTableLookupMapping(subTable)">回填映射</el-button>
+                  <el-button size="small" icon="Plus" @click="addSubTableLookupMapping(subTable)">
+                    {{ $t('microConfig.addLookupMapping') }}
+                  </el-button>
                 </div>
               </div>
               <div class="subtable-field-actions">
-                <span>{{ subTable.fields.length }} 个字段</span>
-                <el-button size="small" icon="Plus" @click="addSubTableField(subTable)">字段</el-button>
+                <span>{{ $t('microConfig.fieldCount', { count: subTable.fields.length }) }}</span>
+                <el-button size="small" icon="Plus" @click="addSubTableField(subTable)">
+                  {{ $t('microConfig.field') }}
+                </el-button>
               </div>
               <el-tree
                 class="field-tree subtable-field-tree"
@@ -346,7 +381,7 @@
                     <span class="field-tree-node__main">
                       <el-icon class="field-tree-node__drag"><Rank /></el-icon>
                       <span class="field-tree-node__text">
-                        <span class="field-tree-node__label">{{ data.label || '未命名字段' }}</span>
+                        <span class="field-tree-node__label">{{ data.label || $t('microConfig.unnamedField') }}</span>
                         <span class="field-tree-node__meta">{{ data.fieldName || 'field_name' }}</span>
                       </span>
                     </span>
@@ -360,7 +395,7 @@
                         @click.stop="deleteSubTableField(subTable, data.fieldName)"
                       >
                         <el-icon><Delete /></el-icon>
-                        <span>删除</span>
+                        <span>{{ $t('common.delete') }}</span>
                       </button>
                     </span>
                   </div>
@@ -374,69 +409,69 @@
           <section class="workspace-panel app-settings-panel">
             <div class="panel-head">
               <div>
-                <div class="section-kicker">生成策略</div>
-                <div class="section-title">页面能力</div>
+                <div class="section-kicker">{{ $t('microConfig.generationStrategy') }}</div>
+                <div class="section-title">{{ $t('microConfig.pageCapabilities') }}</div>
               </div>
               <div class="visual-config-actions">
-                <el-button @click="visualConfigVisible = false">取消</el-button>
-                <el-button type="primary" @click="saveVisualConfig">保存配置</el-button>
+                <el-button @click="visualConfigVisible = false">{{ $t('common.cancel') }}</el-button>
+                <el-button type="primary" @click="saveVisualConfig">{{ $t('microConfig.saveConfig') }}</el-button>
               </div>
             </div>
 
             <el-form :model="MicroAppForm" class="compact-form" label-position="top">
               <div class="switch-matrix">
                 <label class="switch-tile">
-                  <span>新增</span>
+                  <span>{{ $t('common.add') }}</span>
                   <el-switch v-model="MicroAppForm.SupportCreate"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>修改</span>
+                  <span>{{ $t('microConfig.update') }}</span>
                   <el-switch v-model="MicroAppForm.SupportUpdate"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>删除</span>
+                  <span>{{ $t('common.delete') }}</span>
                   <el-switch v-model="MicroAppForm.SupportDelete"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>批量删除</span>
+                  <span>{{ $t('microConfig.batchDelete') }}</span>
                   <el-switch v-model="MicroAppForm.SupportBatchDelete"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>导入</span>
+                  <span>{{ $t('microConfig.import') }}</span>
                   <el-switch v-model="MicroAppForm.SupportImport"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>导出</span>
+                  <span>{{ $t('microConfig.export') }}</span>
                   <el-switch v-model="MicroAppForm.SupportExport"></el-switch>
                 </label>
                 <label class="switch-tile">
-                  <span>列表子表</span>
+                  <span>{{ $t('microConfig.listSubTable') }}</span>
                   <el-switch v-model="MicroAppForm.ShowSubTablesInList"></el-switch>
                 </label>
               </div>
 
               <div class="settings-grid">
-                <el-form-item label="数据范围">
-                  <el-select v-model="MicroAppForm.DataScope" placeholder="请选择数据范围">
-                    <el-option label="全部数据" value="all"></el-option>
-                    <el-option label="本人数据" value="self"></el-option>
-                    <el-option label="部门数据" value="department"></el-option>
+                <el-form-item :label="$t('microConfig.dataScope')">
+                  <el-select v-model="MicroAppForm.DataScope" :placeholder="$t('microConfig.selectDataScope')">
+                    <el-option :label="$t('microConfig.allData')" value="all"></el-option>
+                    <el-option :label="$t('microConfig.selfData')" value="self"></el-option>
+                    <el-option :label="$t('microConfig.departmentData')" value="department"></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item label="表单列数">
-                  <el-select v-model="MicroAppForm.FormColumns" placeholder="请选择每行列数">
-                    <el-option label="1 列" :value="1"></el-option>
-                    <el-option label="2 列" :value="2"></el-option>
-                    <el-option label="3 列" :value="3"></el-option>
-                    <el-option label="4 列" :value="4"></el-option>
+                <el-form-item :label="$t('microConfig.formColumns')">
+                  <el-select v-model="MicroAppForm.FormColumns" :placeholder="$t('microConfig.selectColumnsPerRow')">
+                    <el-option :label="$t('microConfig.oneColumn')" :value="1"></el-option>
+                    <el-option :label="$t('microConfig.twoColumns')" :value="2"></el-option>
+                    <el-option :label="$t('microConfig.threeColumns')" :value="3"></el-option>
+                    <el-option :label="$t('microConfig.fourColumns')" :value="4"></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item label="搜索列数">
-                  <el-select v-model="MicroAppForm.QueryColumns" placeholder="请选择每行搜索字段数">
-                    <el-option label="1 列" :value="1"></el-option>
-                    <el-option label="2 列" :value="2"></el-option>
-                    <el-option label="3 列" :value="3"></el-option>
-                    <el-option label="4 列" :value="4"></el-option>
+                <el-form-item :label="$t('microConfig.searchColumns')">
+                  <el-select v-model="MicroAppForm.QueryColumns" :placeholder="$t('microConfig.selectSearchColumns')">
+                    <el-option :label="$t('microConfig.oneColumn')" :value="1"></el-option>
+                    <el-option :label="$t('microConfig.twoColumns')" :value="2"></el-option>
+                    <el-option :label="$t('microConfig.threeColumns')" :value="3"></el-option>
+                    <el-option :label="$t('microConfig.fourColumns')" :value="4"></el-option>
                   </el-select>
                 </el-form-item>
               </div>
@@ -447,9 +482,9 @@
             <template v-if="selectedFieldData">
               <div class="field-editor-head">
                 <div>
-                  <div class="section-kicker">字段属性</div>
+                  <div class="section-kicker">{{ $t('microConfig.fieldProperties') }}</div>
                   <div class="field-editor-title">
-                    {{ selectedFieldData.label || '未命名字段' }}
+                    {{ selectedFieldData.label || $t('microConfig.unnamedField') }}
                     <el-tag size="small" effect="plain" :type="getFieldTypeTagType(selectedFieldData.fieldType)">
                       {{ getFieldTypeLabel(selectedFieldData.fieldType) }}
                     </el-tag>
@@ -460,52 +495,62 @@
 
               <el-form :model="selectedFieldData" class="field-config-form" label-position="top">
                 <div class="config-section">
-                  <div class="config-section-title">基础信息</div>
+                  <div class="config-section-title">{{ $t('microConfig.baseInfo') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="字段名称">
-                      <el-input v-model="selectedFieldData.label" placeholder="例如：客户名称"></el-input>
+                    <el-form-item :label="$t('microConfig.fieldName')">
+                      <el-input
+                        v-model="selectedFieldData.label"
+                        :placeholder="$t('microConfig.fieldNameExample')"
+                      ></el-input>
                     </el-form-item>
-                    <el-form-item label="字段标识">
-                      <el-input v-model="selectedFieldData.fieldName" placeholder="例如：customer_name"></el-input>
+                    <el-form-item :label="$t('microConfig.fieldCode')">
+                      <el-input
+                        v-model="selectedFieldData.fieldName"
+                        :placeholder="$t('microConfig.fieldCodeExample')"
+                      ></el-input>
                     </el-form-item>
-                    <el-form-item label="字段类型">
+                    <el-form-item :label="$t('microConfig.fieldType')">
                       <el-select
                         v-model="selectedFieldData.fieldType"
-                        placeholder="请选择字段类型"
+                        :placeholder="$t('microConfig.selectFieldType')"
                         @change="handleFieldTypeChange"
                       >
-                        <el-option label="文本" value="string"></el-option>
-                        <el-option label="数字" value="number"></el-option>
-                        <el-option label="日期时间" value="datetime"></el-option>
-                        <el-option label="布尔值" value="boolean"></el-option>
-                        <el-option label="文本域" value="textarea"></el-option>
-                        <el-option label="下拉选择" value="select"></el-option>
-                        <el-option label="单选" value="radio"></el-option>
-                        <el-option label="多选" value="checkbox"></el-option>
-                        <el-option v-if="selectedFieldScope === 'main'" label="开窗查询" value="lookup"></el-option>
-                        <el-option label="附件上传" value="attachment"></el-option>
+                        <el-option :label="$t('microConfig.text')" value="string"></el-option>
+                        <el-option :label="$t('microConfig.number')" value="number"></el-option>
+                        <el-option :label="$t('microConfig.datetime')" value="datetime"></el-option>
+                        <el-option :label="$t('microConfig.booleanValue')" value="boolean"></el-option>
+                        <el-option :label="$t('microConfig.textarea')" value="textarea"></el-option>
+                        <el-option :label="$t('microConfig.selectField')" value="select"></el-option>
+                        <el-option :label="$t('microConfig.radio')" value="radio"></el-option>
+                        <el-option :label="$t('microConfig.checkbox')" value="checkbox"></el-option>
+                        <el-option
+                          v-if="selectedFieldScope === 'main'"
+                          :label="$t('microConfig.lookupQuery')"
+                          value="lookup"
+                        ></el-option>
+                        <el-option :label="$t('microConfig.attachmentUpload')" value="attachment"></el-option>
                       </el-select>
                     </el-form-item>
                   </div>
                 </div>
 
                 <div class="config-section">
-                  <div class="config-section-title">展示与编辑</div>
+                  <div class="config-section-title">{{ $t('microConfig.displayEdit') }}</div>
                   <div class="switch-matrix switch-matrix--field">
                     <label class="switch-tile">
-                      <span>必填</span>
+                      <span>{{ $t('microConfig.required') }}</span>
                       <el-switch v-model="selectedFieldData.required"></el-switch>
                     </label>
                     <label class="switch-tile">
-                      <span>列表显示</span>
+                      <span>{{ $t('microConfig.showInList') }}</span>
                       <el-switch v-model="selectedFieldData.showInList"></el-switch>
                     </label>
                     <label class="switch-tile">
-                      <span>允许编辑</span>
+                      <span>{{ $t('microConfig.editable') }}</span>
                       <el-switch v-model="selectedFieldData.editable"></el-switch>
                     </label>
                     <label class="switch-tile">
-                      <span>支持排序</span>
+                      <span>{{ $t('microConfig.sortable') }}</span>
                       <el-switch
                         v-model="selectedFieldData.sortable"
                         :disabled="isAttachmentField(selectedFieldData)"
@@ -513,47 +558,53 @@
                     </label>
                   </div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="列表列宽">
+                    <el-form-item :label="$t('microConfig.columnWidth')">
                       <el-input-number
                         v-model="selectedFieldData.columnWidth"
                         :min="80"
                         :max="600"
                         :step="10"
-                        placeholder="自动"
+                        :placeholder="$t('microConfig.auto')"
                       ></el-input-number>
                     </el-form-item>
-                    <el-form-item label="固定列">
-                      <el-select v-model="selectedFieldData.fixed" placeholder="请选择固定列位置">
-                        <el-option label="不固定" value="none"></el-option>
-                        <el-option label="固定在左侧" value="left"></el-option>
-                        <el-option label="固定在右侧" value="right"></el-option>
+                    <el-form-item :label="$t('microConfig.fixedColumn')">
+                      <el-select v-model="selectedFieldData.fixed" :placeholder="$t('microConfig.selectFixedColumn')">
+                        <el-option :label="$t('microConfig.fixedNone')" value="none"></el-option>
+                        <el-option :label="$t('microConfig.fixedLeft')" value="left"></el-option>
+                        <el-option :label="$t('microConfig.fixedRight')" value="right"></el-option>
                       </el-select>
                     </el-form-item>
-                    <el-form-item v-if="!isAttachmentField(selectedFieldData)" label="默认值">
-                      <el-input v-model="selectedFieldData.defaultValue" placeholder="请输入字段默认值"></el-input>
+                    <el-form-item v-if="!isAttachmentField(selectedFieldData)" :label="$t('microConfig.defaultValue')">
+                      <el-input
+                        v-model="selectedFieldData.defaultValue"
+                        :placeholder="$t('microConfig.defaultValuePlaceholder')"
+                      ></el-input>
                     </el-form-item>
                   </div>
                 </div>
 
                 <div v-if="isDateField(selectedFieldData)" class="config-section">
-                  <div class="config-section-title">日期设置</div>
+                  <div class="config-section-title">{{ $t('microConfig.dateSettings') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="日期格式">
-                      <el-select v-model="selectedFieldData.dateFormat" placeholder="请选择日期格式">
-                        <el-option label="年" value="year"></el-option>
-                        <el-option label="年月" value="month"></el-option>
-                        <el-option label="年月日" value="date"></el-option>
-                        <el-option label="时间" value="datetime"></el-option>
+                    <el-form-item :label="$t('microConfig.dateFormat')">
+                      <el-select
+                        v-model="selectedFieldData.dateFormat"
+                        :placeholder="$t('microConfig.selectDateFormat')"
+                      >
+                        <el-option :label="$t('microConfig.year')" value="year"></el-option>
+                        <el-option :label="$t('microConfig.month')" value="month"></el-option>
+                        <el-option :label="$t('microConfig.day')" value="date"></el-option>
+                        <el-option :label="$t('microConfig.time')" value="datetime"></el-option>
                       </el-select>
                     </el-form-item>
                   </div>
                 </div>
 
                 <div class="config-section">
-                  <div class="config-section-title">查询设置</div>
+                  <div class="config-section-title">{{ $t('microConfig.querySettings') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="查询方式">
-                      <el-select v-model="selectedFieldData.queryMode" placeholder="请选择查询方式">
+                    <el-form-item :label="$t('microConfig.queryMode')">
+                      <el-select v-model="selectedFieldData.queryMode" :placeholder="$t('microConfig.selectQueryMode')">
                         <el-option
                           v-for="option in getQueryModeOptions(selectedFieldData)"
                           :key="option.value"
@@ -562,7 +613,7 @@
                         ></el-option>
                       </el-select>
                     </el-form-item>
-                    <el-form-item v-if="selectedFieldData.queryMode !== 'none'" label="查询宽度">
+                    <el-form-item v-if="selectedFieldData.queryMode !== 'none'" :label="$t('microConfig.queryWidth')">
                       <el-input-number
                         v-model="selectedFieldData.queryWidth"
                         :min="100"
@@ -575,9 +626,9 @@
                 </div>
 
                 <div v-if="supportsColumnLength(selectedFieldData)" class="config-section">
-                  <div class="config-section-title">数据库长度</div>
+                  <div class="config-section-title">{{ $t('microConfig.dbLength') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="字段长度">
+                    <el-form-item :label="$t('microConfig.fieldLength')">
                       <el-input-number
                         v-model="selectedFieldData.columnLength"
                         :min="1"
@@ -590,49 +641,58 @@
                 </div>
 
                 <div v-if="hasValidationConfig(selectedFieldData)" class="config-section">
-                  <div class="config-section-title">校验规则</div>
+                  <div class="config-section-title">{{ $t('microConfig.validationRules') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" label="最小长度">
+                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" :label="$t('microConfig.minLength')">
                       <el-input-number
                         v-model="selectedFieldData.minLength"
                         :min="0"
                         :max="10000"
-                        placeholder="最小长度"
+                        :placeholder="$t('microConfig.minLength')"
                       ></el-input-number>
                     </el-form-item>
-                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" label="最大长度">
+                    <el-form-item v-if="supportsLengthRule(selectedFieldData)" :label="$t('microConfig.maxLength')">
                       <el-input-number
                         v-model="selectedFieldData.maxLength"
                         :min="0"
                         :max="10000"
-                        placeholder="最大长度"
+                        :placeholder="$t('microConfig.maxLength')"
                       ></el-input-number>
                     </el-form-item>
-                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" label="最小值">
-                      <el-input-number v-model="selectedFieldData.minValue" placeholder="最小值"></el-input-number>
+                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" :label="$t('microConfig.minValue')">
+                      <el-input-number
+                        v-model="selectedFieldData.minValue"
+                        :placeholder="$t('microConfig.minValue')"
+                      ></el-input-number>
                     </el-form-item>
-                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" label="最大值">
-                      <el-input-number v-model="selectedFieldData.maxValue" placeholder="最大值"></el-input-number>
+                    <el-form-item v-if="supportsNumberRange(selectedFieldData)" :label="$t('microConfig.maxValue')">
+                      <el-input-number
+                        v-model="selectedFieldData.maxValue"
+                        :placeholder="$t('microConfig.maxValue')"
+                      ></el-input-number>
                     </el-form-item>
                     <el-form-item
                       v-if="supportsPatternRule(selectedFieldData)"
-                      label="正则校验"
+                      :label="$t('microConfig.pattern')"
                       class="form-grid-span-2"
                     >
-                      <el-input v-model="selectedFieldData.pattern" placeholder="请输入正则表达式"></el-input>
+                      <el-input
+                        v-model="selectedFieldData.pattern"
+                        :placeholder="$t('microConfig.patternPlaceholder')"
+                      ></el-input>
                     </el-form-item>
                   </div>
                 </div>
 
                 <div v-if="selectedFieldScope === 'main' && isLookupField(selectedFieldData)" class="config-section">
-                  <div class="config-section-title">开窗查询</div>
+                  <div class="config-section-title">{{ $t('microConfig.lookupQuery') }}</div>
                   <div class="form-grid form-grid--3">
-                    <el-form-item label="ESB 数据源">
+                    <el-form-item :label="$t('microConfig.esbDataSource')">
                       <el-select
                         v-model="selectedFieldData.lookupDataSourceCode"
                         clearable
                         filterable
-                        placeholder="请选择 ESB 数据源"
+                        :placeholder="$t('microConfig.selectEsbDataSource')"
                       >
                         <el-option
                           v-for="source in esbDataSources"
@@ -642,10 +702,13 @@
                         ></el-option>
                       </el-select>
                     </el-form-item>
-                    <el-form-item label="当前字段取值列">
-                      <el-input v-model="selectedFieldData.lookupValueField" placeholder="例如 id"></el-input>
+                    <el-form-item :label="$t('microConfig.lookupValueField')">
+                      <el-input
+                        v-model="selectedFieldData.lookupValueField"
+                        :placeholder="$t('microConfig.lookupValueFieldExample')"
+                      ></el-input>
                     </el-form-item>
-                    <el-form-item label="分页大小">
+                    <el-form-item :label="$t('microConfig.pageSize')">
                       <el-input-number
                         v-model="selectedFieldData.lookupPageSize"
                         :min="5"
@@ -655,16 +718,16 @@
                       ></el-input-number>
                     </el-form-item>
                   </div>
-                  <el-form-item label="静态参数 JSON">
+                  <el-form-item :label="$t('microConfig.staticParamsJson')">
                     <el-input
                       ref="lookupParamsInput"
                       v-model="selectedFieldData.lookupParams"
                       type="textarea"
                       :rows="2"
-                      placeholder='例如 {"userAcc":"${currentUser.account}"}'
+                      :placeholder="$t('microConfig.lookupParamsExample')"
                     ></el-input>
                     <div class="esb-variable-panel">
-                      <span class="esb-variable-title">可用变量</span>
+                      <span class="esb-variable-title">{{ $t('microConfig.availableVariables') }}</span>
                       <el-tag
                         v-for="variable in esbVariableOptions"
                         :key="variable.value"
@@ -672,39 +735,45 @@
                         effect="plain"
                         @click="insertLookupVariable(variable.value)"
                       >
-                        {{ variable.label }} {{ variable.value }}
+                        {{ $t(variable.labelKey) }} {{ variable.value }}
                       </el-tag>
                     </div>
                   </el-form-item>
-                  <el-form-item label="弹窗显示列">
+                  <el-form-item :label="$t('microConfig.lookupColumns')">
                     <div class="lookup-config-list">
                       <div
                         v-for="(column, index) in selectedFieldData.lookupColumns"
                         :key="index"
                         class="lookup-config-row lookup-config-row--columns"
                       >
-                        <el-input v-model="column.field" placeholder="返回字段"></el-input>
-                        <el-input v-model="column.label" placeholder="列标题"></el-input>
+                        <el-input v-model="column.field" :placeholder="$t('microConfig.returnField')"></el-input>
+                        <el-input v-model="column.label" :placeholder="$t('microConfig.columnTitle')"></el-input>
                         <el-input-number
                           v-model="column.width"
                           :min="80"
                           :max="500"
-                          placeholder="宽度"
+                          :placeholder="$t('microConfig.width')"
                         ></el-input-number>
                         <el-button type="danger" icon="Delete" @click="removeLookupColumn(index)"></el-button>
                       </div>
-                      <el-button icon="Plus" @click="addLookupColumn">添加显示列</el-button>
+                      <el-button icon="Plus" @click="addLookupColumn">
+                        {{ $t('microConfig.addLookupColumn') }}
+                      </el-button>
                     </div>
                   </el-form-item>
-                  <el-form-item label="字段回填映射">
+                  <el-form-item :label="$t('microConfig.lookupMappings')">
                     <div class="lookup-config-list">
                       <div
                         v-for="(mapping, index) in selectedFieldData.lookupMappings"
                         :key="index"
                         class="lookup-config-row"
                       >
-                        <el-input v-model="mapping.sourceField" placeholder="返回字段"></el-input>
-                        <el-select v-model="mapping.targetField" filterable placeholder="回填字段">
+                        <el-input v-model="mapping.sourceField" :placeholder="$t('microConfig.returnField')"></el-input>
+                        <el-select
+                          v-model="mapping.targetField"
+                          filterable
+                          :placeholder="$t('microConfig.targetField')"
+                        >
                           <el-option
                             v-for="field in lookupTargetFieldOptions"
                             :key="field.fieldName"
@@ -714,14 +783,16 @@
                         </el-select>
                         <el-button type="danger" icon="Delete" @click="removeLookupMapping(index)"></el-button>
                       </div>
-                      <el-button icon="Plus" @click="addLookupMapping">添加回填映射</el-button>
+                      <el-button icon="Plus" @click="addLookupMapping">
+                        {{ $t('microConfig.addTargetMapping') }}
+                      </el-button>
                     </div>
                   </el-form-item>
                 </div>
 
                 <div v-if="supportsOptions(selectedFieldData)" class="config-section">
                   <div class="config-section-head">
-                    <div class="config-section-title">选项配置</div>
+                    <div class="config-section-title">{{ $t('microConfig.optionConfig') }}</div>
                     <el-button
                       v-if="selectedFieldData.optionSource === 'manual'"
                       type="primary"
@@ -729,14 +800,14 @@
                       icon="Plus"
                       @click="addOption"
                     >
-                      添加选项
+                      {{ $t('microConfig.addOption') }}
                     </el-button>
                   </div>
                   <div class="option-source-row">
                     <el-radio-group v-model="selectedFieldData.optionSource" @change="handleOptionSourceChange">
-                      <el-radio label="manual">手动选项</el-radio>
-                      <el-radio label="dictionary">数据字典</el-radio>
-                      <el-radio label="esb">ESB 数据源</el-radio>
+                      <el-radio label="manual">{{ $t('microConfig.manualOptions') }}</el-radio>
+                      <el-radio label="dictionary">{{ $t('microConfig.dictionary') }}</el-radio>
+                      <el-radio label="esb">{{ $t('microConfig.esbDataSource') }}</el-radio>
                     </el-radio-group>
                     <el-select
                       v-if="selectedFieldData.optionSource === 'dictionary'"
@@ -744,7 +815,7 @@
                       class="dict-code-select"
                       clearable
                       filterable
-                      placeholder="请选择字典"
+                      :placeholder="$t('microConfig.selectDictionary')"
                     >
                       <el-option
                         v-for="dict in dictionaryTypes"
@@ -759,7 +830,7 @@
                       class="dict-code-select"
                       clearable
                       filterable
-                      placeholder="请选择 ESB 数据源"
+                      :placeholder="$t('microConfig.selectEsbDataSource')"
                     >
                       <el-option
                         v-for="source in esbDataSources"
@@ -775,10 +846,10 @@
                       v-model="selectedFieldData.esbParams"
                       type="textarea"
                       :rows="2"
-                      placeholder='静态参数 JSON，例如 {"userAcc":"${currentUser.account}"}'
+                      :placeholder="$t('microConfig.lookupParamsExample')"
                     ></el-input>
                     <div class="esb-variable-panel">
-                      <span class="esb-variable-title">可用变量</span>
+                      <span class="esb-variable-title">{{ $t('microConfig.availableVariables') }}</span>
                       <el-tag
                         v-for="variable in esbVariableOptions"
                         :key="variable.value"
@@ -786,25 +857,25 @@
                         effect="plain"
                         @click="insertEsbVariable(variable.value)"
                       >
-                        {{ variable.label }} {{ variable.value }}
+                        {{ $t(variable.labelKey) }} {{ variable.value }}
                       </el-tag>
                     </div>
                   </div>
                   <div class="options-container">
                     <div v-if="selectedFieldData.optionSource === 'dictionary'" class="empty-inline">
-                      运行时会按字典编码加载启用的字典项。
+                      {{ $t('microConfig.dictionaryRuntimeTip') }}
                     </div>
                     <div v-else-if="selectedFieldData.optionSource === 'esb'" class="empty-inline">
-                      运行时会调用 ESB 数据源加载选项。
+                      {{ $t('microConfig.esbRuntimeTip') }}
                     </div>
                     <div
                       v-else-if="selectedFieldData.options && selectedFieldData.options.length > 0"
                       class="option-list"
                     >
                       <div v-for="(option, index) in selectedFieldData.options" :key="index" class="option-item">
-                        <el-input v-model="option.label" placeholder="选项标签"></el-input>
-                        <el-input v-model="option.value" placeholder="选项值"></el-input>
-                        <el-tooltip content="删除选项" placement="top">
+                        <el-input v-model="option.label" :placeholder="$t('microConfig.optionLabel')"></el-input>
+                        <el-input v-model="option.value" :placeholder="$t('microConfig.optionValue')"></el-input>
+                        <el-tooltip :content="$t('microConfig.deleteOption')" placement="top">
                           <el-button
                             class="option-delete-button"
                             type="danger"
@@ -812,19 +883,19 @@
                             icon="Delete"
                             @click="deleteOption(index)"
                           >
-                            删除
+                            {{ $t('common.delete') }}
                           </el-button>
                         </el-tooltip>
                       </div>
                     </div>
-                    <div v-else class="empty-inline">还没有选项，添加后可用于下拉、单选或多选。</div>
+                    <div v-else class="empty-inline">{{ $t('microConfig.noOptions') }}</div>
                   </div>
                 </div>
               </el-form>
             </template>
             <div v-else class="no-selection">
-              <div class="no-selection-title">选择左侧字段开始配置</div>
-              <div class="no-selection-subtitle">字段支持拖拽排序，配置会影响生成页面的列表、表单和查询区域。</div>
+              <div class="no-selection-title">{{ $t('microConfig.noSelectionTitle') }}</div>
+              <div class="no-selection-subtitle">{{ $t('microConfig.noSelectionSubtitle') }}</div>
             </div>
           </section>
         </main>
@@ -892,9 +963,9 @@ export default {
       dictionaryTypes: [],
       esbDataSources: [],
       esbVariableOptions: [
-        { label: '当前用户账号', value: '${currentUser.account}' },
-        { label: '当前用户姓名', value: '${currentUser.displayName}' },
-        { label: '当前用户邮箱', value: '${currentUser.email}' }
+        { labelKey: 'microConfig.currentUserAccount', value: '${currentUser.account}' },
+        { labelKey: 'microConfig.currentUserName', value: '${currentUser.displayName}' },
+        { labelKey: 'microConfig.currentUserEmail', value: '${currentUser.email}' }
       ],
       // 生成的API列表
       generatedApis: [],
@@ -922,22 +993,22 @@ export default {
       // 表单验证规则
       rules: {
         ConfigName: [
-          { required: true, message: '请输入配置名称', trigger: 'blur' },
-          { min: 2, max: 20, message: '配置名称长度在 2 到 20 个字符', trigger: 'blur' }
+          { required: true, message: this.$t('microConfig.configNameRequired'), trigger: 'blur' },
+          { min: 2, max: 20, message: this.$t('microConfig.configNameLength'), trigger: 'blur' }
         ],
         ModelName: [
-          { required: true, message: '请输入数据模型名称', trigger: 'blur' },
+          { required: true, message: this.$t('microConfig.modelNameRequired'), trigger: 'blur' },
           {
             pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
-            message: '数据模型名称只能包含英文、数字和下划线，且以英文开头',
+            message: this.$t('microConfig.modelNamePattern'),
             trigger: 'blur'
           }
         ],
         MicroAppPath: [
-          { required: true, message: '请输入微应用路径', trigger: 'blur' },
+          { required: true, message: this.$t('microConfig.microAppPathRequired'), trigger: 'blur' },
           {
             pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/,
-            message: '微应用路径只能包含英文、数字、中划线和下划线，且以英文开头',
+            message: this.$t('microConfig.microAppPathPattern'),
             trigger: 'blur'
           }
         ]
@@ -985,7 +1056,7 @@ export default {
           this.dictionaryTypes = res.data || []
         }
       } catch (error) {
-        console.error('加载字典分类失败：', error)
+        console.error(this.$t('microConfig.loadDictionaryFailed'), error)
       }
     },
     async loadEsbDataSources() {
@@ -1039,19 +1110,19 @@ export default {
     },
     getFieldTypeLabel(fieldType) {
       const typeMap = {
-        string: '文本',
-        number: '数字',
-        datetime: '日期',
-        boolean: '布尔',
-        textarea: '文本域',
-        select: '下拉',
-        radio: '单选',
-        checkbox: '多选',
-        lookup: '开窗',
-        attachment: '附件'
+        string: this.$t('microConfig.text'),
+        number: this.$t('microConfig.number'),
+        datetime: this.$t('microConfig.date'),
+        boolean: this.$t('microConfig.boolean'),
+        textarea: this.$t('microConfig.textarea'),
+        select: this.$t('microConfig.select'),
+        radio: this.$t('microConfig.radio'),
+        checkbox: this.$t('microConfig.checkbox'),
+        lookup: this.$t('microConfig.lookup'),
+        attachment: this.$t('microConfig.attachment')
       }
 
-      return typeMap[fieldType] || '字段'
+      return typeMap[fieldType] || this.$t('microConfig.field')
     },
     getFieldTypeTagType(fieldType) {
       const tagMap = {
@@ -1065,24 +1136,24 @@ export default {
       return tagMap[fieldType]
     },
     getQueryModeOptions(field) {
-      const options = [{ label: '不参与查询', value: 'none' }]
+      const options = [{ label: this.$t('microConfig.noQuery'), value: 'none' }]
 
       if (this.isTextField(field) || this.isLookupField(field)) {
         return options.concat([
-          { label: '精确查询', value: 'exact' },
-          { label: '模糊查询', value: 'fuzzy' }
+          { label: this.$t('microConfig.exactQuery'), value: 'exact' },
+          { label: this.$t('microConfig.fuzzyQuery'), value: 'fuzzy' }
         ])
       }
 
       if (this.isNumberField(field) || this.isDateField(field)) {
         return options.concat([
-          { label: '精确查询', value: 'exact' },
-          { label: '范围查询', value: 'range' }
+          { label: this.$t('microConfig.exactQuery'), value: 'exact' },
+          { label: this.$t('microConfig.rangeQuery'), value: 'range' }
         ])
       }
 
       if (this.supportsOptions(field) || field?.fieldType === 'boolean') {
-        return options.concat([{ label: '精确查询', value: 'exact' }])
+        return options.concat([{ label: this.$t('microConfig.exactQuery'), value: 'exact' }])
       }
 
       return options
@@ -1411,10 +1482,10 @@ export default {
           }))
           this.total = res.total
         } else {
-          this.$message.error(res.msg || '获取微应用配置列表失败')
+          this.$message.error(res.msg || this.$t('microConfig.loadListFailed'))
         }
       } catch (error) {
-        this.$message.error('获取微应用配置列表失败：' + error.message)
+        this.$message.error(`${this.$t('microConfig.loadListFailed')}: ${error.message}`)
       }
     },
     // 处理分页大小变化
@@ -1429,7 +1500,7 @@ export default {
     },
     // 添加微应用
     addMicroApp() {
-      this.dialogTitle = '创建微应用'
+      this.dialogTitle = this.$t('microConfig.create')
       this.MicroAppForm = {
         ItemId: '',
         ConfigName: '',
@@ -1454,7 +1525,7 @@ export default {
     },
     // 编辑微应用
     editMicroApp(row) {
-      this.dialogTitle = '编辑微应用'
+      this.dialogTitle = this.$t('microConfig.edit')
       this.MicroAppForm = {
         ...row,
         MicroAppPath: row.MicroAppPath || row.ApiPrefix || row.ModelName || '',
@@ -1469,26 +1540,26 @@ export default {
     },
     // 删除微应用
     deleteMicroApp(ItemId) {
-      this.$confirm('确定要删除该微应用吗？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('microConfig.deleteConfirm'), this.$t('microRuntime.warning'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       })
         .then(async () => {
           try {
             const { data: res } = await deleteMicroAppConfig(ItemId)
             if (res.success) {
-              this.$message.success(res.msg || '删除成功')
+              this.$message.success(res.msg || this.$t('language.deleteSuccess'))
               this.getMicroApps()
             } else {
-              this.$message.error(res.msg || '删除失败')
+              this.$message.error(res.msg || this.$t('language.deleteFailed'))
             }
           } catch (error) {
-            this.$message.error('删除失败：' + error.message)
+            this.$message.error(`${this.$t('language.deleteFailed')}: ${error.message}`)
           }
         })
         .catch(() => {
-          this.$message.info('已取消删除')
+          this.$message.info(this.$t('organization.deleteCanceled'))
         })
     },
     // 提交表单
@@ -1511,14 +1582,17 @@ export default {
             res = await addMicroAppConfig(submitData)
           }
           if (res.data.success) {
-            this.$message.success(res.data.msg || (this.MicroAppForm.id ? '更新成功' : '添加成功'))
+            this.$message.success(
+              res.data.msg ||
+                (this.MicroAppForm.id ? this.$t('apiKey.updateSuccess') : this.$t('microConfig.addSuccess'))
+            )
             this.dialogVisible = false
             this.getMicroApps()
           } else {
-            this.$message.error(res.data.msg || '操作失败')
+            this.$message.error(res.data.msg || this.$t('microConfig.operationFailed'))
           }
         } catch (error) {
-          this.$message.error('操作失败：' + error.message)
+          this.$message.error(`${this.$t('microConfig.operationFailed')}: ${error.message}`)
         }
       })
     },
@@ -1551,7 +1625,7 @@ export default {
     // 添加字段
     createNewField(sortOrder) {
       return {
-        label: '新字段',
+        label: this.$t('microConfig.newField'),
         fieldName: 'new_field',
         fieldType: 'string',
         required: false,
@@ -1593,7 +1667,7 @@ export default {
     addSubTable() {
       const index = this.MicroAppForm.SubTables.length + 1
       const subTable = {
-        label: `子表${index}`,
+        label: this.$t('microConfig.subTableDefaultName', { index }),
         tableName: `sub_table_${index}`,
         minRows: 0,
         maxRows: null,
@@ -1885,7 +1959,11 @@ export default {
           (subTable) => !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(subTable.tableName || '')
         )
         if (invalidSubTable) {
-          this.$message.error(`${invalidSubTable.label || '子表'} 的子表标识不正确`)
+          this.$message.error(
+            this.$t('microConfig.invalidSubTableName', {
+              name: invalidSubTable.label || this.$t('microConfig.unnamedSubTable')
+            })
+          )
           return
         }
 
@@ -1893,7 +1971,11 @@ export default {
           (field) => this.supportsOptions(field) && field.optionSource === 'dictionary' && !field.dictCode
         )
         if (invalidDictField) {
-          this.$message.error(`${invalidDictField.label || invalidDictField.fieldName} 未选择数据字典`)
+          this.$message.error(
+            this.$t('microConfig.missingDictionary', {
+              name: invalidDictField.label || invalidDictField.fieldName
+            })
+          )
           return
         }
 
@@ -1901,7 +1983,11 @@ export default {
           (field) => this.supportsOptions(field) && field.optionSource === 'esb' && !field.esbDataSourceCode
         )
         if (invalidEsbField) {
-          this.$message.error(`${invalidEsbField.label || invalidEsbField.fieldName} 未选择 ESB 数据源`)
+          this.$message.error(
+            this.$t('microConfig.missingEsbDataSource', {
+              name: invalidEsbField.label || invalidEsbField.fieldName
+            })
+          )
           return
         }
 
@@ -1913,7 +1999,11 @@ export default {
               this.normalizeLookupColumns(field.lookupColumns).length === 0)
         )
         if (invalidLookupField) {
-          this.$message.error(`${invalidLookupField.label || invalidLookupField.fieldName} 的开窗查询配置不完整`)
+          this.$message.error(
+            this.$t('microConfig.incompleteLookup', {
+              name: invalidLookupField.label || invalidLookupField.fieldName
+            })
+          )
           return
         }
 
@@ -1928,7 +2018,11 @@ export default {
               ).length === 0)
         )
         if (invalidLookupSubTable) {
-          this.$message.error(`${invalidLookupSubTable.label || invalidLookupSubTable.tableName} 的开窗带入配置不完整`)
+          this.$message.error(
+            this.$t('microConfig.incompleteSubTableLookup', {
+              name: invalidLookupSubTable.label || invalidLookupSubTable.tableName
+            })
+          )
           return
         }
 
@@ -1968,14 +2062,14 @@ export default {
 
         const res = await updateMicroAppConfig(submitData)
         if (res.data.success) {
-          this.$message.success(res.data.msg || '保存成功')
+          this.$message.success(res.data.msg || this.$t('language.saveSuccess'))
           this.visualConfigVisible = false
           this.getMicroApps()
         } else {
-          this.$message.error(res.data.msg || '保存失败')
+          this.$message.error(res.data.msg || this.$t('microConfig.saveFailed'))
         }
       } catch (error) {
-        this.$message.error('保存失败：' + error.message)
+        this.$message.error(`${this.$t('microConfig.saveFailed')}: ${error.message}`)
       }
     },
     // 生成接口文档
@@ -2012,16 +2106,16 @@ export default {
       this.generatedApis.push({
         method: 'GET',
         path: `${basePath}`,
-        description: '获取' + this.MicroAppForm.ConfigName + '列表',
+        description: this.$t('microConfig.apiDescriptionList', { app: this.MicroAppForm.ConfigName }),
         requestParams: [
-          { name: 'pageNum', type: 'int', required: true, description: '页码' },
-          { name: 'pageSize', type: 'int', required: true, description: '每页条数' },
-          { name: 'keyword', type: 'string', required: false, description: '搜索关键词' }
+          { name: 'pageNum', type: 'int', required: true, description: this.$t('microConfig.pageNum') },
+          { name: 'pageSize', type: 'int', required: true, description: this.$t('microConfig.pageSizeDescription') },
+          { name: 'keyword', type: 'string', required: false, description: this.$t('microConfig.keywordDescription') }
         ],
         responseExample: JSON.stringify(
           {
             success: true,
-            msg: '获取成功',
+            msg: this.$t('microConfig.getSuccess'),
             data: {
               list: [
                 fields.reduce(
@@ -2044,12 +2138,12 @@ export default {
       this.generatedApis.push({
         method: 'GET',
         path: `${basePath}/:id`,
-        description: '获取' + this.MicroAppForm.ConfigName + '详情',
+        description: this.$t('microConfig.apiDescriptionDetail', { app: this.MicroAppForm.ConfigName }),
         requestParams: [{ name: 'id', type: 'long', required: true, description: 'ID' }],
         responseExample: JSON.stringify(
           {
             success: true,
-            msg: '获取成功',
+            msg: this.$t('microConfig.getSuccess'),
             data: fields.reduce(
               (obj, field) => {
                 if (field.fieldName) obj[field.fieldName] = ''
@@ -2068,7 +2162,7 @@ export default {
         this.generatedApis.push({
           method: 'POST',
           path: `${basePath}`,
-          description: '添加' + this.MicroAppForm.ConfigName,
+          description: this.$t('microConfig.apiDescriptionCreate', { app: this.MicroAppForm.ConfigName }),
           requestParams: fields
             .filter((f) => f.fieldName)
             .map((field) => ({
@@ -2080,7 +2174,7 @@ export default {
           responseExample: JSON.stringify(
             {
               success: true,
-              msg: '添加成功',
+              msg: this.$t('microConfig.addSuccess'),
               data: fields.reduce(
                 (obj, field) => {
                   if (field.fieldName) obj[field.fieldName] = ''
@@ -2100,7 +2194,7 @@ export default {
         this.generatedApis.push({
           method: 'PUT',
           path: `${basePath}/:id`,
-          description: '更新' + this.MicroAppForm.ConfigName,
+          description: this.$t('microConfig.apiDescriptionUpdate', { app: this.MicroAppForm.ConfigName }),
           requestParams: [
             { name: 'id', type: 'long', required: true, description: 'ID' },
             ...fields
@@ -2115,7 +2209,7 @@ export default {
           responseExample: JSON.stringify(
             {
               success: true,
-              msg: '更新成功',
+              msg: this.$t('apiKey.updateSuccess'),
               data: null
             },
             null,
@@ -2129,12 +2223,12 @@ export default {
         this.generatedApis.push({
           method: 'DELETE',
           path: `${basePath}/:id`,
-          description: '删除' + this.MicroAppForm.ConfigName,
+          description: this.$t('microConfig.apiDescriptionDelete', { app: this.MicroAppForm.ConfigName }),
           requestParams: [{ name: 'id', type: 'long', required: true, description: 'ID' }],
           responseExample: JSON.stringify(
             {
               success: true,
-              msg: '删除成功',
+              msg: this.$t('language.deleteSuccess'),
               data: null
             },
             null,

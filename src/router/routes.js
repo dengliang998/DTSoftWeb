@@ -11,6 +11,7 @@ const SystemSettings = () => import('../view/Common/SystemSettings.vue')
 const SystemInfo = () => import('../view/Common/SystemInfo.vue')
 const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
 const Dictionaries = () => import('../view/Common/Dictionaries.vue')
+const Languages = () => import('../view/Common/Languages.vue')
 const EsbServiceConnections = () => import('../view/Common/EsbServiceConnections.vue')
 const EsbDataSources = () => import('../view/Common/EsbDataSources.vue')
 const JumpPage = () => import('../view/Common/JumpPage.vue')
@@ -35,7 +36,12 @@ export const routes = [
     component: Home,
     meta: { requiresAuth: true },
     children: [
-      { path: '/welcome', name: 'Welcome', component: Welcome, meta: withCache('Welcome', { title: '首页' }) },
+      {
+        path: '/welcome',
+        name: 'Welcome',
+        component: Welcome,
+        meta: withCache('Welcome', { titleKey: 'menu.welcome' })
+      },
       {
         path: '/user/organization',
         name: 'Organization',
@@ -74,6 +80,12 @@ export const routes = [
         name: 'Dictionaries',
         component: Dictionaries,
         meta: withCache('Dictionaries')
+      },
+      {
+        path: '/common/languages',
+        name: 'Languages',
+        component: Languages,
+        meta: withCache('Languages')
       },
       {
         path: '/common/esb-connections',

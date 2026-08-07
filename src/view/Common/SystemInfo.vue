@@ -3,11 +3,13 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>系统信息</h1>
-          <p>查看当前服务运行状态、资源占用和数据库连接信息。</p>
+          <h1>{{ $t('systemInfo.title') }}</h1>
+          <p>{{ $t('systemInfo.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadSystemRuntimeInfo">刷新</el-button>
+          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadSystemRuntimeInfo">
+            {{ $t('common.refresh') }}
+          </el-button>
         </div>
       </div>
 
@@ -26,14 +28,14 @@
       <div class="dt-panel info-work-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>运行明细</strong>
-            <span>最近刷新：{{ lastRefreshTime || '-' }}</span>
+            <strong>{{ $t('systemInfo.runtimeDetails') }}</strong>
+            <span>{{ $t('systemInfo.lastRefresh', { time: lastRefreshTime || '-' }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">应用</span>
-            <span class="dt-chip">运行时</span>
-            <span class="dt-chip">服务器</span>
-            <span class="dt-chip dt-chip--success">数据库</span>
+            <span class="dt-chip">{{ $t('systemInfo.applicationChip') }}</span>
+            <span class="dt-chip">{{ $t('systemInfo.runtimeChip') }}</span>
+            <span class="dt-chip">{{ $t('systemInfo.serverChip') }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('systemInfo.databaseChip') }}</span>
           </div>
         </div>
 
@@ -91,25 +93,25 @@ export default {
     summaryCards() {
       return [
         {
-          label: '服务器 CPU',
+          label: this.$t('welcome.metrics.serverCpu'),
           value: this.formatPercent(this.serverCpuPercent),
           icon: 'Cpu',
           tone: 'blue'
         },
         {
-          label: '服务器内存',
+          label: this.$t('welcome.metrics.serverMemory'),
           value: this.formatPercent(this.serverMemoryPercent),
           icon: 'Histogram',
           tone: 'green'
         },
         {
-          label: '程序 CPU',
+          label: this.$t('welcome.metrics.processCpu'),
           value: this.formatPercent(this.processCpuPercent),
           icon: 'Monitor',
           tone: 'amber'
         },
         {
-          label: '程序内存',
+          label: this.$t('welcome.metrics.processMemory'),
           value: this.formatPercent(this.processMemoryPercent),
           icon: 'Clock',
           tone: 'slate'
@@ -142,70 +144,81 @@ export default {
 
       return [
         {
-          title: '资源信息',
+          title: this.$t('systemInfo.sections.resource'),
           icon: 'Histogram',
           rows: [
-            { label: '内存总量', value: this.formatBytes(resource.TotalMemoryBytes) },
-            { label: '可用内存', value: this.formatBytes(resource.AvailableMemoryBytes) },
-            { label: '工作集内存', value: this.formatBytes(memory.WorkingSetBytes) },
-            { label: '私有内存', value: this.formatBytes(memory.PrivateMemoryBytes) },
-            { label: 'GC 托管内存', value: this.formatBytes(memory.GCTotalMemoryBytes) },
-            { label: '采集时间', value: this.formatValue(resource.CollectedAt) }
+            { label: this.$t('systemInfo.labels.totalMemory'), value: this.formatBytes(resource.TotalMemoryBytes) },
+            {
+              label: this.$t('systemInfo.labels.availableMemory'),
+              value: this.formatBytes(resource.AvailableMemoryBytes)
+            },
+            { label: this.$t('systemInfo.labels.workingSetMemory'), value: this.formatBytes(memory.WorkingSetBytes) },
+            { label: this.$t('systemInfo.labels.privateMemory'), value: this.formatBytes(memory.PrivateMemoryBytes) },
+            { label: this.$t('systemInfo.labels.gcMemory'), value: this.formatBytes(memory.GCTotalMemoryBytes) },
+            { label: this.$t('systemInfo.labels.collectedAt'), value: this.formatValue(resource.CollectedAt) }
           ]
         },
         {
-          title: '应用',
+          title: this.$t('systemInfo.sections.application'),
           icon: 'FolderOpened',
           rows: [
-            { label: '应用名称', value: this.formatValue(application.Name) },
-            { label: '应用版本', value: this.formatValue(application.Version) },
-            { label: '运行环境', value: this.formatValue(application.EnvironmentName) },
-            { label: '运行时长', value: this.formatDuration(server.UptimeSeconds) },
-            { label: '应用目录', value: this.formatValue(application.BaseDirectory) },
-            { label: '资源目录', value: this.formatValue(application.RootPath) }
+            { label: this.$t('systemInfo.labels.appName'), value: this.formatValue(application.Name) },
+            { label: this.$t('systemInfo.labels.appVersion'), value: this.formatValue(application.Version) },
+            { label: this.$t('systemInfo.labels.environment'), value: this.formatValue(application.EnvironmentName) },
+            { label: this.$t('systemInfo.labels.uptime'), value: this.formatDuration(server.UptimeSeconds) },
+            { label: this.$t('systemInfo.labels.baseDirectory'), value: this.formatValue(application.BaseDirectory) },
+            { label: this.$t('systemInfo.labels.rootPath'), value: this.formatValue(application.RootPath) }
           ]
         },
         {
-          title: '许可授权',
+          title: this.$t('systemInfo.sections.license'),
           icon: 'Tickets',
           rows: [
-            { label: '授权状态', value: this.formatValue(license.Status) },
-            { label: '授权类型', value: this.formatValue(license.LicenseTypeName) },
-            { label: '客户名称', value: this.formatValue(license.Customer) },
-            { label: '有效期至', value: this.formatValue(license.ExpireAtText) },
-            { label: '并发用户数', value: this.formatValue(license.MaxConcurrentUsersText) },
-            ...(license.Message ? [{ label: '授权信息', value: this.formatValue(license.Message) }] : [])
+            { label: this.$t('systemInfo.labels.licenseStatus'), value: this.formatValue(license.Status) },
+            { label: this.$t('systemInfo.labels.licenseType'), value: this.formatValue(license.LicenseTypeName) },
+            { label: this.$t('systemInfo.labels.customer'), value: this.formatValue(license.Customer) },
+            { label: this.$t('systemInfo.labels.expireAt'), value: this.formatValue(license.ExpireAtText) },
+            { label: this.$t('systemInfo.labels.maxUsers'), value: this.formatValue(license.MaxConcurrentUsersText) },
+            ...(license.Message
+              ? [{ label: this.$t('systemInfo.labels.licenseMessage'), value: this.formatValue(license.Message) }]
+              : [])
           ]
         },
         {
-          title: '运行时',
+          title: this.$t('systemInfo.sections.runtime'),
           icon: 'Cpu',
           rows: [
-            { label: '框架', value: this.formatValue(runtime.FrameworkDescription) },
-            { label: '运行标识', value: this.formatValue(runtime.RuntimeIdentifier) },
-            { label: '操作系统', value: this.formatValue(runtime.OSDescription) },
-            { label: '系统架构', value: this.formatValue(runtime.OSArchitecture) },
-            { label: '进程架构', value: this.formatValue(runtime.ProcessArchitecture) }
+            { label: this.$t('systemInfo.labels.framework'), value: this.formatValue(runtime.FrameworkDescription) },
+            {
+              label: this.$t('systemInfo.labels.runtimeIdentifier'),
+              value: this.formatValue(runtime.RuntimeIdentifier)
+            },
+            { label: this.$t('systemInfo.labels.os'), value: this.formatValue(runtime.OSDescription) },
+            { label: this.$t('systemInfo.labels.osArchitecture'), value: this.formatValue(runtime.OSArchitecture) },
+            {
+              label: this.$t('systemInfo.labels.processArchitecture'),
+              value: this.formatValue(runtime.ProcessArchitecture)
+            }
           ]
         },
         {
-          title: '服务器',
+          title: this.$t('systemInfo.sections.server'),
           icon: 'Monitor',
           rows: [
-            { label: '主机名', value: this.formatValue(server.MachineName) },
-            { label: '处理器数量', value: this.formatValue(server.ProcessorCount) },
-            { label: '时区', value: this.formatValue(server.TimeZone) },
-            { label: '启动时间', value: this.formatValue(server.StartedAt) }
+            { label: this.$t('systemInfo.labels.machineName'), value: this.formatValue(server.MachineName) },
+            { label: this.$t('systemInfo.labels.processorCount'), value: this.formatValue(server.ProcessorCount) },
+            { label: this.$t('systemInfo.labels.timeZone'), value: this.formatValue(server.TimeZone) },
+            { label: this.$t('systemInfo.labels.startedAt'), value: this.formatValue(server.StartedAt) }
           ]
         },
         {
-          title: '数据库',
+          title: this.$t('systemInfo.sections.database'),
           icon: 'Coin',
           rows: [
-            { label: '数据库驱动', value: this.formatValue(database.ProviderName) },
-            { label: '数据源', value: this.formatValue(database.DataSource) },
-            { label: '数据库', value: this.formatValue(database.Database) },
-            { label: '数据库版本', value: this.formatValue(database.Version) }
+            { label: this.$t('systemInfo.labels.databaseProvider'), value: this.formatValue(database.ProviderName) },
+            { label: this.$t('systemInfo.labels.dataSource'), value: this.formatValue(database.DataSource) },
+            { label: this.$t('systemInfo.labels.databaseName'), value: this.formatValue(database.Database) },
+            { label: this.$t('systemInfo.labels.databaseVersion'), value: this.formatValue(database.Version) }
           ]
         }
       ]
@@ -223,10 +236,12 @@ export default {
           this.info = res.data || {}
           this.lastRefreshTime = this.formatNow()
         } else {
-          this.$message.error('系统信息获取失败：' + (res?.Msg || res?.message || '未知错误'))
+          this.$message.error(
+            `${this.$t('systemInfo.loadFailed')}：${res?.Msg || res?.message || this.$t('welcome.unknownError')}`
+          )
         }
       } catch (error) {
-        this.$message.error('系统信息获取失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('systemInfo.loadFailed')}：${error?.message || error}`)
       } finally {
         this.loading = false
       }
@@ -268,9 +283,9 @@ export default {
       const hours = Math.floor((totalSeconds % 86400) / 3600)
       const minutes = Math.floor((totalSeconds % 3600) / 60)
 
-      if (days > 0) return `${days} 天 ${hours} 小时`
-      if (hours > 0) return `${hours} 小时 ${minutes} 分钟`
-      return `${minutes} 分钟`
+      if (days > 0) return this.$t('welcome.duration.daysHours', { days, hours })
+      if (hours > 0) return this.$t('welcome.duration.hoursMinutes', { hours, minutes })
+      return this.$t('welcome.duration.minutes', { minutes })
     },
     formatNow() {
       const now = new Date()

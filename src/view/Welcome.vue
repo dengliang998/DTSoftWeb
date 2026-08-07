@@ -3,7 +3,7 @@
     <section class="welcome-workbench">
       <section class="hero-section">
         <div class="hero-copy">
-          <span class="page-kicker">系统工作台</span>
+          <span class="page-kicker">{{ $t('welcome.kicker') }}</span>
           <h2>{{ greetingTitle }}</h2>
           <p>{{ greetingSubtitle }}</p>
           <div class="hero-meta">
@@ -13,19 +13,19 @@
             </span>
             <span class="status-chip" :class="{ 'is-error': dashboardError }">
               <el-icon><component :is="dashboardError ? 'Warning' : 'CircleCheck'" /></el-icon>
-              {{ dashboardError ? '运行信息获取异常' : '运行信息已同步' }}
+              {{ dashboardError ? $t('welcome.statusError') : $t('welcome.statusSynced') }}
             </span>
           </div>
         </div>
 
         <div class="hero-actions">
           <div class="refresh-box">
-            <small>最近刷新</small>
+            <small>{{ $t('welcome.lastRefresh') }}</small>
             <strong>{{ lastRefreshTime || '-' }}</strong>
           </div>
           <el-button class="refresh-button" :loading="loading" @click="loadRuntimeInfo">
             <el-icon><Refresh /></el-icon>
-            <span>刷新</span>
+            <span>{{ $t('welcome.refresh') }}</span>
           </el-button>
         </div>
       </section>
@@ -118,30 +118,30 @@ export default {
     metricCards() {
       return [
         {
-          label: '服务器 CPU',
+          label: this.$t('welcome.metrics.serverCpu'),
           value: this.formatPercent(this.serverCpuPercent),
-          note: `${this.formatValue(this.server.ProcessorCount)} 核心`,
+          note: this.$t('welcome.metrics.cores', { count: this.formatValue(this.server.ProcessorCount) }),
           icon: 'Cpu',
           tone: 'is-blue'
         },
         {
-          label: '服务器内存',
+          label: this.$t('welcome.metrics.serverMemory'),
           value: this.formatPercent(this.serverMemoryPercent),
-          note: `总计 ${this.formatBytes(this.resource.TotalMemoryBytes)}`,
+          note: this.$t('welcome.metrics.total', { value: this.formatBytes(this.resource.TotalMemoryBytes) }),
           icon: 'Histogram',
           tone: 'is-green'
         },
         {
-          label: '程序 CPU',
+          label: this.$t('welcome.metrics.processCpu'),
           value: this.formatPercent(this.processCpuPercent),
-          note: '当前服务进程',
+          note: this.$t('welcome.metrics.currentProcess'),
           icon: 'Monitor',
           tone: 'is-amber'
         },
         {
-          label: '程序内存',
+          label: this.$t('welcome.metrics.processMemory'),
           value: this.formatPercent(this.processMemoryPercent),
-          note: `工作集 ${this.formatBytes(this.memory.WorkingSetBytes)}`,
+          note: this.$t('welcome.metrics.workingSet', { value: this.formatBytes(this.memory.WorkingSetBytes) }),
           icon: 'Clock',
           tone: 'is-slate'
         }
@@ -149,12 +149,12 @@ export default {
     },
     overviewRows() {
       return [
-        { label: '应用', value: this.formatValue(this.application.Name) },
-        { label: '环境', value: this.formatValue(this.application.EnvironmentName) },
-        { label: '运行时长', value: this.formatDuration(this.server.UptimeSeconds) },
-        { label: '启动时间', value: this.formatValue(this.server.StartedAt) },
-        { label: '操作系统', value: this.formatValue(this.runtime.OSDescription) },
-        { label: '数据库', value: this.formatValue(this.database.Database) }
+        { label: this.$t('welcome.overview.application'), value: this.formatValue(this.application.Name) },
+        { label: this.$t('welcome.overview.environment'), value: this.formatValue(this.application.EnvironmentName) },
+        { label: this.$t('welcome.overview.uptime'), value: this.formatDuration(this.server.UptimeSeconds) },
+        { label: this.$t('welcome.overview.startedAt'), value: this.formatValue(this.server.StartedAt) },
+        { label: this.$t('welcome.overview.os'), value: this.formatValue(this.runtime.OSDescription) },
+        { label: this.$t('welcome.overview.database'), value: this.formatValue(this.database.Database) }
       ]
     }
   },
@@ -182,17 +182,17 @@ export default {
           this.runtimeInfo = res.data || {}
           this.lastRefreshTime = this.formatNow()
         } else {
-          this.dashboardError = '运行信息获取失败：' + (res?.Msg || res?.message || '未知错误')
+          this.dashboardError = `${this.$t('welcome.loadFailed')}：${res?.Msg || res?.message || this.$t('welcome.unknownError')}`
         }
       } catch (error) {
-        this.dashboardError = '运行信息获取失败：' + (error?.message || error)
+        this.dashboardError = `${this.$t('welcome.loadFailed')}：${error?.message || error}`
       } finally {
         this.loading = false
       }
     },
     updateTime() {
       const now = new Date()
-      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+      const weekDays = Array.from({ length: 7 }, (_, index) => this.$t(`welcome.weekdays.${index}`))
       const year = now.getFullYear()
       const month = String(now.getMonth() + 1).padStart(2, '0')
       const day = String(now.getDate()).padStart(2, '0')
@@ -206,20 +206,20 @@ export default {
       const hour = new Date().getHours()
 
       if (hour >= 5 && hour < 11) {
-        this.greetingTitle = '上午好，今天从系统状态开始'
-        this.greetingSubtitle = '首页保留关键资源指标，详细运行信息可在系统信息页查看。'
+        this.greetingTitle = this.$t('welcome.greeting.morningTitle')
+        this.greetingSubtitle = this.$t('welcome.greeting.morningSubtitle')
       } else if (hour >= 11 && hour < 14) {
-        this.greetingTitle = '中午好，服务状态保持可见'
-        this.greetingSubtitle = '快速查看 CPU、内存和运行时长，判断当前负载。'
+        this.greetingTitle = this.$t('welcome.greeting.noonTitle')
+        this.greetingSubtitle = this.$t('welcome.greeting.noonSubtitle')
       } else if (hour >= 14 && hour < 18) {
-        this.greetingTitle = '下午好，继续保持系统稳定'
-        this.greetingSubtitle = '关键指标已汇总，页面保持简洁便于扫读。'
+        this.greetingTitle = this.$t('welcome.greeting.afternoonTitle')
+        this.greetingSubtitle = this.$t('welcome.greeting.afternoonSubtitle')
       } else if (hour >= 18 && hour < 22) {
-        this.greetingTitle = '晚上好，适合做一次状态确认'
-        this.greetingSubtitle = '关注资源占用和服务运行状态，详细信息进入系统信息页。'
+        this.greetingTitle = this.$t('welcome.greeting.eveningTitle')
+        this.greetingSubtitle = this.$t('welcome.greeting.eveningSubtitle')
       } else {
-        this.greetingTitle = '夜间巡检，系统运行信息已准备'
-        this.greetingSubtitle = '低峰时段可重点查看服务器和程序资源占用。'
+        this.greetingTitle = this.$t('welcome.greeting.nightTitle')
+        this.greetingSubtitle = this.$t('welcome.greeting.nightSubtitle')
       }
     },
     normalizePercent(value) {
@@ -259,9 +259,9 @@ export default {
       const hours = Math.floor((totalSeconds % 86400) / 3600)
       const minutes = Math.floor((totalSeconds % 3600) / 60)
 
-      if (days > 0) return `${days} 天 ${hours} 小时`
-      if (hours > 0) return `${hours} 小时 ${minutes} 分钟`
-      return `${minutes} 分钟`
+      if (days > 0) return this.$t('welcome.duration.daysHours', { days, hours })
+      if (hours > 0) return this.$t('welcome.duration.hoursMinutes', { hours, minutes })
+      return this.$t('welcome.duration.minutes', { minutes })
     },
     formatNow() {
       const now = new Date()

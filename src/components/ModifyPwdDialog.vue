@@ -1,21 +1,21 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog v-model="dialogVisible" title="修改密码" width="30%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" :title="$t('user.changePassword')" width="30%" @close="handleClose">
     <el-form ref="formRef" :model="form" label-width="70px" class="modify-pwd-form">
-      <el-form-item label="原密码" prop="OldPwd">
+      <el-form-item :label="$t('password.oldPassword')" prop="OldPwd">
         <el-input v-model="form.OldPwd" show-password></el-input>
       </el-form-item>
-      <el-form-item label="新密码" prop="NewPwd">
+      <el-form-item :label="$t('password.newPassword')" prop="NewPwd">
         <el-input v-model="form.NewPwd" show-password></el-input>
       </el-form-item>
-      <el-form-item label="确认密码" prop="ConfirmPwd">
+      <el-form-item :label="$t('password.confirmPassword')" prop="ConfirmPwd">
         <el-input v-model="form.ConfirmPwd" show-password></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submit">确 定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submit">{{ $t('common.confirm') }}</el-button>
       </span>
     </template>
   </el-dialog>
@@ -58,11 +58,11 @@ export default {
       const me = this
       const f = me.form
       if (!f.OldPwd || !f.NewPwd || !f.ConfirmPwd) {
-        me.$message.error('密码不能为空')
+        me.$message.error(me.$t('password.empty'))
         return
       }
       if (f.NewPwd !== f.ConfirmPwd) {
-        me.$message.error('密码不一致')
+        me.$message.error(me.$t('password.mismatch'))
         return
       }
       submitModifyPassword(f)
@@ -72,11 +72,11 @@ export default {
             me.dialogVisible = false
             me.$emit('success')
           } else {
-            me.$message.error('修改失败：' + response.data.Msg)
+            me.$message.error(me.$t('password.modifyFailed') + '：' + response.data.Msg)
           }
         })
         .catch(function (error) {
-          me.$message.error(error.message || '修改失败')
+          me.$message.error(error.message || me.$t('password.modifyFailed'))
         })
     }
   }

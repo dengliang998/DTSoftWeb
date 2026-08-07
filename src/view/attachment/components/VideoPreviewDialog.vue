@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="视频预览" width="60%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" :title="$t('attachmentPage.videoPreview')" width="60%" @close="handleClose">
     <video :src="videoUrl" controls style="width: 100%; height: auto"></video>
   </el-dialog>
 </template>

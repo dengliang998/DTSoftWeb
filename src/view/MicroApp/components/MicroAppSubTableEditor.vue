@@ -2,11 +2,13 @@
   <section class="form-section subtable-form-sections">
     <div class="subtable-group-heading">
       <div>
-        <div class="section-kicker">明细</div>
-        <div class="subtable-group-title">明细信息</div>
-        <div class="subtable-group-subtitle">维护当前记录的关联明细</div>
+        <div class="section-kicker">{{ $t('microRuntime.detail') }}</div>
+        <div class="subtable-group-title">{{ $t('microRuntime.detailInfo') }}</div>
+        <div class="subtable-group-subtitle">{{ $t('microRuntime.detailSubtitle') }}</div>
       </div>
-      <span class="subtable-group-count">{{ subTables.length }} 个子表 / {{ totalSubTableRows }} 行</span>
+      <span class="subtable-group-count">
+        {{ $t('microRuntime.subTableSummary', { subTables: subTables.length, rows: totalSubTableRows }) }}
+      </span>
     </div>
     <el-tabs v-model="activeSubTableName" class="subtable-tabs" @tab-click="$emit('activate')">
       <el-tab-pane v-for="subTable in subTables" :key="subTable.tableName" :name="subTable.tableName">
@@ -23,8 +25,10 @@
               <div>
                 <div class="subtable-title">{{ subTable.label || subTable.tableName }}</div>
                 <div class="subtable-meta">
-                  {{ getRows(subTable).length }} 行
-                  <template v-if="subTable.maxRows">/ 最多 {{ subTable.maxRows }} 行</template>
+                  {{ $t('microRuntime.rowCount', { count: getRows(subTable).length }) }}
+                  <template v-if="subTable.maxRows">
+                    / {{ $t('microRuntime.maxRows', { count: subTable.maxRows }) }}
+                  </template>
                 </div>
               </div>
             </div>
@@ -37,7 +41,7 @@
                 :disabled="isMaxReached(subTable)"
                 @click="$emit('open-lookup', subTable)"
               >
-                选择数据
+                {{ $t('microRuntime.selectData') }}
               </el-button>
               <el-button
                 class="subtable-action-button subtable-action-button--primary"
@@ -47,13 +51,13 @@
                 :disabled="isMaxReached(subTable)"
                 @click="$emit('add-row', subTable)"
               >
-                新增行
+                {{ $t('microRuntime.addRow') }}
               </el-button>
             </div>
           </div>
           <div v-if="getRows(subTable).length === 0" class="subtable-empty-state">
-            <div class="subtable-empty-title">暂无明细</div>
-            <div class="subtable-empty-text">可以新增空白行，也可以从配置的数据源带入</div>
+            <div class="subtable-empty-title">{{ $t('microRuntime.noDetails') }}</div>
+            <div class="subtable-empty-text">{{ $t('microRuntime.noDetailsText') }}</div>
             <div class="subtable-empty-actions">
               <el-button
                 v-if="subTable.enableLookup"
@@ -62,7 +66,7 @@
                 :disabled="isMaxReached(subTable)"
                 @click="$emit('open-lookup', subTable)"
               >
-                选择数据
+                {{ $t('microRuntime.selectData') }}
               </el-button>
               <el-button
                 type="primary"
@@ -71,7 +75,7 @@
                 :disabled="isMaxReached(subTable)"
                 @click="$emit('add-row', subTable)"
               >
-                新增第一行
+                {{ $t('microRuntime.addFirstRow') }}
               </el-button>
             </div>
           </div>
@@ -85,7 +89,7 @@
               :row-style="{ height: '52px' }"
               :cell-style="{ padding: '6px 0' }"
             >
-              <el-table-column type="index" label="序号" width="64"></el-table-column>
+              <el-table-column type="index" :label="$t('microRuntime.sequence')" width="64"></el-table-column>
               <el-table-column
                 v-for="field in normalizeFieldOrder(subTable.fields)"
                 :key="field.fieldName"
@@ -165,14 +169,14 @@
                   </el-form-item>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="80" fixed="right" align="center">
+              <el-table-column :label="$t('common.actions')" width="80" fixed="right" align="center">
                 <template #default="{ $index }">
                   <el-button
                     class="subtable-delete-button"
                     type="danger"
                     size="small"
                     icon="Delete"
-                    title="删除行"
+                    :title="$t('microRuntime.deleteRow')"
                     @click="$emit('remove-row', subTable, $index)"
                   ></el-button>
                 </template>

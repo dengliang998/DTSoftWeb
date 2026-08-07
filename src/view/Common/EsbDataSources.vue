@@ -3,12 +3,14 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>ESB 数据源</h1>
-          <p>维护 SQL 数据源、参数配置和返回字段映射。</p>
+          <h1>{{ $t('esb.dataSourceTitle') }}</h1>
+          <p>{{ $t('esb.dataSourceSubtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadDataSources">刷新</el-button>
-          <el-button type="primary" :icon="Plus" @click="openCreateDialog">新增数据源</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadDataSources">
+            {{ $t('common.refresh') }}
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="openCreateDialog">{{ $t('esb.addDataSource') }}</el-button>
         </div>
       </div>
 
@@ -17,7 +19,7 @@
           v-model="query.keyword"
           class="dt-search"
           clearable
-          placeholder="搜索编码或名称"
+          :placeholder="$t('esb.dataSourceSearchPlaceholder')"
           @clear="loadDataSources"
           @keyup.enter="loadDataSources"
         >
@@ -28,7 +30,7 @@
         <el-select
           v-model="query.connectionId"
           class="connection-filter"
-          placeholder="服务连接"
+          :placeholder="$t('esb.serviceConnection')"
           clearable
           @change="loadDataSources"
         >
@@ -44,14 +46,18 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>数据源列表</strong>
-            <span>服务端总数 {{ total }}</span>
+            <strong>{{ $t('esb.dataSourceList') }}</strong>
+            <span>{{ $t('esb.serverTotal', { total }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">本页 {{ dataSources.length }}</span>
-            <span class="dt-chip dt-chip--success">启用 {{ dataSourceStats.enabled }}</span>
-            <span class="dt-chip dt-chip--warning">禁用 {{ dataSourceStats.disabled }}</span>
-            <span class="dt-chip">连接 {{ databaseConnectionOptions.length }}</span>
+            <span class="dt-chip">{{ $t('esb.currentPage', { count: dataSources.length }) }}</span>
+            <span class="dt-chip dt-chip--success">
+              {{ $t('organization.enabledCount', { count: dataSourceStats.enabled }) }}
+            </span>
+            <span class="dt-chip dt-chip--warning">
+              {{ $t('organization.disabledCount', { count: dataSourceStats.disabled }) }}
+            </span>
+            <span class="dt-chip">{{ $t('esb.connectionCount', { count: databaseConnectionOptions.length }) }}</span>
           </div>
         </div>
 
@@ -60,14 +66,14 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无数据源"
+          :empty-text="$t('esb.emptyDataSources')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="Name" label="数据源" min-width="220">
+          <el-table-column prop="Name" :label="$t('esb.dataSource')" min-width="220">
             <template #default="{ row }">
               <span class="dt-name-copy">
                 <strong>{{ row.Name }}</strong>
@@ -75,43 +81,43 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="Code" label="编码" min-width="170">
+          <el-table-column prop="Code" :label="$t('esb.code')" min-width="170">
             <template #default="{ row }">
               <code class="dt-code">{{ row.Code }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="类型" width="90">
+          <el-table-column :label="$t('esb.type')" width="90">
             <template #default="{ row }">
               <span class="dt-badge dt-badge--neutral">{{ row.SourceType || row.sourceType }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="服务连接" min-width="170">
+          <el-table-column :label="$t('esb.serviceConnection')" min-width="170">
             <template #default="{ row }">
               <span class="dt-muted-pill">{{ row.ConnectionName || getConnectionName(row.ConnectionId) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="96">
+          <el-table-column :label="$t('common.status')" width="96">
             <template #default="{ row }">
               <span :class="['dt-badge', normalizeStatus(row) === 1 ? 'dt-badge--success' : 'dt-badge--warning']">
-                {{ normalizeStatus(row) === 1 ? '启用' : '禁用' }}
+                {{ normalizeStatus(row) === 1 ? $t('common.enabled') : $t('common.disabled') }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="更新时间" width="180">
+          <el-table-column :label="$t('esb.updateTime')" width="180">
             <template #default="{ row }">
               <code class="dt-code">{{ formatDate(row.UpdateTime || row.updateTime) }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="132" fixed="right" align="right">
+          <el-table-column :label="$t('common.actions')" width="132" fixed="right" align="right">
             <template #default="{ row }">
               <div class="dt-operation-buttons esb-actions">
-                <el-tooltip content="编辑数据源" placement="top">
+                <el-tooltip :content="$t('esb.editDataSourceAction')" placement="top">
                   <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="openEditDialog(row)" />
                 </el-tooltip>
-                <el-tooltip content="测试执行" placement="top">
+                <el-tooltip :content="$t('esb.testExecute')" placement="top">
                   <el-button class="dt-icon-action dt-icon-action--add" :icon="Document" @click="openTestDialog(row)" />
                 </el-tooltip>
-                <el-tooltip content="删除数据源" placement="top">
+                <el-tooltip :content="$t('esb.deleteDataSource')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -135,22 +141,26 @@
       </div>
     </section>
 
-    <el-dialog v-model="formDialogVisible" :title="form.ItemId ? '编辑数据源' : '新增数据源'" width="860px">
+    <el-dialog
+      v-model="formDialogVisible"
+      :title="form.ItemId ? $t('esb.editDataSource') : $t('esb.addDataSource')"
+      width="860px"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
         <div class="form-grid">
-          <el-form-item label="数据源编码" prop="Code">
-            <el-input v-model="form.Code" placeholder="例如 customer_options"></el-input>
+          <el-form-item :label="$t('esb.dataSourceCode')" prop="Code">
+            <el-input v-model="form.Code" :placeholder="$t('esb.dataSourceCodePlaceholder')"></el-input>
           </el-form-item>
-          <el-form-item label="数据源名称" prop="Name">
-            <el-input v-model="form.Name" placeholder="请输入名称"></el-input>
+          <el-form-item :label="$t('esb.dataSourceName')" prop="Name">
+            <el-input v-model="form.Name" :placeholder="$t('esb.namePlaceholder')"></el-input>
           </el-form-item>
-          <el-form-item label="数据源类型">
+          <el-form-item :label="$t('esb.sourceType')">
             <el-select v-model="form.SourceType" disabled>
               <el-option label="SQL" value="sql"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="服务连接" prop="ConnectionId">
-            <el-select v-model="form.ConnectionId" filterable placeholder="请选择服务连接">
+          <el-form-item :label="$t('esb.serviceConnection')" prop="ConnectionId">
+            <el-select v-model="form.ConnectionId" filterable :placeholder="$t('esb.selectServiceConnection')">
               <el-option
                 v-for="connection in databaseConnectionOptions"
                 :key="connection.ItemId"
@@ -162,63 +172,58 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="最大行数">
+          <el-form-item :label="$t('esb.maxRows')">
             <el-input-number v-model="form.MaxRows" :min="1" :max="1000"></el-input-number>
           </el-form-item>
-          <el-form-item label="超时秒数">
+          <el-form-item :label="$t('esb.timeoutSeconds')">
             <el-input-number v-model="form.TimeoutSeconds" :min="1" :max="120"></el-input-number>
           </el-form-item>
-          <el-form-item label="状态">
+          <el-form-item :label="$t('common.status')">
             <el-switch v-model="form.Status" :active-value="1" :inactive-value="0"></el-switch>
           </el-form-item>
         </div>
 
         <el-form-item label="SQL" prop="SqlText">
-          <el-input
-            v-model="form.SqlText"
-            type="textarea"
-            :rows="8"
-            placeholder="仅支持单条 SELECT 查询，参数使用 @paramName"
-          ></el-input>
+          <el-input v-model="form.SqlText" type="textarea" :rows="8" :placeholder="$t('esb.sqlPlaceholder')"></el-input>
         </el-form-item>
 
-        <el-form-item label="参数">
+        <el-form-item :label="$t('esb.parameters')">
           <div class="parameter-editor">
             <div v-for="(parameter, index) in form.Parameters" :key="index" class="parameter-row">
-              <el-input v-model="parameter.Name" placeholder="参数名"></el-input>
-              <el-input v-model="parameter.Label" placeholder="显示名"></el-input>
+              <el-input v-model="parameter.Name" :placeholder="$t('esb.paramName')"></el-input>
+              <el-input v-model="parameter.Label" :placeholder="$t('esb.displayName')"></el-input>
               <el-select v-model="parameter.Type">
-                <el-option label="文本" value="string"></el-option>
-                <el-option label="数字" value="number"></el-option>
-                <el-option label="布尔" value="boolean"></el-option>
-                <el-option label="日期时间" value="datetime"></el-option>
+                <el-option :label="$t('esb.text')" value="string"></el-option>
+                <el-option :label="$t('esb.number')" value="number"></el-option>
+                <el-option :label="$t('esb.boolean')" value="boolean"></el-option>
+                <el-option :label="$t('esb.datetime')" value="datetime"></el-option>
               </el-select>
-              <el-switch v-model="parameter.Required" active-text="必填"></el-switch>
-              <el-input v-model="parameter.DefaultValue" placeholder="默认值"></el-input>
+              <el-switch v-model="parameter.Required" :active-text="$t('esb.required')"></el-switch>
+              <el-input v-model="parameter.DefaultValue" :placeholder="$t('esb.defaultValue')"></el-input>
               <el-button type="danger" icon="Delete" @click="removeParameter(index)"></el-button>
             </div>
-            <el-button icon="Plus" @click="addParameter">添加参数</el-button>
+            <el-button icon="Plus" @click="addParameter">{{ $t('esb.addParameter') }}</el-button>
           </div>
         </el-form-item>
 
-        <el-form-item label="返回映射">
+        <el-form-item :label="$t('esb.resultMapping')">
           <div class="mapping-row">
-            <el-input v-model="form.ResultMapping.LabelField" placeholder="label 字段"></el-input>
-            <el-input v-model="form.ResultMapping.ValueField" placeholder="value 字段"></el-input>
+            <el-input v-model="form.ResultMapping.LabelField" :placeholder="$t('esb.labelField')"></el-input>
+            <el-input v-model="form.ResultMapping.ValueField" :placeholder="$t('esb.valueField')"></el-input>
           </div>
         </el-form-item>
 
-        <el-form-item label="备注">
+        <el-form-item :label="$t('esb.remark')">
           <el-input v-model="form.Remark" type="textarea" :rows="2"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveDataSource">保存</el-button>
+        <el-button @click="formDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="saving" @click="saveDataSource">{{ $t('common.save') }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="testDialogVisible" title="测试执行" width="760px">
+    <el-dialog v-model="testDialogVisible" :title="$t('esb.testExecute')" width="760px">
       <el-form label-width="100px">
         <el-form-item
           v-for="parameter in testParameters"
@@ -228,7 +233,7 @@
           <el-input v-model="testForm[parameter.Name]" :placeholder="parameter.Name"></el-input>
         </el-form-item>
       </el-form>
-      <el-button type="primary" :loading="testing" @click="executeTest">执行测试</el-button>
+      <el-button type="primary" :loading="testing" @click="executeTest">{{ $t('esb.executeTest') }}</el-button>
       <pre class="test-result">{{ testResult }}</pre>
     </el-dialog>
   </div>
@@ -296,10 +301,10 @@ export default {
       testForm: {},
       testResult: '',
       rules: {
-        Code: [{ required: true, message: '请输入数据源编码', trigger: 'blur' }],
-        Name: [{ required: true, message: '请输入数据源名称', trigger: 'blur' }],
-        ConnectionId: [{ required: true, message: '请选择服务连接', trigger: 'change' }],
-        SqlText: [{ required: true, message: '请输入 SQL', trigger: 'blur' }]
+        Code: [{ required: true, message: this.$t('esb.dataSourceCodePlaceholder'), trigger: 'blur' }],
+        Name: [{ required: true, message: this.$t('esb.namePlaceholder'), trigger: 'blur' }],
+        ConnectionId: [{ required: true, message: this.$t('esb.selectServiceConnection'), trigger: 'change' }],
+        SqlText: [{ required: true, message: this.$t('esb.sqlPlaceholder'), trigger: 'blur' }]
       }
     }
   },
@@ -394,7 +399,7 @@ export default {
         this.dataSources = (res.data || []).map((item) => this.normalizeRow(item))
         this.total = res.total || 0
       } else {
-        this.$message.error(res?.msg || '获取 ESB 数据源失败')
+        this.$message.error(res?.msg || this.$t('esb.loadDataSourcesFailed'))
       }
     },
     async loadConnectionOptions() {
@@ -402,13 +407,13 @@ export default {
       if (res?.success) {
         this.connectionOptions = (res.data || []).map((item) => this.normalizeConnection(item))
       } else {
-        this.$message.error(res?.msg || '获取 ESB 服务连接失败')
+        this.$message.error(res?.msg || this.$t('esb.loadConnectionsFailed'))
       }
     },
     getConnectionName(connectionId) {
       const value = connectionId ?? 0
       const connection = this.connectionOptions.find((item) => item.ItemId === value)
-      return connection?.Name || '默认系统库'
+      return connection?.Name || this.$t('esb.defaultSystemDb')
     },
     handleSizeChange(size) {
       this.query.pageSize = size
@@ -466,11 +471,11 @@ export default {
             ? await updateEsbDataSource(submitData)
             : await addEsbDataSource(submitData)
           if (res?.success) {
-            this.$message.success(res.msg || '保存成功')
+            this.$message.success(res.msg || this.$t('language.saveSuccess'))
             this.formDialogVisible = false
             await this.loadDataSources()
           } else {
-            this.$message.error(res?.msg || '保存失败')
+            this.$message.error(res?.msg || this.$t('esb.saveFailed'))
           }
         } catch (error) {
           const msg =
@@ -478,7 +483,7 @@ export default {
             error.response?.data?.message ||
             error.response?.data?.title ||
             error.message ||
-            '保存失败'
+            this.$t('esb.saveFailed')
           this.$message.error(msg)
         } finally {
           this.saving = false
@@ -486,14 +491,14 @@ export default {
       })
     },
     removeDataSource(row) {
-      this.$confirm('确认删除该 ESB 数据源？', '提示', { type: 'warning' })
+      this.$confirm(this.$t('esb.deleteDataSourceConfirm'), this.$t('organization.prompt'), { type: 'warning' })
         .then(async () => {
           const { data: res } = await deleteEsbDataSource(row.ItemId || row.itemId)
           if (res?.success) {
-            this.$message.success(res.msg || '删除成功')
+            this.$message.success(res.msg || this.$t('language.deleteSuccess'))
             await this.loadDataSources()
           } else {
-            this.$message.error(res?.msg || '删除失败')
+            this.$message.error(res?.msg || this.$t('language.deleteFailed'))
           }
         })
         .catch(() => {})

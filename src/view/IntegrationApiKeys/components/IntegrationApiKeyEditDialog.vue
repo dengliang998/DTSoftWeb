@@ -1,29 +1,38 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog v-model="dialogVisible" title="修改API密钥" width="50%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" :title="$t('apiKey.editTitle')" width="50%" @close="handleClose">
     <el-form ref="formRef" :model="form" label-width="100px">
-      <el-form-item label="密钥名称">
+      <el-form-item :label="$t('apiKey.keyName')">
         <el-input v-model="form.KeyName" disabled></el-input>
       </el-form-item>
       <el-form-item
-        label="描述信息"
+        :label="$t('apiKey.description')"
         prop="Description"
-        :rules="[{ max: 500, message: '描述信息最多500字符', trigger: 'blur' }]"
+        :rules="[{ max: 500, message: $t('apiKey.descriptionMax'), trigger: 'blur' }]"
       >
-        <el-input v-model="form.Description" type="textarea" :rows="3" placeholder="请填写描述信息"></el-input>
+        <el-input
+          v-model="form.Description"
+          type="textarea"
+          :rows="3"
+          :placeholder="$t('apiKey.descriptionPlaceholder')"
+        ></el-input>
       </el-form-item>
       <el-form-item
-        label="启用状态"
+        :label="$t('apiKey.enabledStatus')"
         prop="Enabled"
-        :rules="[{ required: true, message: '请选择启用状态', trigger: 'change' }]"
+        :rules="[{ required: true, message: $t('apiKey.selectEnabled'), trigger: 'change' }]"
       >
-        <el-switch v-model="form.Enabled" active-text="启用" inactive-text="禁用"></el-switch>
+        <el-switch
+          v-model="form.Enabled"
+          :active-text="$t('common.enabled')"
+          :inactive-text="$t('common.disabled')"
+        ></el-switch>
       </el-form-item>
-      <el-form-item label="过期时间">
+      <el-form-item :label="$t('apiKey.expireTime')">
         <el-date-picker
           v-model="form.ExpireTime"
           type="datetime"
-          placeholder="选择过期时间（可选）"
+          :placeholder="$t('apiKey.expirePlaceholder')"
           format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DDTHH:mm:ss"
           style="width: 100%"
@@ -32,8 +41,8 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submit">确 定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submit">{{ $t('common.confirm') }}</el-button>
       </span>
     </template>
   </el-dialog>
@@ -72,14 +81,14 @@ export default {
           if (this.form.ExpireTime) data.ExpireTime = this.form.ExpireTime
           const response = await updateApiKey(data)
           if (response.data.Code === 200) {
-            this.$message.success('更新成功')
+            this.$message.success(this.$t('apiKey.updateSuccess'))
             this.dialogVisible = false
             this.$emit('success')
           } else {
-            this.$message.error(response.data.Message || '更新失败')
+            this.$message.error(response.data.Message || this.$t('apiKey.updateFailed'))
           }
         } catch (error) {
-          this.$message.error('更新失败：' + (error.response?.data?.Message || error.message))
+          this.$message.error(`${this.$t('apiKey.updateFailed')}: ${error.response?.data?.Message || error.message}`)
         }
       })
     }

@@ -3,16 +3,16 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>系统日志</h1>
-          <p>查询接口请求、操作用户、客户端 IP 和返回结果。</p>
+          <h1>{{ $t('log.title') }}</h1>
+          <p>{{ $t('log.subtitle') }}</p>
         </div>
       </div>
 
       <div class="dt-panel log-filter-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>筛选条件</strong>
-            <span>{{ filterCollapsed ? '已折叠，展开后可设置筛选条件' : '支持综合搜索和字段精确筛选' }}</span>
+            <strong>{{ $t('log.filters') }}</strong>
+            <span>{{ filterCollapsed ? $t('log.collapsedHint') : $t('log.expandedHint') }}</span>
           </div>
           <div class="dt-panel__meta">
             <el-button
@@ -20,7 +20,7 @@
               :icon="filterCollapsed ? ArrowDown : ArrowUp"
               @click="toggleFilters"
             >
-              {{ filterCollapsed ? '展开筛选' : '收起筛选' }}
+              {{ filterCollapsed ? $t('log.expandFilters') : $t('log.collapseFilters') }}
             </el-button>
           </div>
         </div>
@@ -28,11 +28,11 @@
           <el-form :model="queryInfo" label-width="76px" class="filter-form">
             <el-row :gutter="12">
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
-                <el-form-item label="综合搜索">
+                <el-form-item :label="$t('log.keyword')">
                   <el-input
                     v-model="queryInfo.Keyword"
                     clearable
-                    placeholder="用户 / IP / 接口 / 参数 / 结果"
+                    :placeholder="$t('log.keywordPlaceholder')"
                     @keyup.enter="handleSearch"
                   >
                     <template #prefix>
@@ -42,72 +42,72 @@
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="16" :lg="10" :xl="8">
-                <el-form-item label="日志时间">
+                <el-form-item :label="$t('log.logTime')">
                   <el-date-picker
                     v-model="logDateRange"
                     type="datetimerange"
                     value-format="YYYY-MM-DD HH:mm:ss"
-                    range-separator="至"
-                    start-placeholder="开始时间"
-                    end-placeholder="结束时间"
+                    range-separator="-"
+                    :start-placeholder="$t('log.startTime')"
+                    :end-placeholder="$t('log.endTime')"
                     class="date-range-picker"
                   ></el-date-picker>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="4" :xl="4">
-                <el-form-item label="操作用户">
+                <el-form-item :label="$t('log.operator')">
                   <el-input
                     v-model="queryInfo.UserAcc"
                     clearable
-                    placeholder="账号或显示名"
+                    :placeholder="$t('log.operatorPlaceholder')"
                     @keyup.enter="handleSearch"
                   ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="4" :xl="4">
-                <el-form-item label="IP 地址">
+                <el-form-item :label="$t('log.ip')">
                   <el-input
                     v-model="queryInfo.ClientIP"
                     clearable
-                    placeholder="请输入 IP"
+                    :placeholder="$t('log.ipPlaceholder')"
                     @keyup.enter="handleSearch"
                   ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
-                <el-form-item label="接口名称">
+                <el-form-item :label="$t('log.actionName')">
                   <el-input
                     v-model="queryInfo.ActionName"
                     clearable
-                    placeholder="请输入接口名称"
+                    :placeholder="$t('log.actionNamePlaceholder')"
                     @keyup.enter="handleSearch"
                   ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
-                <el-form-item label="请求参数">
+                <el-form-item :label="$t('log.param')">
                   <el-input
                     v-model="queryInfo.Param"
                     clearable
-                    placeholder="请输入请求参数"
+                    :placeholder="$t('log.paramPlaceholder')"
                     @keyup.enter="handleSearch"
                   ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
-                <el-form-item label="返回结果">
+                <el-form-item :label="$t('log.result')">
                   <el-input
                     v-model="queryInfo.Result"
                     clearable
-                    placeholder="请输入返回结果"
+                    :placeholder="$t('log.resultPlaceholder')"
                     @keyup.enter="handleSearch"
                   ></el-input>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="5">
                 <el-form-item label-width="0" class="filter-actions">
-                  <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-                  <el-button @click="resetFilters">重置</el-button>
+                  <el-button type="primary" :icon="Search" @click="handleSearch">{{ $t('common.search') }}</el-button>
+                  <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -118,12 +118,12 @@
       <div class="dt-panel log-table-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>日志列表</strong>
-            <span>服务端总数 {{ total }}</span>
+            <strong>{{ $t('log.listTitle') }}</strong>
+            <span>{{ $t('log.serverTotal', { total }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">本页 {{ LogActionList.length }}</span>
-            <span class="dt-chip dt-chip--success">每页 {{ queryInfo.pagesize }}</span>
+            <span class="dt-chip">{{ $t('log.currentPage', { count: LogActionList.length }) }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('log.pageSize', { size: queryInfo.pagesize }) }}</span>
           </div>
         </div>
         <el-table
@@ -133,31 +133,41 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无日志"
+          :empty-text="$t('log.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="日志时间" prop="LogDate" width="180" class-name="log-date-column">
+          <el-table-column :label="$t('log.logTime')" prop="LogDate" width="180" class-name="log-date-column">
             <template #default="{ row }">
               <code class="dt-code log-date-cell">{{ row.LogDate }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="操作用户" prop="UserAcc" width="130">
+          <el-table-column :label="$t('log.operator')" prop="UserAcc" width="130">
             <template #default="{ row }">
               <span class="dt-muted-pill">{{ row.UserAcc || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="接口名称" prop="ActionName" min-width="180" show-overflow-tooltip></el-table-column>
-          <el-table-column label="IP 地址" prop="ClientIP" width="150">
+          <el-table-column
+            :label="$t('log.actionName')"
+            prop="ActionName"
+            min-width="180"
+            show-overflow-tooltip
+          ></el-table-column>
+          <el-table-column :label="$t('log.ip')" prop="ClientIP" width="150">
             <template #default="{ row }">
               <code class="dt-code">{{ row.ClientIP || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="请求参数" prop="Param" min-width="180" show-overflow-tooltip></el-table-column>
-          <el-table-column label="返回结果" min-width="220">
+          <el-table-column
+            :label="$t('log.param')"
+            prop="Param"
+            min-width="180"
+            show-overflow-tooltip
+          ></el-table-column>
+          <el-table-column :label="$t('log.result')" min-width="220">
             <template #default="{ row }">
               <el-popover
                 v-if="hasResult(row.Result)"
@@ -174,7 +184,7 @@
               <span v-else class="empty-result">-</span>
             </template>
           </el-table-column>
-          <el-table-column label="请求类型" prop="RequestType" width="110">
+          <el-table-column :label="$t('log.requestType')" prop="RequestType" width="110">
             <template #default="{ row }">
               <span class="dt-badge dt-badge--neutral">{{ row.RequestType || '-' }}</span>
             </template>
@@ -247,10 +257,10 @@ export default {
           this.LogActionList = response.data.data ?? []
           this.total = response.data.Total ?? 0
         } else {
-          this.$message.error('日志列表获取失败：' + response.data.Msg)
+          this.$message.error(`${this.$t('log.loadFailed')}：${response.data.Msg}`)
         }
       } catch (error) {
-        this.$message.error('日志列表获取失败：' + error.message)
+        this.$message.error(`${this.$t('log.loadFailed')}：${error.message}`)
       }
     },
     getQueryParams() {

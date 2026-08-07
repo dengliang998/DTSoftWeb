@@ -1,14 +1,14 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="Excel导入"
+    :title="$t('microRuntime.importTitle')"
     width="50%"
     :top="'20vh'"
     :close-on-click-modal="false"
     :close-on-press-escape="!importLoading"
   >
     <el-form label-width="100px">
-      <el-form-item label="选择文件">
+      <el-form-item :label="$t('microRuntime.selectFile')">
         <el-upload
           v-model:file-list="fileList"
           :auto-upload="false"
@@ -21,32 +21,32 @@
         >
           <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
           <div class="el-upload__text">
-            拖拽文件到此处或
-            <em>点击上传</em>
+            {{ $t('microRuntime.uploadText') }}
+            <em>{{ $t('microRuntime.clickUpload') }}</em>
           </div>
           <template #tip>
-            <div class="el-upload__tip">支持上传 .xlsx, .xls 格式文件</div>
+            <div class="el-upload__tip">{{ $t('microRuntime.uploadTip') }}</div>
           </template>
         </el-upload>
       </el-form-item>
-      <el-form-item label="导入说明">
+      <el-form-item :label="$t('microRuntime.importTips')">
         <div class="import-tips">
-          <p>• 请确保Excel文件列头与系统字段匹配</p>
-          <p>• 数据量较大时可能需要等待较长时间</p>
-          <p>• 导入过程中请勿关闭页面</p>
+          <p>• {{ $t('microRuntime.importTipHeader') }}</p>
+          <p>• {{ $t('microRuntime.importTipLarge') }}</p>
+          <p>• {{ $t('microRuntime.importTipStay') }}</p>
         </div>
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button :disabled="importLoading" @click="handleCancel">取消</el-button>
+        <el-button :disabled="importLoading" @click="handleCancel">{{ $t('common.cancel') }}</el-button>
         <el-button
           type="primary"
           :loading="importLoading"
           :disabled="importLoading || fileList.length === 0"
           @click="doImport"
         >
-          {{ importLoading ? '导入中...' : '导入' }}
+          {{ importLoading ? $t('microRuntime.importing') : $t('microRuntime.import') }}
         </el-button>
       </span>
     </template>
@@ -100,7 +100,7 @@ export default {
     },
     async doImport() {
       if (this.fileList.length === 0) {
-        this.$message.error('请选择要导入的文件')
+        this.$message.error(this.$t('microRuntime.selectImportFile'))
         return
       }
       this.importLoading = true
@@ -109,15 +109,17 @@ export default {
         formData.append('file', this.fileList[0].raw)
         const { data: res } = await importMicroRuntimeData({ modelName: this.appConfig.modelName, data: formData })
         if (res.success) {
-          this.$message.success(res.msg || '导入成功')
+          this.$message.success(res.msg || this.$t('microRuntime.importSuccess'))
           this.fileList = []
           this.dialogVisible = false
           this.$emit('success')
         } else {
-          this.$message.error(res.msg || '导入失败')
+          this.$message.error(res.msg || this.$t('microRuntime.importFailed'))
         }
       } catch (error) {
-        this.$message.error('导入失败：' + (error.message || '网络错误'))
+        this.$message.error(
+          `${this.$t('microRuntime.importFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+        )
       } finally {
         this.importLoading = false
       }

@@ -4,12 +4,19 @@ import NProgress from 'nprogress'
 import { ElMessage } from 'element-plus'
 import { clearAuthSession, getToken } from '@/core/session'
 import { getMessage, isUnauthorizedPayload } from '@/core/response'
+import { getCurrentLanguage, translate } from '@/i18n'
 
 const http = axios.create({
   timeout: 20000
 })
 
-const publicEndpoints = ['/api/Auth/login', '/api/Auth/login-encryption-key', '/api/Auth/captcha']
+const publicEndpoints = [
+  '/api/Auth/login',
+  '/api/Auth/login-encryption-key',
+  '/api/Auth/captcha',
+  '/api/Language/GetEnabledLanguages',
+  '/api/Language/GetLanguageResourceValues'
+]
 
 const isPublicEndpoint = (url = '') => publicEndpoints.some((endpoint) => url.includes(endpoint))
 
@@ -25,7 +32,7 @@ const redirectToLogin = () => {
 }
 
 const handleUnauthorized = (message) => {
-  ElMessage.warning(message || '登录已过期，请重新登录')
+  ElMessage.warning(message || translate('common.sessionExpired'))
   clearAuthSession()
   redirectToLogin()
 }
@@ -39,6 +46,7 @@ http.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`
       }
     }
+    config.headers['X-Language'] = getCurrentLanguage()
     return config
   },
   (error) => {
@@ -51,14 +59,14 @@ http.interceptors.response.use(
   (response) => {
     NProgress.done()
     if (!isPublicEndpoint(response.config?.url) && isUnauthorizedPayload(response)) {
-      handleUnauthorized(getMessage(response, '登录已过期，请重新登录'))
+      handleUnauthorized(getMessage(response, translate('common.sessionExpired')))
     }
     return response
   },
   (error) => {
     NProgress.done()
     if (!isPublicEndpoint(error.config?.url) && error.response?.status === 401) {
-      handleUnauthorized(getMessage(error.response, '登录已过期，请重新登录'))
+      handleUnauthorized(getMessage(error.response, translate('common.sessionExpired')))
     }
     return Promise.reject(error)
   }

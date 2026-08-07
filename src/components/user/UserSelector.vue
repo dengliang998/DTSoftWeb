@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="选择用户"
+    :title="$t('user.selector.title')"
     width="72%"
     align-center
     class="user-selector-dialog"
@@ -11,8 +11,8 @@
       <aside class="selector-panel dt-panel dept-tree-section">
         <div class="selector-panel__header dt-panel__header">
           <div>
-            <strong>部门列表</strong>
-            <span>{{ deptTree.length }} 个根部门</span>
+            <strong>{{ $t('user.selector.departmentList') }}</strong>
+            <span>{{ $t('user.selector.rootDeptCount', { count: deptTree.length }) }}</span>
           </div>
         </div>
         <div class="dept-tree-scroll">
@@ -40,18 +40,22 @@
       <section class="selector-panel dt-panel user-list-section">
         <div class="selector-panel__header dt-panel__header">
           <div>
-            <strong>{{ currentDeptName || '用户列表' }}</strong>
-            <span>{{ currentDeptName ? '当前部门用户' : '选择左侧部门后筛选' }}</span>
+            <strong>{{ currentDeptName || $t('user.selector.userList') }}</strong>
+            <span>
+              {{ currentDeptName ? $t('user.selector.currentDeptUsers') : $t('user.selector.selectDeptHint') }}
+            </span>
           </div>
           <div class="selected-summary dt-panel__meta">
-            <span class="dt-chip dt-chip--success">已选 {{ selectedRows.length }}</span>
+            <span class="dt-chip dt-chip--success">
+              {{ $t('user.selector.selectedCount', { count: selectedRows.length }) }}
+            </span>
             <el-button
               class="dt-ghost-action selector-clear-button"
               size="small"
               :disabled="selectedRows.length === 0"
               @click="clearSelection"
             >
-              清空
+              {{ $t('user.form.clear') }}
             </el-button>
           </div>
         </div>
@@ -60,7 +64,7 @@
           <el-input
             v-model="queryInfo.Keyword"
             class="user-search dt-search"
-            placeholder="搜索用户账号或姓名"
+            :placeholder="$t('user.selector.searchPlaceholder')"
             clearable
             @clear="handleSearch"
             @keyup.enter="handleSearch"
@@ -69,7 +73,7 @@
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
-          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" :icon="Search" @click="handleSearch">{{ $t('common.search') }}</el-button>
         </div>
 
         <el-table
@@ -80,27 +84,27 @@
           :row-style="{ height: '46px' }"
           :cell-style="{ padding: '0px' }"
           class="user-table dt-table"
-          empty-text="暂无用户"
+          :empty-text="$t('user.selector.empty')"
           @selection-change="handleSelectionChange"
           @row-click="handleRowClick"
         >
           <el-table-column type="selection" width="52" :selectable="isRowSelectable"></el-table-column>
-          <el-table-column label="账号" prop="Account" min-width="160" show-overflow-tooltip>
+          <el-table-column :label="$t('user.form.account')" prop="Account" min-width="160" show-overflow-tooltip>
             <template #default="{ row }">
               <code class="dt-code">{{ row.Account || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="用户名" prop="DisplayName" min-width="150" show-overflow-tooltip>
+          <el-table-column :label="$t('user.form.username')" prop="DisplayName" min-width="150" show-overflow-tooltip>
             <template #default="{ row }">
               <span class="user-name">{{ row.DisplayName || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="职位" prop="Position" min-width="150" show-overflow-tooltip>
+          <el-table-column :label="$t('user.form.position')" prop="Position" min-width="150" show-overflow-tooltip>
             <template #default="{ row }">
               <span class="dt-muted-pill">{{ row.Position || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="96" align="center">
+          <el-table-column :label="$t('common.status')" width="96" align="center">
             <template #default="{ row }">
               <span :class="getStatusClass(row)">{{ getStatusText(row) }}</span>
             </template>
@@ -122,11 +126,11 @@
 
     <template #footer>
       <div class="dialog-footer">
-        <span class="footer-hint">点击行即可选择，翻页后保留已选用户。</span>
+        <span class="footer-hint">{{ $t('user.selector.footerHint') }}</span>
         <div class="footer-actions">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
           <el-button type="primary" :disabled="selectedRows.length === 0" @click="handleConfirm">
-            确定 {{ selectedRows.length ? `(${selectedRows.length})` : '' }}
+            {{ $t('user.selector.confirmWithCount', { count: selectedRows.length ? `(${selectedRows.length})` : '' }) }}
           </el-button>
         </div>
       </div>
@@ -216,11 +220,11 @@ export default {
           this.deptTree = res.data || []
           this.expandedDeptKeys = this.deptTree.map((item) => item.ItemId)
         } else {
-          this.$message.error('部门树加载失败：' + (res.Msg || res.message))
+          this.$message.error(`${this.$t('user.selector.deptLoadFailed')}：${res.Msg || res.message}`)
         }
       } catch (error) {
-        console.error('部门树加载失败:', error)
-        this.$message.error('部门树加载失败，请稍后重试')
+        console.error(`${this.$t('user.selector.deptLoadFailed')}:`, error)
+        this.$message.error(`${this.$t('user.selector.deptLoadFailed')}，${this.$t('user.selector.retryLater')}`)
       }
     },
 
@@ -238,11 +242,11 @@ export default {
           this.total = res.Total || 0
           this.$nextTick(() => this.syncTableSelection())
         } else {
-          this.$message.error('用户列表加载失败：' + (res.Msg || res.message))
+          this.$message.error(`${this.$t('user.selector.userListLoadFailed')}：${res.Msg || res.message}`)
         }
       } catch (error) {
-        console.error('用户列表加载失败:', error)
-        this.$message.error('用户列表加载失败，请稍后重试')
+        console.error(`${this.$t('user.selector.userListLoadFailed')}:`, error)
+        this.$message.error(`${this.$t('user.selector.userListLoadFailed')}，${this.$t('user.selector.retryLater')}`)
       } finally {
         this.loading = false
       }
@@ -337,8 +341,8 @@ export default {
     },
 
     getStatusText(row) {
-      if (this.isAlreadySelected(row)) return '已添加'
-      return this.isNewlySelected(row) ? '已选择' : '可选择'
+      if (this.isAlreadySelected(row)) return this.$t('user.selector.alreadyAdded')
+      return this.isNewlySelected(row) ? this.$t('user.selector.selected') : this.$t('user.selector.selectable')
     },
 
     getStatusClass(row) {
@@ -359,7 +363,7 @@ export default {
 
     handleConfirm() {
       if (this.selectedRows.length === 0) {
-        this.$message.warning('请至少选择一个用户')
+        this.$message.warning(this.$t('user.selector.selectAtLeastOne'))
         return
       }
       this.$emit('confirm', this.selectedRows)

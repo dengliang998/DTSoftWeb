@@ -6,11 +6,13 @@
       <div class="list-page">
         <div class="dt-commandbar">
           <div class="dt-page-title">
-            <h1>{{ appConfig.configName || '微应用' }}</h1>
-            <p>动态数据列表，支持查询、导入导出和关联明细查看。</p>
+            <h1>{{ appConfig.configName || $t('microRuntime.appFallback') }}</h1>
+            <p>{{ $t('microRuntime.subtitle') }}</p>
           </div>
           <div class="dt-command-actions">
-            <el-button class="dt-ghost-action" :icon="Refresh" @click="getAppData">刷新</el-button>
+            <el-button class="dt-ghost-action" :icon="Refresh" @click="getAppData">
+              {{ $t('common.refresh') }}
+            </el-button>
           </div>
         </div>
 
@@ -19,7 +21,7 @@
             v-model="searchKeyword"
             class="dt-search toolbar-search"
             clearable
-            placeholder="请输入关键词搜索"
+            :placeholder="$t('microRuntime.keywordPlaceholder')"
             @clear="getAppData"
             @keyup.enter="getAppData"
           >
@@ -29,13 +31,13 @@
           </el-input>
           <div class="dt-toolbar-actions toolbar-actions">
             <el-button v-if="appConfig.supportCreate" type="primary" :icon="Plus" @click="openCreateDialog">
-              新增
+              {{ $t('common.add') }}
             </el-button>
             <el-button v-if="appConfig.supportExport" class="dt-ghost-action" :icon="Download" @click="exportData">
-              导出Excel
+              {{ $t('microRuntime.exportExcel') }}
             </el-button>
             <el-button v-if="appConfig.supportImport" class="dt-ghost-action" :icon="Upload" @click="openImportDialog">
-              导入Excel
+              {{ $t('microRuntime.importExcel') }}
             </el-button>
             <el-button
               v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
@@ -44,7 +46,7 @@
               :disabled="selectedRows.length === 0"
               @click="batchDeleteData"
             >
-              批量删除
+              {{ $t('microRuntime.batchDelete') }}
             </el-button>
           </div>
         </div>
@@ -52,14 +54,16 @@
         <div class="dt-panel runtime-panel">
           <div class="dt-panel__header">
             <div>
-              <strong>数据列表</strong>
-              <span>服务端总数 {{ appData.total }}</span>
+              <strong>{{ $t('microRuntime.dataList') }}</strong>
+              <span>{{ $t('microRuntime.serverTotal', { count: appData.total }) }}</span>
             </div>
             <div class="dt-panel__meta">
-              <span class="dt-chip">本页 {{ appData.list.length }}</span>
-              <span v-if="queryableFields.length > 0" class="dt-chip">查询字段 {{ queryableFields.length }}</span>
+              <span class="dt-chip">{{ $t('microRuntime.currentPage', { count: appData.list.length }) }}</span>
+              <span v-if="queryableFields.length > 0" class="dt-chip">
+                {{ $t('microRuntime.queryFields', { count: queryableFields.length }) }}
+              </span>
               <span v-if="selectedRows.length > 0" class="dt-chip dt-chip--warning">
-                已选 {{ selectedRows.length }}
+                {{ $t('microRuntime.selectedCount', { count: selectedRows.length }) }}
               </span>
             </div>
           </div>
@@ -75,7 +79,7 @@
                         type="year"
                         value-format="YYYY"
                         format="YYYY"
-                        placeholder="开始"
+                        :placeholder="$t('microRuntime.start')"
                         style="width: 50%"
                       ></el-date-picker>
                       <el-date-picker
@@ -83,7 +87,7 @@
                         type="year"
                         value-format="YYYY"
                         format="YYYY"
-                        placeholder="结束"
+                        :placeholder="$t('microRuntime.end')"
                         style="width: 50%"
                       ></el-date-picker>
                     </template>
@@ -93,14 +97,22 @@
                       :type="getDateRangePickerType(field)"
                       :value-format="getDateValueFormat(field)"
                       :format="getDateDisplayFormat(field)"
-                      range-separator="至"
-                      start-placeholder="开始"
-                      end-placeholder="结束"
+                      :range-separator="$t('microRuntime.to')"
+                      :start-placeholder="$t('microRuntime.start')"
+                      :end-placeholder="$t('microRuntime.end')"
                       style="width: 100%"
                     ></el-date-picker>
                     <template v-else>
-                      <el-input v-model="queryFilters[field.fieldName].start" clearable placeholder="最小值"></el-input>
-                      <el-input v-model="queryFilters[field.fieldName].end" clearable placeholder="最大值"></el-input>
+                      <el-input
+                        v-model="queryFilters[field.fieldName].start"
+                        clearable
+                        :placeholder="$t('microRuntime.minValue')"
+                      ></el-input>
+                      <el-input
+                        v-model="queryFilters[field.fieldName].end"
+                        clearable
+                        :placeholder="$t('microRuntime.maxValue')"
+                      ></el-input>
                     </template>
                   </div>
                 </template>
@@ -110,7 +122,7 @@
                   class="query-control"
                   :style="getQueryControlStyle(field)"
                   clearable
-                  :placeholder="'请选择' + (field.label || field.fieldName)"
+                  :placeholder="$t('microRuntime.selectPlaceholder', { label: field.label || field.fieldName })"
                 >
                   <el-option
                     v-for="option in field.options || []"
@@ -128,7 +140,7 @@
                   :value-format="getDateValueFormat(field)"
                   :format="getDateDisplayFormat(field)"
                   clearable
-                  :placeholder="'请选择' + (field.label || field.fieldName)"
+                  :placeholder="$t('microRuntime.selectPlaceholder', { label: field.label || field.fieldName })"
                 ></el-date-picker>
                 <el-input
                   v-else
@@ -136,12 +148,18 @@
                   class="query-control"
                   :style="getQueryControlStyle(field)"
                   clearable
-                  :placeholder="field.queryMode === 'exact' ? '精确查询' : '模糊查询'"
+                  :placeholder="
+                    field.queryMode === 'exact' ? $t('microRuntime.exactQuery') : $t('microRuntime.fuzzyQuery')
+                  "
                 ></el-input>
               </div>
               <div v-if="rowIndex === queryFieldRows.length - 1" class="query-actions">
-                <el-button type="primary" :icon="Search" @click="applyQueryFilters">查询</el-button>
-                <el-button class="dt-ghost-action" :icon="Refresh" @click="resetQueryFilters">重置</el-button>
+                <el-button type="primary" :icon="Search" @click="applyQueryFilters">
+                  {{ $t('common.search') }}
+                </el-button>
+                <el-button class="dt-ghost-action" :icon="Refresh" @click="resetQueryFilters">
+                  {{ $t('common.reset') }}
+                </el-button>
               </div>
             </div>
           </div>
@@ -156,7 +174,7 @@
               highlight-current-row
               class="table-wrapper dt-table"
               height="100%"
-              empty-text="暂无数据"
+              :empty-text="$t('microRuntime.noData')"
               @selection-change="handleSelectionChange"
               @sort-change="handleSortChange"
               @row-click="handleRuntimeRowClick"
@@ -178,7 +196,7 @@
                 <el-table-column
                   v-if="field?.showInList && field?.fieldName"
                   :prop="field.fieldName"
-                  :label="field.label || field.fieldName || '未知字段'"
+                  :label="field.label || field.fieldName || $t('microRuntime.unknownField')"
                   :width="field.columnWidth || undefined"
                   :fixed="normalizeFixedColumn(field.fixed)"
                   :sortable="field.sortable ? 'custom' : false"
@@ -206,7 +224,7 @@
                             type="button"
                             @click="previewAttachment(attachment)"
                           >
-                            预览
+                            {{ $t('microRuntime.preview') }}
                           </button>
                         </div>
                       </template>
@@ -218,17 +236,17 @@
                   </template>
                 </el-table-column>
               </template>
-              <el-table-column label="操作" width="108" fixed="right" align="right">
+              <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="right">
                 <template #default="scope">
                   <div class="dt-operation-buttons operation-buttons runtime-actions">
-                    <el-tooltip v-if="appConfig.supportUpdate" content="编辑数据" placement="top">
+                    <el-tooltip v-if="appConfig.supportUpdate" :content="$t('microRuntime.editData')" placement="top">
                       <el-button
                         class="dt-icon-action dt-icon-action--edit"
                         :icon="Edit"
                         @click="openEditDialog(scope.row)"
                       />
                     </el-tooltip>
-                    <el-tooltip v-if="appConfig.supportDelete" content="删除数据" placement="top">
+                    <el-tooltip v-if="appConfig.supportDelete" :content="$t('microRuntime.deleteData')" placement="top">
                       <el-button
                         class="dt-icon-action dt-icon-action--danger"
                         :icon="Delete"
@@ -254,9 +272,13 @@
               <div class="related-title-area">
                 <span class="related-title-marker"></span>
                 <div>
-                  <div class="related-title">关联数据</div>
+                  <div class="related-title">{{ $t('microRuntime.relatedData') }}</div>
                   <div class="related-subtitle">
-                    {{ activeRuntimeRowId ? '当前主表记录的子表明细' : '选择一条主表记录查看子表明细' }}
+                    {{
+                      activeRuntimeRowId
+                        ? $t('microRuntime.currentSubTableDetails')
+                        : $t('microRuntime.selectMainRowDetails')
+                    }}
                   </div>
                 </div>
               </div>
@@ -267,10 +289,10 @@
                 @click="loadRelatedData(activeRuntimeRowId)"
               >
                 <el-icon class="button-leading-icon"><Refresh /></el-icon>
-                刷新
+                {{ $t('common.refresh') }}
               </el-button>
             </div>
-            <div v-if="!activeRuntimeRowId" class="related-empty-state">请选择上方列表中的一条数据</div>
+            <div v-if="!activeRuntimeRowId" class="related-empty-state">{{ $t('microRuntime.selectOneRow') }}</div>
             <div v-else v-loading="relatedDataLoading" class="related-content">
               <el-tabs v-model="activeSubTableName" class="related-tabs">
                 <el-tab-pane v-for="subTable in orderedSubTables" :key="subTable.tableName" :name="subTable.tableName">
@@ -304,7 +326,7 @@
                       </template>
                     </el-table-column>
                     <template #empty>
-                      <div class="related-table-empty">暂无关联数据</div>
+                      <div class="related-table-empty">{{ $t('microRuntime.noRelatedData') }}</div>
                     </template>
                   </el-table>
                   <div class="related-pagination">
@@ -328,12 +350,17 @@
     </section>
 
     <!-- 加载中 -->
-    <div v-if="loading" v-loading="loading" class="loading-container" element-loading-text="加载微应用配置中..."></div>
+    <div
+      v-if="loading"
+      v-loading="loading"
+      class="loading-container"
+      :element-loading-text="$t('microRuntime.loadingConfig')"
+    ></div>
     <!-- 微应用配置未找到 -->
     <div v-else-if="!loading && !appConfig" class="loading-container">
       <div style="text-align: center; color: #909399">
         <el-icon size="48" style="margin-bottom: 10px"><WarningFilled /></el-icon>
-        <div>微应用配置未找到</div>
+        <div>{{ $t('microRuntime.configNotFound') }}</div>
       </div>
     </div>
 
@@ -570,7 +597,7 @@ export default {
 
       const id = this.getRowPrimaryKey(row)
       if (!id) {
-        this.$message.warning('无法获取当前行数据ID')
+        this.$message.warning(this.$t('microRuntime.getRowIdFailed'))
         return
       }
 
@@ -602,11 +629,15 @@ export default {
           }
         } else {
           this.activeRuntimeDetail = null
-          this.$message.error('获取关联数据失败：' + (res?.msg || '未知错误'))
+          this.$message.error(
+            `${this.$t('microRuntime.loadRelatedFailed')}: ${res?.msg || this.$t('microRuntime.unknownError')}`
+          )
         }
       } catch (error) {
         this.activeRuntimeDetail = null
-        this.$message.error('获取关联数据失败：' + (error.message || '网络错误'))
+        this.$message.error(
+          `${this.$t('microRuntime.loadRelatedFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+        )
       } finally {
         this.relatedDataLoading = false
       }
@@ -919,13 +950,17 @@ export default {
             // 获取应用数据
             this.getAppData()
           } else {
-            this.$message.error('未找到对应的微应用配置')
+            this.$message.error(this.$t('microRuntime.configNotFoundMessage'))
           }
         } else {
-          this.$message.error('加载微应用配置失败：' + (res.msg || '未知错误'))
+          this.$message.error(
+            `${this.$t('microRuntime.loadConfigFailed')}: ${res.msg || this.$t('microRuntime.unknownError')}`
+          )
         }
       } catch (error) {
-        this.$message.error('加载微应用配置失败：' + (error.message || '网络错误'))
+        this.$message.error(
+          `${this.$t('microRuntime.loadConfigFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+        )
       } finally {
         this.loading = false
       }
@@ -975,13 +1010,31 @@ export default {
       const rules = []
       // 必填验证
       if (field.required) {
-        rules.push({ required: true, message: '请输入' + field.label, trigger: 'blur' })
+        rules.push({
+          required: true,
+          message: this.$t('microRuntime.inputPlaceholder', { label: field.label || field.fieldName }),
+          trigger: 'blur'
+        })
       }
       if (field.minLength !== null && field.minLength !== undefined) {
-        rules.push({ min: field.minLength, message: `${field.label}不能少于${field.minLength}个字符`, trigger: 'blur' })
+        rules.push({
+          min: field.minLength,
+          message: this.$t('microRuntime.lengthRange', {
+            min: field.minLength,
+            max: field.maxLength || 99999
+          }),
+          trigger: 'blur'
+        })
       }
       if (field.maxLength !== null && field.maxLength !== undefined) {
-        rules.push({ max: field.maxLength, message: `${field.label}不能超过${field.maxLength}个字符`, trigger: 'blur' })
+        rules.push({
+          max: field.maxLength,
+          message: this.$t('microRuntime.lengthRange', {
+            min: field.minLength || 0,
+            max: field.maxLength
+          }),
+          trigger: 'blur'
+        })
       }
       if (field.fieldType === 'number' && (field.minValue !== null || field.maxValue !== null)) {
         rules.push({
@@ -991,11 +1044,11 @@ export default {
               return
             }
             if (field.minValue !== null && field.minValue !== undefined && Number(value) < Number(field.minValue)) {
-              callback(new Error(`${field.label}不能小于${field.minValue}`))
+              callback(new Error(this.$t('microRuntime.minMessage', { min: field.minValue })))
               return
             }
             if (field.maxValue !== null && field.maxValue !== undefined && Number(value) > Number(field.maxValue)) {
-              callback(new Error(`${field.label}不能大于${field.maxValue}`))
+              callback(new Error(this.$t('microRuntime.maxMessage', { max: field.maxValue })))
               return
             }
             callback()
@@ -1007,11 +1060,11 @@ export default {
         try {
           rules.push({
             pattern: new RegExp(field.pattern),
-            message: `${field.label}格式不正确`,
+            message: this.$t('microRuntime.invalidFormat'),
             trigger: 'blur'
           })
         } catch (error) {
-          console.error('字段正则校验解析失败：', error)
+          console.error(this.$t('microRuntime.fieldRegexParseFailed'), error)
         }
       }
       // 自定义验证规则
@@ -1022,7 +1075,7 @@ export default {
             rules.push(...validation)
           }
         } catch (e) {
-          console.error('字段验证规则解析失败：', e)
+          console.error(this.$t('microRuntime.fieldValidationParseFailed'), e)
         }
       }
       return rules
@@ -1103,17 +1156,23 @@ export default {
             this.activeRuntimeDetail = null
           }
         } else {
-          this.$message.error('获取数据失败：' + (res.msg || '未知错误'))
+          this.$message.error(
+            `${this.$t('microRuntime.getDataFailed')}: ${res.msg || this.$t('microRuntime.unknownError')}`
+          )
         }
       } catch (error) {
-        this.$message.error('获取数据失败：' + (error.message || '网络错误'))
+        this.$message.error(
+          `${this.$t('microRuntime.getDataFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+        )
       }
     },
 
     // 打开新增对话框
     openCreateDialog() {
       this.dialogType = 'create'
-      this.dialogTitle = '新增' + this.appConfig.configName
+      this.dialogTitle = this.$t('microRuntime.createDialogTitle', {
+        app: this.appConfig.configName || this.$t('microRuntime.appFallback')
+      })
       this.initFormData()
       this.dialogVisible = true
     },
@@ -1140,7 +1199,9 @@ export default {
     // 打开编辑对话框
     async openEditDialog(row) {
       this.dialogType = 'edit'
-      this.dialogTitle = '编辑' + this.appConfig.configName
+      this.dialogTitle = this.$t('microRuntime.editDialogTitle', {
+        app: this.appConfig.configName || this.$t('microRuntime.appFallback')
+      })
       const id = this.getRowPrimaryKey(row)
       let detailRow = { ...row }
       if (id) {
@@ -1153,7 +1214,9 @@ export default {
             detailRow = res.data
           }
         } catch (error) {
-          this.$message.error('获取详情失败：' + (error.message || '网络错误'))
+          this.$message.error(
+            `${this.$t('microRuntime.getDetailFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+          )
         }
       }
 
@@ -1177,16 +1240,16 @@ export default {
 
     // 删除数据
     deleteData(row) {
-      this.$confirm('确定要删除这条数据吗？', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      this.$confirm(this.$t('microRuntime.deleteOneConfirm'), this.$t('microRuntime.warning'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       })
         .then(async () => {
           try {
             const id = this.getRowPrimaryKey(row)
             if (!id) {
-              this.$message.error('删除失败：无法获取数据ID')
+              this.$message.error(this.$t('microRuntime.deleteMissingId'))
               return
             }
 
@@ -1195,32 +1258,40 @@ export default {
               id
             })
             if (res.success) {
-              this.$message.success(res.msg || '删除成功')
+              this.$message.success(res.msg || this.$t('microRuntime.deleteSuccess'))
               this.getAppData()
             } else {
-              this.$message.error('删除失败：' + (res.msg || '未知错误'))
+              this.$message.error(
+                `${this.$t('microRuntime.deleteFailed')}: ${res.msg || this.$t('microRuntime.unknownError')}`
+              )
             }
           } catch (error) {
-            this.$message.error('删除失败：' + (error.message || '网络错误'))
+            this.$message.error(
+              `${this.$t('microRuntime.deleteFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+            )
           }
         })
         .catch(() => {
-          this.$message.info('已取消删除')
+          this.$message.info(this.$t('microRuntime.deleteCanceled'))
         })
     },
 
     batchDeleteData() {
       const ids = this.selectedRows.map((row) => this.getRowPrimaryKey(row)).filter(Boolean)
       if (ids.length === 0) {
-        this.$message.warning('请选择要删除的数据')
+        this.$message.warning(this.$t('microRuntime.selectDeleteRows'))
         return
       }
 
-      this.$confirm(`确定要删除选中的 ${ids.length} 条数据吗？`, '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
+      this.$confirm(
+        this.$t('microRuntime.batchDeleteConfirm', { count: ids.length }),
+        this.$t('microRuntime.warning'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      )
         .then(async () => {
           try {
             const { data: res } = await batchDeleteMicroRuntimeData({
@@ -1228,18 +1299,22 @@ export default {
               ids
             })
             if (res.success) {
-              this.$message.success(res.msg || '批量删除成功')
+              this.$message.success(res.msg || this.$t('microRuntime.batchDeleteSuccess'))
               this.selectedRows = []
               this.getAppData()
             } else {
-              this.$message.error('批量删除失败：' + (res.msg || '未知错误'))
+              this.$message.error(
+                `${this.$t('microRuntime.batchDeleteFailed')}: ${res.msg || this.$t('microRuntime.unknownError')}`
+              )
             }
           } catch (error) {
-            this.$message.error('批量删除失败：' + (error.message || '网络错误'))
+            this.$message.error(
+              `${this.$t('microRuntime.batchDeleteFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+            )
           }
         })
         .catch(() => {
-          this.$message.info('已取消删除')
+          this.$message.info(this.$t('microRuntime.deleteCanceled'))
         })
     },
 
@@ -1287,7 +1362,7 @@ export default {
             // 更新数据
             const id = this.getRowPrimaryKey(this.formData)
             if (!id) {
-              this.$message.error('更新失败：无法获取数据ID')
+              this.$message.error(this.$t('microRuntime.updateMissingId'))
               return
             }
             res = await updateMicroRuntimeData({
@@ -1299,18 +1374,27 @@ export default {
 
           const result = res.data
           if (result.success) {
-            this.$message.success(result.msg || (this.dialogType === 'create' ? '新增成功' : '更新成功'))
+            this.$message.success(
+              result.msg ||
+                (this.dialogType === 'create'
+                  ? this.$t('microRuntime.createSuccess')
+                  : this.$t('microRuntime.updateSuccess'))
+            )
             this.dialogVisible = false
             this.getAppData()
             this.initFormData()
           } else {
             this.$message.error(
-              (this.dialogType === 'create' ? '新增' : '更新') + '失败：' + (result.msg || '未知错误')
+              `${this.dialogType === 'create' ? this.$t('microRuntime.createFailed') : this.$t('microRuntime.updateFailed')}: ${
+                result.msg || this.$t('microRuntime.unknownError')
+              }`
             )
           }
         } catch (error) {
           this.$message.error(
-            (this.dialogType === 'create' ? '新增' : '更新') + '失败：' + (error.message || '网络错误')
+            `${this.dialogType === 'create' ? this.$t('microRuntime.createFailed') : this.$t('microRuntime.updateFailed')}: ${
+              error.message || this.$t('microRuntime.networkError')
+            }`
           )
         }
       })
@@ -1457,7 +1541,7 @@ export default {
     previewAttachment(attachment) {
       const url = this.getAttachmentUrl(attachment)
       if (!url) {
-        this.$message.warning('无法获取文件编号')
+        this.$message.warning(this.$t('microRuntime.getFileIdFailed'))
         return
       }
 
@@ -1478,7 +1562,7 @@ export default {
     downloadAttachment(attachment) {
       const url = this.getAttachmentUrl(attachment)
       if (!url) {
-        this.$message.warning('无法获取文件编号')
+        this.$message.warning(this.$t('microRuntime.getFileIdFailed'))
         return
       }
       window.location.href = url
@@ -1487,7 +1571,7 @@ export default {
     async exportData() {
       // 检查列表数据是否为空
       if (!this.appData.list || this.appData.list.length === 0) {
-        this.$message.warning('当前列表为空，无法导出数据')
+        this.$message.warning(this.$t('microRuntime.exportEmpty'))
         return
       }
 
@@ -1508,15 +1592,19 @@ export default {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `${this.appConfig.configName}列表.xlsx`
+        link.download = this.$t('microRuntime.exportFileName', {
+          app: this.appConfig.configName || this.$t('microRuntime.appFallback')
+        })
         link.click()
 
         // 释放URL对象
         window.URL.revokeObjectURL(url)
 
-        this.$message.success('导出成功')
+        this.$message.success(this.$t('microRuntime.exportSuccess'))
       } catch (error) {
-        this.$message.error('导出失败：' + (error.message || '网络错误'))
+        this.$message.error(
+          `${this.$t('microRuntime.exportFailed')}: ${error.message || this.$t('microRuntime.networkError')}`
+        )
       }
     },
     // 打开导入对话框
@@ -1907,17 +1995,9 @@ export default {
   overflow-x: auto;
 }
 
-/* 表格列样式优化 */
+/* Table column tuning */
 :deep(.el-table-column) {
   min-width: 80px;
-}
-
-/* 操作列固定宽度 */
-:deep(.el-table-column--name__操作) {
-  width: 200px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
-  flex: none !important;
 }
 
 /* 对话框样式优化 */

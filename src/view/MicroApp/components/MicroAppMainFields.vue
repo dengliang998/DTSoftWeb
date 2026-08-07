@@ -3,10 +3,12 @@
   <section class="form-section form-section--main">
     <div class="form-section-head">
       <div>
-        <div class="section-kicker">主表</div>
-        <h3 class="form-section-title">基础信息</h3>
+        <div class="section-kicker">{{ $t('microRuntime.mainTable') }}</div>
+        <h3 class="form-section-title">{{ $t('microRuntime.baseInfo') }}</h3>
       </div>
-      <span class="section-pill">{{ completedRequiredFieldCount }}/{{ requiredFieldCount }} 必填</span>
+      <span class="section-pill">
+        {{ $t('microRuntime.requiredProgress', { completed: completedRequiredFieldCount, total: requiredFieldCount }) }}
+      </span>
     </div>
     <el-row class="main-field-grid" :gutter="16">
       <el-col v-for="(field, index) in orderedFields" :key="index" :span="formFieldSpan">
@@ -19,7 +21,7 @@
           <el-input
             v-if="field.fieldType === 'string'"
             v-model="formData[field.fieldName]"
-            :placeholder="'请输入' + (field.label || field.fieldName)"
+            :placeholder="$t('microRuntime.inputPlaceholder', { label: field.label || field.fieldName })"
             :disabled="isFieldDisabled(field)"
           ></el-input>
           <el-input-number
@@ -88,7 +90,7 @@
             <el-input
               v-model="formData[field.fieldName]"
               readonly
-              :placeholder="'请选择' + (field.label || field.fieldName)"
+              :placeholder="$t('microRuntime.selectPlaceholder', { label: field.label || field.fieldName })"
               :disabled="isFieldDisabled(field)"
             ></el-input>
             <button

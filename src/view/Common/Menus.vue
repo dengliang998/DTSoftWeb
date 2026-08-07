@@ -3,14 +3,14 @@
     <section class="menu-workbench dt-workbench">
       <div class="menu-commandbar dt-commandbar">
         <div class="menu-title dt-page-title">
-          <h1>菜单维护</h1>
-          <p>维护导航、微应用入口和扩展页面。拖拽同级菜单可调整排序。</p>
+          <h1>{{ $t('menuPage.title') }}</h1>
+          <p>{{ $t('menuPage.subtitle') }}</p>
         </div>
         <div class="command-actions dt-command-actions">
           <el-button class="ghost-action dt-ghost-action" :icon="Refresh" :loading="sortSaving" @click="getMenuList">
-            刷新
+            {{ $t('common.refresh') }}
           </el-button>
-          <el-button type="primary" :icon="Plus" @click="showAddDialog">新建菜单</el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddDialog">{{ $t('menuPage.create') }}</el-button>
         </div>
       </div>
 
@@ -19,7 +19,7 @@
           v-model="queryInfo.query"
           clearable
           class="menu-search dt-search"
-          placeholder="搜索菜单名称、路径或图标"
+          :placeholder="$t('menuPage.searchPlaceholder')"
           @clear="bindTableDrag"
         >
           <template #prefix>
@@ -41,10 +41,10 @@
 
         <div class="toolbar-actions dt-toolbar-actions">
           <el-button class="ghost-action dt-ghost-action" :icon="ArrowDown" @click="setAllRowsExpanded(true)">
-            展开
+            {{ $t('menuPage.expand') }}
           </el-button>
           <el-button class="ghost-action dt-ghost-action" :icon="ArrowUp" @click="setAllRowsExpanded(false)">
-            收起
+            {{ $t('menuPage.collapse') }}
           </el-button>
         </div>
       </div>
@@ -52,15 +52,19 @@
       <div class="menu-table-panel dt-panel">
         <div class="table-panel__header dt-panel__header">
           <div>
-            <strong>菜单结构</strong>
+            <strong>{{ $t('menuPage.structure') }}</strong>
             <span>{{ tableSummaryText }}</span>
           </div>
           <div class="table-panel__meta dt-panel__meta">
-            <span class="metric-chip dt-chip">全部 {{ menuStats.total }}</span>
-            <span class="metric-chip dt-chip dt-chip--success">微应用 {{ menuStats.micro }}</span>
-            <span class="metric-chip dt-chip">扩展页 {{ menuStats.custom }}</span>
-            <span class="metric-chip metric-chip--warning dt-chip dt-chip--warning">隐藏 {{ menuStats.hidden }}</span>
-            <span v-if="sortSaving" class="saving-pill dt-chip dt-chip--success">排序保存中</span>
+            <span class="metric-chip dt-chip">{{ $t('menuPage.all', { count: menuStats.total }) }}</span>
+            <span class="metric-chip dt-chip dt-chip--success">
+              {{ $t('menuPage.micro', { count: menuStats.micro }) }}
+            </span>
+            <span class="metric-chip dt-chip">{{ $t('menuPage.customPage', { count: menuStats.custom }) }}</span>
+            <span class="metric-chip metric-chip--warning dt-chip dt-chip--warning">
+              {{ $t('menuPage.hiddenCount', { count: menuStats.hidden }) }}
+            </span>
+            <span v-if="sortSaving" class="saving-pill dt-chip dt-chip--success">{{ $t('menuPage.sortSaving') }}</span>
           </div>
         </div>
 
@@ -72,7 +76,7 @@
           row-key="id"
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
           class="table-wrapper dt-table"
-          empty-text="暂无匹配菜单"
+          :empty-text="$t('menuPage.empty')"
           :row-class-name="getMenuRowClassName"
           @expand-change="bindTableDrag"
         >
@@ -86,7 +90,7 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="菜单" prop="menuName" min-width="320">
+          <el-table-column :label="$t('menuPage.menu')" prop="menuName" min-width="320">
             <template #default="scope">
               <div class="menu-name-cell dt-name-cell">
                 <span class="menu-icon-shell dt-icon-shell">
@@ -96,30 +100,35 @@
                   <el-icon v-else><Grid /></el-icon>
                 </span>
                 <span class="menu-name-copy dt-name-copy">
-                  <strong>{{ scope.row.menuName || '未命名菜单' }}</strong>
+                  <strong>{{ getMenuDisplayName(scope.row) }}</strong>
                   <small>{{ getChildrenLabel(scope.row) }}</small>
                 </span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="类型" prop="menuType" width="116">
+          <el-table-column :label="$t('menuPage.type')" prop="menuType" width="116">
             <template #default="scope">
               <span :class="['type-badge', 'dt-badge', `type-badge--${scope.row.menuType}`]">
                 {{ getMenuTypeMeta(scope.row.menuType).label }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="路径" prop="path" min-width="260">
+          <el-table-column :label="$t('menuPage.resourceKey')" prop="i18nKey" min-width="180">
             <template #default="scope">
-              <code class="path-code dt-code">{{ scope.row.path || '未设置' }}</code>
+              <code class="path-code dt-code">{{ scope.row.i18nKey || $t('menuPage.notSet') }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="图标" prop="icon" min-width="120">
+          <el-table-column :label="$t('menuPage.path')" prop="path" min-width="260">
             <template #default="scope">
-              <span class="icon-name dt-muted-pill">{{ scope.row.icon || '默认' }}</span>
+              <code class="path-code dt-code">{{ scope.row.path || $t('menuPage.notSet') }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="状态" prop="visible" width="96">
+          <el-table-column :label="$t('menuPage.icon')" prop="icon" min-width="120">
+            <template #default="scope">
+              <span class="icon-name dt-muted-pill">{{ scope.row.icon || $t('menuPage.defaultIcon') }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column :label="$t('common.status')" prop="visible" width="96">
             <template #default="scope">
               <span
                 :class="[
@@ -128,14 +137,14 @@
                   scope.row.visible ? 'is-visible dt-badge--success' : 'is-hidden dt-badge--danger'
                 ]"
               >
-                {{ scope.row.visible ? '显示' : '隐藏' }}
+                {{ scope.row.visible ? $t('menuPage.visible') : $t('menuPage.hidden') }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="156" align="right">
+          <el-table-column :label="$t('common.actions')" width="156" align="right">
             <template #default="scope">
               <div class="operation-buttons dt-operation-buttons">
-                <el-tooltip content="添加子菜单" placement="top">
+                <el-tooltip :content="$t('menuPage.addChild')" placement="top">
                   <el-button
                     class="icon-action icon-action--add dt-icon-action dt-icon-action--add"
                     :icon="Plus"
@@ -143,14 +152,14 @@
                     @click="showAddChildDialog(scope.row.id)"
                   />
                 </el-tooltip>
-                <el-tooltip content="编辑菜单" placement="top">
+                <el-tooltip :content="$t('menuPage.edit')" placement="top">
                   <el-button
                     class="icon-action icon-action--edit dt-icon-action dt-icon-action--edit"
                     :icon="Edit"
                     @click="showEditDialog(scope.row)"
                   />
                 </el-tooltip>
-                <el-tooltip content="删除菜单" placement="top">
+                <el-tooltip :content="$t('menuPage.delete')" placement="top">
                   <el-button
                     class="icon-action icon-action--danger dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -183,11 +192,14 @@ import { Search, Plus, Edit, Delete, Rank, Refresh, ArrowDown, ArrowUp, Grid } f
 import MenuFormDialog from './components/MenuFormDialog.vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
+import { getLanguageResourceValues } from '@/api/language'
+import { getCurrentLanguage } from '@/i18n'
+import { getMenuDisplayName as resolveMenuDisplayName } from '@/modules/home/menuState'
 
 const MENU_TYPES = {
-  0: { label: '自定义', tagType: 'info' },
-  1: { label: '微应用', tagType: 'success' },
-  2: { label: '扩展页面', tagType: 'warning' }
+  0: { labelKey: 'menuPage.custom', tagType: 'info' },
+  1: { labelKey: 'menuPage.microApp', tagType: 'success' },
+  2: { labelKey: 'menuPage.extensionPage', tagType: 'warning' }
 }
 
 export default {
@@ -208,6 +220,7 @@ export default {
 
     // 菜单列表
     const menuList = ref([])
+    const dynamicResources = ref({})
     const menuTableRef = ref(null)
     const draggingMenuId = ref(null)
     const rowDragCleanups = []
@@ -217,11 +230,12 @@ export default {
     const menuOptions = ref([])
     // 是否显示添加菜单对话框
     const addDialogVisible = ref(false)
-    const dialogTitle = ref('添加菜单')
+    const dialogTitle = ref(proxy.$t('menuPage.addTitle'))
     // 添加菜单的表单数据
     const addForm = reactive({
       parentId: 0,
       menuName: '',
+      i18nKey: '',
       menuType: '0',
       path: '',
       microAppPath: '',
@@ -234,7 +248,7 @@ export default {
     })
     // 添加表单验证规则
     const addFormRules = {
-      menuName: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }]
+      menuName: [{ required: true, message: proxy.$t('menuPage.form.namePlaceholder'), trigger: 'blur' }]
     }
     // 当前操作类型（添加/编辑）
     const currentAction = ref('add')
@@ -255,15 +269,21 @@ export default {
       return Object.prototype.hasOwnProperty.call(MENU_TYPES, String(rawType)) ? String(rawType) : '0'
     }
 
-    const getMenuTypeMeta = (menuType) => MENU_TYPES[String(menuType)] || MENU_TYPES[0]
+    const getMenuTypeMeta = (menuType) => {
+      const meta = MENU_TYPES[String(menuType)] || MENU_TYPES[0]
+      return {
+        ...meta,
+        label: proxy.$t(meta.labelKey)
+      }
+    }
 
-    const filterOptions = [
-      { label: '全部', value: 'all' },
-      { label: '微应用', value: '1' },
-      { label: '扩展页面', value: '2' },
-      { label: '自定义', value: '0' },
-      { label: '隐藏', value: 'hidden' }
-    ]
+    const filterOptions = computed(() => [
+      { label: proxy.$t('menuPage.filterAll'), value: 'all' },
+      { label: proxy.$t('menuPage.microApp'), value: '1' },
+      { label: proxy.$t('menuPage.extensionPage'), value: '2' },
+      { label: proxy.$t('menuPage.custom'), value: '0' },
+      { label: proxy.$t('menuPage.filterHidden'), value: 'hidden' }
+    ])
 
     const flattenMenuList = (menus) => {
       return menus.reduce((list, menu) => {
@@ -296,7 +316,14 @@ export default {
 
     const matchesKeyword = (menu, keyword) => {
       if (!keyword) return true
-      const haystack = [menu.menuName, menu.path, menu.icon, getMenuTypeMeta(menu.menuType).label]
+      const haystack = [
+        menu.menuName,
+        menu.i18nKey,
+        getMenuDisplayName(menu),
+        menu.path,
+        menu.icon,
+        getMenuTypeMeta(menu.menuType).label
+      ]
         .join(' ')
         .toLowerCase()
       return haystack.includes(keyword)
@@ -323,13 +350,29 @@ export default {
 
     const tableSummaryText = computed(() => {
       const count = filteredFlatMenus.value.length
-      if (count === menuStats.value.total) return `共 ${count} 项`
-      return `筛选出 ${count} / ${menuStats.value.total} 项`
+      if (count === menuStats.value.total) return proxy.$t('menuPage.summaryAll', { count })
+      return proxy.$t('menuPage.summaryFiltered', { count, total: menuStats.value.total })
     })
 
     const getChildrenLabel = (menu) => {
       const count = menu.children?.length || 0
-      return count ? `${count} 个子菜单` : menu.path || '未配置路由'
+      return count ? proxy.$t('menuPage.childrenCount', { count }) : menu.path || proxy.$t('menuPage.noRoute')
+    }
+
+    const getMenuDisplayName = (menu) => resolveMenuDisplayName(menu, dynamicResources.value)
+
+    const loadDynamicResources = async () => {
+      try {
+        const { data: res } = await getLanguageResourceValues(getCurrentLanguage())
+        dynamicResources.value = res?.success && res.data ? res.data : {}
+      } catch {
+        dynamicResources.value = {}
+      }
+    }
+
+    const handleLanguageChanged = async () => {
+      await loadDynamicResources()
+      updateMenuOptions()
     }
 
     const setAllRowsExpanded = async (expanded) => {
@@ -355,20 +398,35 @@ export default {
       return normalizedPath.startsWith('custom/') ? normalizedPath : ''
     }
 
+    const buildMenuOptionTree = (menus) =>
+      (menus || []).map((menu) => ({
+        ...menu,
+        displayName: getMenuDisplayName(menu),
+        children: buildMenuOptionTree(menu.children || [])
+      }))
+
     const updateMenuOptions = () => {
-      menuOptions.value = [{ id: 0, menuName: '主类目', children: [...menuList.value] }]
+      menuOptions.value = [
+        {
+          id: 0,
+          menuName: proxy.$t('menuPage.root'),
+          displayName: proxy.$t('menuPage.root'),
+          children: buildMenuOptionTree(menuList.value)
+        }
+      ]
     }
 
     // 获取菜单列表
     const getMenuList = async () => {
       const loading = proxy.$loading({
         lock: true,
-        text: '加载中...',
+        text: proxy.$t('menuPage.loading'),
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
 
       try {
+        await loadDynamicResources()
         // 使用正确的Menu/GetMenu接口获取菜单列表
         const { data: res } = await getMenu()
         if (res.success) {
@@ -378,10 +436,10 @@ export default {
           updateMenuOptions()
           bindTableDrag()
         } else {
-          proxy.$message.error('获取菜单列表失败')
+          proxy.$message.error(proxy.$t('menuPage.loadFailed'))
         }
       } catch (error) {
-        proxy.$message.error('获取菜单列表失败：' + error.message)
+        proxy.$message.error(`${proxy.$t('menuPage.loadFailed')}：${error.message}`)
       } finally {
         loading.close()
       }
@@ -395,6 +453,7 @@ export default {
         id: item.id,
         parentId: item.pid || item.parentId,
         menuName: item.MenuName || item.menuName,
+        i18nKey: item.I18nKey || item.i18nKey || '',
         menuType: inferMenuType(item),
         path: item.path || item.MenuPath || '',
         orderNum: item.order || item.Order || 0,
@@ -502,6 +561,7 @@ export default {
         formData.append('ItemId', menu.id)
         formData.append('Pid', menu.parentId || 0)
         formData.append('MenuName', menu.menuName || '')
+        formData.append('I18nKey', menu.i18nKey || '')
         formData.append('MenuPath', menu.path || '')
         formData.append('Order', orderNum)
         formData.append('Icon', menu.icon || '')
@@ -526,7 +586,7 @@ export default {
       if (!source || !target) return
 
       if (String(source.parentId || 0) !== String(target.parentId || 0)) {
-        proxy.$message.warning('只能在同级菜单内拖拽排序')
+        proxy.$message.warning(proxy.$t('menuPage.sameLevelOnly'))
         return
       }
 
@@ -549,9 +609,9 @@ export default {
         await persistSiblingOrder(siblings, changedIds)
         updateMenuOptions()
         bindTableDrag()
-        proxy.$message.success('菜单排序已更新')
+        proxy.$message.success(proxy.$t('menuPage.sortSaved'))
       } catch (error) {
-        proxy.$message.error('菜单排序保存失败：' + (error.response?.data?.Msg || error.message))
+        proxy.$message.error(`${proxy.$t('menuPage.sortSaveFailed')}：${error.response?.data?.Msg || error.message}`)
         getMenuList()
       } finally {
         sortSaving.value = false
@@ -646,16 +706,17 @@ export default {
     const showAddChildDialog = (parentId) => {
       // 先检查是否超过层级限制
       if (isMenuLevelExceeded(parentId)) {
-        proxy.$message.warning('菜单最多只能添加到三级')
+        proxy.$message.warning(proxy.$t('menuPage.maxLevel'))
         return
       }
 
-      dialogTitle.value = '添加子菜单'
+      dialogTitle.value = proxy.$t('menuPage.addChildTitle')
       currentAction.value = 'add'
       editMenuParentId.value = 0
       Object.assign(addForm, {
         parentId: parentId,
         menuName: '',
+        i18nKey: '',
         menuType: '0',
         path: '',
         microAppPath: '',
@@ -671,12 +732,13 @@ export default {
 
     // 显示添加菜单对话框
     const showAddDialog = () => {
-      dialogTitle.value = '添加菜单'
+      dialogTitle.value = proxy.$t('menuPage.addTitle')
       currentAction.value = 'add'
       editMenuParentId.value = 0
       Object.assign(addForm, {
         parentId: 0,
         menuName: '',
+        i18nKey: '',
         menuType: '0',
         path: '',
         microAppPath: '',
@@ -692,7 +754,7 @@ export default {
 
     // 显示编辑菜单对话框
     const showEditDialog = (menu) => {
-      dialogTitle.value = '修改菜单'
+      dialogTitle.value = proxy.$t('menuPage.editTitle')
       currentAction.value = 'edit'
       editMenuId.value = menu.id
       editMenuParentId.value = menu.parentId || 0
@@ -700,6 +762,7 @@ export default {
       Object.assign(addForm, {
         parentId: menu.parentId || 0, // 确保parentId有默认值
         menuName: menu.menuName,
+        i18nKey: menu.i18nKey || '',
         menuType: menu.menuType || '0',
         path: menu.path,
         microAppPath: extractMicroAppPath(menu.path),
@@ -719,7 +782,7 @@ export default {
     const addMenu = async () => {
       const loading = proxy.$loading({
         lock: true,
-        text: '提交中...',
+        text: proxy.$t('menuPage.submitLoading'),
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
@@ -733,7 +796,7 @@ export default {
               : addForm.path
 
         if (!resolvedPath) {
-          proxy.$message.warning('请选择或填写菜单路由')
+          proxy.$message.warning(proxy.$t('menuPage.routeRequired'))
           return
         }
 
@@ -747,6 +810,7 @@ export default {
           const formData = new FormData()
           formData.append('MType', addForm.menuType)
           formData.append('MenuName', addForm.menuName)
+          formData.append('I18nKey', addForm.i18nKey || '')
           formData.append('Pid', addForm.parentId)
           formData.append('MenuPath', resolvedPath)
           formData.append('Order', resolvedOrder)
@@ -762,6 +826,7 @@ export default {
           formData.append('ItemId', editMenuId.value)
           formData.append('Pid', addForm.parentId)
           formData.append('MenuName', addForm.menuName)
+          formData.append('I18nKey', addForm.i18nKey || '')
 
           // 只有当path不为空时才添加到formData中
           if (resolvedPath !== null && resolvedPath !== undefined && resolvedPath !== '') {
@@ -786,17 +851,19 @@ export default {
 
         // 检查响应数据结构并正确处理成功/失败情况
         if (res.data.StateCode === 0 && res.data.success) {
-          proxy.$message.success(currentAction.value === 'add' ? '添加菜单成功' : '修改菜单成功')
+          proxy.$message.success(
+            currentAction.value === 'add' ? proxy.$t('menuPage.addSuccess') : proxy.$t('menuPage.editSuccess')
+          )
           addDialogVisible.value = false
           getMenuList()
         } else {
-          proxy.$message.error(res.data.msg || res.data.message || '操作失败')
+          proxy.$message.error(res.data.msg || res.data.message || proxy.$t('menuPage.operationFailed'))
         }
       } catch (error) {
         proxy.$message.error(
-          (currentAction.value === 'add' ? '添加' : '修改') +
-            '菜单失败：' +
-            (error.response?.data?.message || error.message)
+          `${currentAction.value === 'add' ? proxy.$t('menuPage.addFailed') : proxy.$t('menuPage.editFailed')}：${
+            error.response?.data?.message || error.message
+          }`
         )
       } finally {
         loading.close()
@@ -806,9 +873,9 @@ export default {
     // 删除菜单
     const removeMenu = async (id) => {
       try {
-        await proxy.$confirm('此操作将永久删除该菜单, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await proxy.$confirm(proxy.$t('menuPage.deleteConfirm'), proxy.$t('common.confirm'), {
+          confirmButtonText: proxy.$t('common.confirm'),
+          cancelButtonText: proxy.$t('common.cancel'),
           type: 'warning'
         })
 
@@ -820,15 +887,15 @@ export default {
 
         // 根据新的响应格式检查删除成功与否
         if (res.data.StateCode === 0 && res.data.success) {
-          proxy.$message.success(res.data.Msg || '删除菜单成功')
+          proxy.$message.success(res.data.Msg || proxy.$t('menuPage.deleteSuccess'))
           getMenuList()
         } else {
-          proxy.$message.error(res.data.Msg || '删除菜单失败')
+          proxy.$message.error(res.data.Msg || proxy.$t('menuPage.deleteFailed'))
         }
       } catch (error) {
         if (error !== 'cancel') {
           proxy.$message.error(
-            '删除菜单失败：' + (error.response?.data?.Msg || error.response?.data?.message || error.message)
+            `${proxy.$t('menuPage.deleteFailed')}：${error.response?.data?.Msg || error.response?.data?.message || error.message}`
           )
         }
       }
@@ -836,10 +903,12 @@ export default {
 
     onMounted(() => {
       getMenuList()
+      window.addEventListener('dt-language-changed', handleLanguageChanged)
     })
 
     onBeforeUnmount(() => {
       clearTableDrag()
+      window.removeEventListener('dt-language-changed', handleLanguageChanged)
     })
 
     return {
@@ -866,6 +935,7 @@ export default {
       getChildrenLabel,
       setAllRowsExpanded,
       getMenuRowClassName,
+      getMenuDisplayName,
       indexMethod,
       getMenuList,
       showAddDialog,

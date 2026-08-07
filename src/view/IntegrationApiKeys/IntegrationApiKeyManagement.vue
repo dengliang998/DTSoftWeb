@@ -3,12 +3,14 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>集成管理</h1>
-          <p>创建、禁用和维护外部系统访问密钥。</p>
+          <h1>{{ $t('apiKey.title') }}</h1>
+          <p>{{ $t('apiKey.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="getApiKeyList">刷新</el-button>
-          <el-button type="primary" :icon="Plus" @click="showAddDialog">创建密钥</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getApiKeyList">
+            {{ $t('common.refresh') }}
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddDialog">{{ $t('apiKey.create') }}</el-button>
         </div>
       </div>
 
@@ -16,7 +18,7 @@
         <el-input
           v-model="queryInfo.KeyName"
           class="dt-search"
-          placeholder="搜索密钥名称"
+          :placeholder="$t('apiKey.searchPlaceholder')"
           clearable
           @clear="getApiKeyList"
           @keyup.enter="getApiKeyList"
@@ -41,13 +43,17 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>密钥列表</strong>
-            <span>共 {{ apiKeyList.length }} 条</span>
+            <strong>{{ $t('apiKey.listTitle') }}</strong>
+            <span>{{ $t('apiKey.totalRows', { count: apiKeyList.length }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">全部 {{ apiKeyStats.total }}</span>
-            <span class="dt-chip dt-chip--success">启用 {{ apiKeyStats.enabled }}</span>
-            <span class="dt-chip dt-chip--warning">禁用 {{ apiKeyStats.disabled }}</span>
+            <span class="dt-chip">{{ $t('apiKey.allCount', { count: apiKeyStats.total }) }}</span>
+            <span class="dt-chip dt-chip--success">
+              {{ $t('organization.enabledCount', { count: apiKeyStats.enabled }) }}
+            </span>
+            <span class="dt-chip dt-chip--warning">
+              {{ $t('organization.disabledCount', { count: apiKeyStats.disabled }) }}
+            </span>
           </div>
         </div>
 
@@ -57,59 +63,61 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无 API Key"
+          :empty-text="$t('apiKey.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="密钥" prop="KeyName" min-width="220">
+          <el-table-column :label="$t('apiKey.key')" prop="KeyName" min-width="220">
             <template #default="scope">
               <span class="dt-name-copy">
                 <strong>{{ scope.row.KeyName }}</strong>
-                <small>{{ scope.row.Description || '未设置描述' }}</small>
+                <small>{{ scope.row.Description || $t('apiKey.noDescription') }}</small>
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="96" align="center">
+          <el-table-column :label="$t('common.status')" width="96" align="center">
             <template #default="scope">
               <span :class="['dt-badge', scope.row.Enabled ? 'dt-badge--success' : 'dt-badge--warning']">
-                {{ scope.row.Enabled ? '启用' : '禁用' }}
+                {{ scope.row.Enabled ? $t('common.enabled') : $t('common.disabled') }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="启用状态" width="110" align="center">
+          <el-table-column :label="$t('apiKey.enabledStatus')" width="110" align="center">
             <template #default="scope">
               <el-switch v-model="scope.row.Enabled" @change="handleStatusChange(scope.row)"></el-switch>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" width="180">
+          <el-table-column :label="$t('apiKey.createTime')" width="180">
             <template #default="scope">
               <code class="dt-code">{{ formatDate(scope.row.CreateTime) }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="过期时间" width="180">
+          <el-table-column :label="$t('apiKey.expireTime')" width="180">
             <template #default="scope">
-              <code class="dt-code">{{ scope.row.ExpireTime ? formatDate(scope.row.ExpireTime) : '永不过期' }}</code>
+              <code class="dt-code">
+                {{ scope.row.ExpireTime ? formatDate(scope.row.ExpireTime) : $t('apiKey.neverExpires') }}
+              </code>
             </template>
           </el-table-column>
-          <el-table-column label="创建人" prop="CreatedBy" width="120">
+          <el-table-column :label="$t('apiKey.creator')" prop="CreatedBy" width="120">
             <template #default="scope">
               <span class="dt-muted-pill">{{ scope.row.CreatedBy || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="108" fixed="right" align="right">
+          <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="right">
             <template #default="scope">
               <div class="dt-operation-buttons integration-api-key-actions">
-                <el-tooltip content="编辑密钥" placement="top">
+                <el-tooltip :content="$t('apiKey.edit')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--edit"
                     :icon="Edit"
                     @click="showEditDialog(scope.row)"
                   />
                 </el-tooltip>
-                <el-tooltip content="删除密钥" placement="top">
+                <el-tooltip :content="$t('apiKey.delete')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -123,13 +131,13 @@
       </div>
     </section>
 
-    <!-- 创建密钥对话框 -->
+    <!-- Create API key dialog -->
     <IntegrationApiKeyAddDialog v-model="addDialogVisible" :form="addForm" @created="onApiKeyCreated" />
 
-    <!-- 修改密钥对话框 -->
+    <!-- Edit API key dialog -->
     <IntegrationApiKeyEditDialog v-model="editDialogVisible" :form="editForm" @success="getApiKeyList" />
 
-    <!-- 显示SecretKey对话框 -->
+    <!-- SecretKey display dialog -->
     <IntegrationApiKeySecretDialog v-model="secretKeyDialogVisible" :data="secretKeyData" />
   </div>
 </template>
@@ -139,6 +147,7 @@ import { computed, defineComponent, reactive, ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { getApiKeyList, updateApiKey, deleteApiKey } from '@/api/integrationApiKeys'
+import { translate } from '@/i18n'
 import IntegrationApiKeyAddDialog from './components/IntegrationApiKeyAddDialog.vue'
 import IntegrationApiKeyEditDialog from './components/IntegrationApiKeyEditDialog.vue'
 import IntegrationApiKeySecretDialog from './components/IntegrationApiKeySecretDialog.vue'
@@ -155,17 +164,17 @@ export default defineComponent({
     const loading = ref(false)
     const apiKeyList = ref([])
 
-    // 查询参数
+    // Query parameters
     const queryInfo = reactive({
       KeyName: '',
       Enabled: undefined
     })
 
-    const enabledFilters = [
-      { label: '全部', value: undefined },
-      { label: '启用', value: true },
-      { label: '禁用', value: false }
-    ]
+    const enabledFilters = computed(() => [
+      { label: translate('apiKey.all'), value: undefined },
+      { label: translate('common.enabled'), value: true },
+      { label: translate('common.disabled'), value: false }
+    ])
 
     const apiKeyStats = computed(() =>
       apiKeyList.value.reduce(
@@ -182,7 +191,7 @@ export default defineComponent({
       )
     )
 
-    // 添加对话框
+    // Add dialog
     const addDialogVisible = ref(false)
     const addForm = reactive({
       KeyName: '',
@@ -190,7 +199,7 @@ export default defineComponent({
       ExpireTime: ''
     })
 
-    // 编辑对话框
+    // Edit dialog
     const editDialogVisible = ref(false)
     const editForm = reactive({
       ItemId: 0,
@@ -200,14 +209,14 @@ export default defineComponent({
       ExpireTime: ''
     })
 
-    // SecretKey显示对话框
+    // SecretKey display dialog
     const secretKeyDialogVisible = ref(false)
     const secretKeyData = reactive({
       KeyName: '',
       SecretKey: ''
     })
 
-    // 获取API密钥列表
+    // Load API key list
     const getApiKeyListData = async () => {
       loading.value = true
       try {
@@ -223,16 +232,16 @@ export default defineComponent({
         if (response.data.Code === 200) {
           apiKeyList.value = response.data.Data || []
         } else {
-          ElMessage.error(response.data.Message || '查询失败')
+          ElMessage.error(response.data.Message || translate('apiKey.queryFailed'))
         }
       } catch (error) {
-        ElMessage.error('查询失败：' + (error.response?.data?.Message || error.message))
+        ElMessage.error(`${translate('apiKey.queryFailed')}: ${error.response?.data?.Message || error.message}`)
       } finally {
         loading.value = false
       }
     }
 
-    // 显示添加对话框
+    // Show add dialog
     const showAddDialog = () => {
       addDialogVisible.value = true
     }
@@ -242,10 +251,10 @@ export default defineComponent({
       getApiKeyListData()
     }
 
-    // 添加对话框关闭
+    // Add dialog close
     // addDialogClosed handled by IntegrationApiKeyAddDialog component
 
-    // 创建API密钥
+    // Create API key
     const onApiKeyCreated = (resultData) => {
       secretKeyData.KeyName = resultData.KeyName
       secretKeyData.SecretKey = resultData.SecretKey
@@ -253,7 +262,7 @@ export default defineComponent({
       getApiKeyListData()
     }
 
-    // 显示编辑对话框
+    // Show edit dialog
     const showEditDialog = (row) => {
       editForm.ItemId = row.ItemId
       editForm.KeyName = row.KeyName
@@ -263,12 +272,12 @@ export default defineComponent({
       editDialogVisible.value = true
     }
 
-    // 编辑对话框关闭
+    // Edit dialog close
     // editDialogClosed handled by IntegrationApiKeyEditDialog component
 
-    // 更新API密钥
+    // Update API key
 
-    // 状态变更
+    // Status change
     const handleStatusChange = async (row) => {
       try {
         const data = {
@@ -284,46 +293,46 @@ export default defineComponent({
 
         const response = await updateApiKey(data)
         if (response.data.Code === 200) {
-          ElMessage.success(row.Enabled ? '已启用' : '已禁用')
+          ElMessage.success(row.Enabled ? translate('apiKey.enabled') : translate('apiKey.disabled'))
         } else {
-          ElMessage.error(response.data.Message || '更新失败')
-          // 恢复原状态
+          ElMessage.error(response.data.Message || translate('apiKey.updateFailed'))
+          // Restore previous status
           row.Enabled = !row.Enabled
         }
       } catch (error) {
-        ElMessage.error('更新失败：' + (error.response?.data?.Message || error.message))
-        // 恢复原状态
+        ElMessage.error(`${translate('apiKey.updateFailed')}: ${error.response?.data?.Message || error.message}`)
+        // Restore previous status
         row.Enabled = !row.Enabled
       }
     }
 
-    // 删除API密钥
+    // Delete API key
     const removeApiKey = async (itemId) => {
       try {
-        await ElMessageBox.confirm('此操作将永久删除该API密钥，是否继续？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(translate('apiKey.deleteConfirm'), translate('organization.prompt'), {
+          confirmButtonText: translate('common.confirm'),
+          cancelButtonText: translate('common.cancel'),
           type: 'warning'
         })
 
         const response = await deleteApiKey(itemId)
         if (response.data.Code === 200) {
-          ElMessage.success('删除成功')
+          ElMessage.success(translate('apiKey.deleteSuccess'))
           getApiKeyListData()
         } else {
-          ElMessage.error(response.data.Message || '删除失败')
+          ElMessage.error(response.data.Message || translate('apiKey.deleteFailed'))
         }
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败：' + (error.response?.data?.Message || error.message))
+          ElMessage.error(`${translate('apiKey.deleteFailed')}: ${error.response?.data?.Message || error.message}`)
         }
       }
     }
 
-    // 复制SecretKey
+    // Copy SecretKey
     // copySecretKey handled by IntegrationApiKeySecretDialog component
 
-    // 格式化日期
+    // Format date
     const formatDate = (dateStr) => {
       if (!dateStr) return ''
       const dt = new Date(dateStr)
@@ -336,7 +345,7 @@ export default defineComponent({
       return `${year}-${month}-${date} ${hour}:${minute}:${second}`
     }
 
-    // 索引方法
+    // Index method
     const indexMethod = (index) => {
       return index + 1
     }
@@ -404,7 +413,7 @@ export default defineComponent({
   }
 }
 
-// 确保日期选择器不被对话框裁剪
+// Keep the date picker visible inside the dialog.
 :deep(.el-dialog__wrapper) {
   overflow: visible;
 }

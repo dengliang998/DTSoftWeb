@@ -10,10 +10,12 @@
     <template #header>
       <div class="menu-auth-header">
         <div>
-          <div class="menu-auth-title">菜单权限配置</div>
-          <div class="menu-auth-subtitle">角色编码：{{ roleId || '-' }}</div>
+          <div class="menu-auth-title">{{ $t('rolePage.menuAuth.title') }}</div>
+          <div class="menu-auth-subtitle">{{ $t('rolePage.menuAuth.roleCode', { roleId: roleId || '-' }) }}</div>
         </div>
-        <el-tag type="info" effect="plain">已选 {{ selectedCount }} 项</el-tag>
+        <el-tag type="info" effect="plain">
+          {{ $t('rolePage.menuAuth.selectedCount', { count: selectedCount }) }}
+        </el-tag>
       </div>
     </template>
     <div class="menu-auth-panel">
@@ -21,21 +23,23 @@
         <el-input
           v-model="filterKeyword"
           clearable
-          placeholder="搜索已加载菜单"
+          :placeholder="$t('rolePage.menuAuth.searchPlaceholder')"
           prefix-icon="Search"
           class="menu-auth-search"
         ></el-input>
         <div class="menu-auth-actions">
-          <el-button size="small" icon="Expand" @click="expandAll">展开</el-button>
-          <el-button size="small" icon="Fold" @click="collapseAll">收起</el-button>
+          <el-button size="small" icon="Expand" @click="expandAll">{{ $t('menuPage.expand') }}</el-button>
+          <el-button size="small" icon="Fold" @click="collapseAll">{{ $t('menuPage.collapse') }}</el-button>
           <el-button class="menu-auth-clear-button" size="small" plain icon="Delete" @click="clearChecked">
-            清空
+            {{ $t('user.form.clear') }}
           </el-button>
         </div>
       </div>
       <div class="menu-auth-meta">
-        <span>菜单权限树</span>
-        <span v-if="halfCheckedMenuCount">半选 {{ halfCheckedMenuCount }} 项</span>
+        <span>{{ $t('rolePage.menuAuth.permissionTree') }}</span>
+        <span v-if="halfCheckedMenuCount">
+          {{ $t('rolePage.menuAuth.halfChecked', { count: halfCheckedMenuCount }) }}
+        </span>
       </div>
       <el-scrollbar class="menu-tree-scrollbar">
         <div class="menu-tree-surface">
@@ -49,7 +53,7 @@
             node-key="id"
             show-checkbox
             default-expand-all
-            empty-text="暂无菜单"
+            :empty-text="$t('rolePage.menuAuth.empty')"
             @check="syncStats"
           ></el-tree>
         </div>
@@ -57,10 +61,10 @@
     </div>
     <template #footer>
       <div class="menu-auth-footer">
-        <span>将保存 {{ selectedCount }} 个菜单权限节点</span>
+        <span>{{ $t('rolePage.menuAuth.willSave', { count: selectedCount }) }}</span>
         <div>
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" icon="Setting" @click="save">保存权限</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" icon="Setting" @click="save">{{ $t('rolePage.menuAuth.save') }}</el-button>
         </div>
       </div>
     </template>
@@ -138,7 +142,7 @@ export default {
           }
         })
       } catch (error) {
-        this.$message.error('数据初始化失败，请稍后重试！')
+        this.$message.error(`${this.$t('rolePage.initFailed')}，${this.$t('user.selector.retryLater')}！`)
       }
     },
     normalizeItems(menuList, parentId = 0) {
@@ -244,7 +248,7 @@ export default {
           }
         })
         .catch(function () {
-          me.$message.error('操作失败，请稍后重试！')
+          me.$message.error(`${me.$t('organization.operationFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     handleClose() {

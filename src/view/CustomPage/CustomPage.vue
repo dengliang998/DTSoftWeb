@@ -2,11 +2,11 @@
   <div class="custom-page-shell">
     <div v-if="loading" class="custom-page-state">
       <el-icon class="is-loading"><Loading /></el-icon>
-      <span>自定义页面加载中</span>
+      <span>{{ $t('customPage.loading') }}</span>
     </div>
 
     <el-empty v-else-if="error" :description="error">
-      <el-button type="primary" @click="loadPage">重试</el-button>
+      <el-button type="primary" @click="loadPage">{{ $t('customPage.retry') }}</el-button>
     </el-empty>
 
     <div v-show="!loading && !error" ref="mountPoint" class="custom-page-mount"></div>
@@ -63,7 +63,7 @@ export default {
         })
 
         if (!pageConfig) {
-          throw new Error('未找到自定义页面配置')
+          throw new Error(this.$t('customPage.notFound'))
         }
 
         this.pageConfig = pageConfig
@@ -110,10 +110,10 @@ export default {
         }
 
         if (!html) {
-          throw new Error('自定义页面需要提供 component、html、render 或 mount')
+          throw new Error(this.$t('customPage.invalidDefinition'))
         }
       } catch (error) {
-        this.error = error?.message || '自定义页面加载失败'
+        this.error = error?.message || this.$t('customPage.loadFailed')
         this.loading = false
       }
     }

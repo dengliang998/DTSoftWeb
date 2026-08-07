@@ -2,7 +2,7 @@
   <div class="user-info-panel">
     <!-- 内容主体区域 -->
     <el-form ref="UserFormRef" :model="UserForm" label-position="top" class="user-info-form">
-      <el-form-item label="头像" class="avatar-form-item">
+      <el-form-item :label="$t('user.form.avatar')" class="avatar-form-item">
         <el-upload
           class="avatar-uploader"
           :action="UploadActionUrl"
@@ -14,40 +14,48 @@
           <img v-if="imageUrl" :src="imageUrl" class="avatar" />
           <div v-else class="upload-placeholder">
             <i class="el-icon-plus avatar-uploader-icon"></i>
-            <span class="upload-text">点击上传</span>
+            <span class="upload-text">{{ $t('user.form.upload') }}</span>
           </div>
         </el-upload>
       </el-form-item>
-      <el-form-item label="账号">
-        <el-input v-model="UserForm.Account" :disabled="OpenType === 'Edit'" placeholder="请填写账号"></el-input>
+      <el-form-item :label="$t('user.form.account')">
+        <el-input
+          v-model="UserForm.Account"
+          :disabled="OpenType === 'Edit'"
+          :placeholder="$t('user.form.accountPlaceholder')"
+        ></el-input>
       </el-form-item>
-      <el-form-item label="用户名" prop="DisplayName">
-        <el-input v-model="UserForm.DisplayName" placeholder="请填写用户名"></el-input>
+      <el-form-item :label="$t('user.form.username')" prop="DisplayName">
+        <el-input v-model="UserForm.DisplayName" :placeholder="$t('user.form.usernamePlaceholder')"></el-input>
       </el-form-item>
-      <el-form-item v-if="OpenType === 'New'" label="密码" prop="PassWord">
-        <el-input v-model="UserForm.PassWord" show-password placeholder="请填写密码"></el-input>
+      <el-form-item v-if="OpenType === 'New'" :label="$t('user.form.password')" prop="PassWord">
+        <el-input
+          v-model="UserForm.PassWord"
+          show-password
+          :placeholder="$t('user.form.passwordPlaceholder')"
+        ></el-input>
       </el-form-item>
-      <el-form-item label="性别">
-        <el-radio v-model="UserForm.Sex" value="Male">男</el-radio>
-        <el-radio v-model="UserForm.Sex" value="Female">女</el-radio>
+      <el-form-item :label="$t('user.form.gender')">
+        <el-radio v-model="UserForm.Sex" value="Male">{{ $t('user.form.male') }}</el-radio>
+        <el-radio v-model="UserForm.Sex" value="Female">{{ $t('user.form.female') }}</el-radio>
       </el-form-item>
-      <el-form-item label="职位">
-        <el-input v-model="UserForm.Position" placeholder="请输入职位"></el-input>
+      <el-form-item :label="$t('user.form.position')">
+        <el-input v-model="UserForm.Position" :placeholder="$t('user.form.positionPlaceholder')"></el-input>
       </el-form-item>
-      <el-form-item label="邮箱">
-        <el-input v-model="UserForm.Email" placeholder="请输入邮箱"></el-input>
+      <el-form-item :label="$t('user.form.email')">
+        <el-input v-model="UserForm.Email" :placeholder="$t('user.form.emailPlaceholder')"></el-input>
       </el-form-item>
-      <el-form-item label="直属主管" class="supervisor-form-item">
+      <el-form-item :label="$t('user.form.supervisor')" class="supervisor-form-item">
         <div class="supervisor-row">
-          <el-input v-model="supervisorDisplay" readonly placeholder="请选择直属主管" />
-          <el-button type="primary" @click="openSupervisorPicker">选择</el-button>
-          <el-button @click="clearSupervisor">清空</el-button>
+          <el-input v-model="supervisorDisplay" readonly :placeholder="$t('user.form.supervisorPlaceholder')" />
+          <el-button type="primary" @click="openSupervisorPicker">{{ $t('user.form.select') }}</el-button>
+          <el-button @click="clearSupervisor">{{ $t('user.form.clear') }}</el-button>
         </div>
       </el-form-item>
     </el-form>
     <UserPickerDialog
       v-model="supervisorPickerVisible"
-      title="选择直属主管"
+      :title="$t('user.form.selectSupervisor')"
       :exclude-account="UserForm.Account"
       @select="onSupervisorSelected"
     />
@@ -135,11 +143,11 @@ export default {
       const imgtype = file.type // === "image/jpeg";
       const isLt2M = file.size / 1024 / 1024 < 2
       if (imgtype != 'image/jpeg' && imgtype != 'image/png' && imgtype != 'image/gif') {
-        this.$message.error('上传头像图片只能是 jpeg、gif、png 格式!')
+        this.$message.error(this.$t('user.form.avatarFormatError'))
         return false
       }
       if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 2MB!')
+        this.$message.error(this.$t('user.form.avatarSizeError'))
         return false
       }
     },
@@ -162,11 +170,11 @@ export default {
             //加载头像
             me.imageUrl = getUserAvatarUrl(Account).replace(/^\//, '')
           } else {
-            me.$message.error('用户获取失败：' + response.data.Msg)
+            me.$message.error(`${me.$t('user.form.getFailed')}：${response.data.Msg}`)
           }
         })
         .catch(function () {
-          me.$message.error('用户获取失败，请稍后重试！')
+          me.$message.error(me.$t('user.form.getFailedRetry'))
         })
     },
     // 修改用户信息保存提交
@@ -193,21 +201,21 @@ export default {
           modifyUserInfo(params)
             .then(function (response) {
               if (response.data.success) {
-                me.$message.success('更新用户信息成功')
+                me.$message.success(me.$t('user.form.updateSuccess'))
                 me.$emit('oncallback', res)
               } else {
-                me.$message.error('更新用户信息失败：' + response.data.Msg)
+                me.$message.error(`${me.$t('user.form.updateFailed')}：${response.data.Msg}`)
                 res.success = false
                 me.$emit('oncallback', res)
               }
             })
             .catch(function () {
-              me.$message.error('修改失败，请稍后重试！')
+              me.$message.error(me.$t('user.form.modifyFailedRetry'))
               res.success = false
               me.$emit('oncallback', res)
             })
         } else {
-          me.$message.error('表单内容不允许为空！')
+          me.$message.error(me.$t('user.form.required'))
           res.success = false
           me.$emit('oncallback', res)
         }
@@ -238,21 +246,21 @@ export default {
           createUser(params)
             .then(function (response) {
               if (response.data.success) {
-                me.$message.success('用户添加成功')
+                me.$message.success(me.$t('user.form.addSuccess'))
                 me.$emit('oncallback', res)
               } else {
-                me.$message.error('添加失败:' + response.data.Msg)
+                me.$message.error(`${me.$t('user.form.addFailed')}: ${response.data.Msg}`)
                 res.success = false
                 me.$emit('oncallback', res)
               }
             })
             .catch(function () {
-              me.$message.error('添加失败,请稍后重试!')
+              me.$message.error(me.$t('user.form.addFailedRetry'))
               res.success = false
               me.$emit('oncallback', res)
             })
         } else {
-          me.$message.error('表单内容不允许为空!')
+          me.$message.error(me.$t('user.form.required'))
           res.success = false
           me.$emit('oncallback', res)
         }

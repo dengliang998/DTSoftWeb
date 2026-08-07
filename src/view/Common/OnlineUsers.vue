@@ -3,11 +3,13 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>在线用户</h1>
-          <p>查看最近有操作记录的在线账号。</p>
+          <h1>{{ $t('onlineUsers.title') }}</h1>
+          <p>{{ $t('onlineUsers.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadOnlineUsers">刷新</el-button>
+          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadOnlineUsers">
+            {{ $t('common.refresh') }}
+          </el-button>
         </div>
       </div>
 
@@ -16,7 +18,7 @@
           v-model="keyword"
           class="dt-search"
           clearable
-          placeholder="搜索账号或姓名"
+          :placeholder="$t('onlineUsers.searchPlaceholder')"
           @keyup.enter="loadOnlineUsers"
         >
           <template #prefix>
@@ -28,12 +30,12 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>在线列表</strong>
-            <span>{{ filteredUsers.length }} / {{ total }} 人在线</span>
+            <strong>{{ $t('onlineUsers.listTitle') }}</strong>
+            <span>{{ $t('onlineUsers.onlineSummary', { shown: filteredUsers.length, total }) }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip dt-chip--success">最近 5 分钟有操作</span>
-            <span class="dt-chip">最近刷新 {{ lastRefreshText }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('onlineUsers.recentActive') }}</span>
+            <span class="dt-chip">{{ $t('onlineUsers.recentRefresh', { time: lastRefreshText }) }}</span>
           </div>
         </div>
 
@@ -43,14 +45,14 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无在线用户"
+          :empty-text="$t('onlineUsers.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="用户" prop="DisplayName" min-width="220" show-overflow-tooltip>
+          <el-table-column :label="$t('onlineUsers.user')" prop="DisplayName" min-width="220" show-overflow-tooltip>
             <template #default="{ row }">
               <div class="dt-name-cell">
                 <span class="dt-icon-shell online-user-icon">
@@ -63,14 +65,14 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="最后操作时间" prop="LastActiveTime" min-width="190">
+          <el-table-column :label="$t('onlineUsers.lastActiveTime')" prop="LastActiveTime" min-width="190">
             <template #default="{ row }">
               <code class="dt-code">{{ row.LastActiveTime || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="120" align="center">
+          <el-table-column :label="$t('common.status')" width="120" align="center">
             <template #default>
-              <span class="dt-badge dt-badge--success">在线</span>
+              <span class="dt-badge dt-badge--success">{{ $t('onlineUsers.online') }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -128,10 +130,12 @@ export default {
           this.total = res.Total || this.users.length
           this.lastRefreshTime = this.formatNow()
         } else {
-          this.$message.error('在线用户获取失败：' + (res?.Msg || res?.message || '未知错误'))
+          this.$message.error(
+            `${this.$t('onlineUsers.loadFailed')}：${res?.Msg || res?.message || this.$t('welcome.unknownError')}`
+          )
         }
       } catch (error) {
-        this.$message.error('在线用户获取失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('onlineUsers.loadFailed')}：${error?.message || error}`)
       } finally {
         this.loading = false
       }

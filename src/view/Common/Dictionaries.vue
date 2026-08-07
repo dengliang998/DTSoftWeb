@@ -3,12 +3,14 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>字典维护</h1>
-          <p>维护系统枚举分类和字典项，支持拖拽调整排序。</p>
+          <h1>{{ $t('dictionaryPage.title') }}</h1>
+          <p>{{ $t('dictionaryPage.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="refreshAll">刷新</el-button>
-          <el-button type="primary" :icon="Plus" @click="openTypeDialog()">新增分类</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="refreshAll">{{ $t('common.refresh') }}</el-button>
+          <el-button type="primary" :icon="Plus" @click="openTypeDialog()">
+            {{ $t('dictionaryPage.addType') }}
+          </el-button>
         </div>
       </div>
 
@@ -16,11 +18,11 @@
         <div class="dt-panel type-panel">
           <div class="dt-panel__header">
             <div>
-              <strong>字典分类</strong>
-              <span>{{ dictionaryTypes.length }} 个分类</span>
+              <strong>{{ $t('dictionaryPage.typeList') }}</strong>
+              <span>{{ $t('dictionaryPage.typeCount', { count: dictionaryTypes.length }) }}</span>
             </div>
             <div class="dt-panel__meta">
-              <span class="dt-chip">拖拽排序</span>
+              <span class="dt-chip">{{ $t('dictionaryPage.dragSort') }}</span>
             </div>
           </div>
 
@@ -28,7 +30,7 @@
             <el-input
               v-model="typeQuery.Keyword"
               clearable
-              placeholder="搜索编码或名称"
+              :placeholder="$t('dictionaryPage.typeSearchPlaceholder')"
               class="dt-search"
               @clear="loadTypes"
               @keyup.enter="loadTypes"
@@ -57,27 +59,34 @@
               @drop="onTypeDrop(index)"
               @dragend="onTypeDragEnd"
             >
-              <span class="type-drag-handle" title="拖拽排序" @click.stop>
+              <span class="type-drag-handle" :title="$t('dictionaryPage.dragSort')" @click.stop>
                 <el-icon><Rank /></el-icon>
               </span>
               <span class="type-name">{{ type.DictName }}</span>
               <span class="type-code">{{ type.DictCode }}</span>
-              <span class="type-count">{{ type.ItemCount || 0 }} 项</span>
+              <span class="type-count">{{ $t('dictionaryPage.itemCount', { count: type.ItemCount || 0 }) }}</span>
             </button>
-            <el-empty v-if="!typeLoading && dictionaryTypes.length === 0" description="暂无字典分类" />
+            <el-empty
+              v-if="!typeLoading && dictionaryTypes.length === 0"
+              :description="$t('dictionaryPage.emptyTypes')"
+            />
           </div>
         </div>
 
         <div class="dt-panel item-panel">
           <div class="dt-panel__header">
             <div>
-              <strong>{{ selectedType ? selectedType.DictName : '字典项' }}</strong>
-              <span>{{ selectedType ? selectedType.DictCode : '请选择左侧分类' }}</span>
+              <strong>{{ selectedType ? selectedType.DictName : $t('dictionaryPage.items') }}</strong>
+              <span>{{ selectedType ? selectedType.DictCode : $t('dictionaryPage.selectType') }}</span>
             </div>
             <div class="dt-panel__meta">
-              <span class="dt-chip">字典项 {{ dictionaryItems.length }}</span>
-              <span class="dt-chip dt-chip--success">启用 {{ itemStats.enabled }}</span>
-              <span class="dt-chip dt-chip--warning">禁用 {{ itemStats.disabled }}</span>
+              <span class="dt-chip">{{ $t('dictionaryPage.itemTotal', { count: dictionaryItems.length }) }}</span>
+              <span class="dt-chip dt-chip--success">
+                {{ $t('organization.enabledCount', { count: itemStats.enabled }) }}
+              </span>
+              <span class="dt-chip dt-chip--warning">
+                {{ $t('organization.disabledCount', { count: itemStats.disabled }) }}
+              </span>
             </div>
           </div>
 
@@ -86,7 +95,7 @@
               v-model="itemQuery.Keyword"
               clearable
               class="dt-search item-search"
-              placeholder="搜索标签、值或备注"
+              :placeholder="$t('dictionaryPage.itemSearchPlaceholder')"
               @clear="loadItems"
               @keyup.enter="loadItems"
             >
@@ -96,13 +105,13 @@
             </el-input>
             <div class="dt-toolbar-actions">
               <el-button class="dt-ghost-action" :disabled="!selectedType" @click="openTypeDialog(selectedType)">
-                编辑分类
+                {{ $t('dictionaryPage.editTypeButton') }}
               </el-button>
               <el-button class="dt-ghost-action danger-ghost" :disabled="!selectedType" @click="removeType">
-                删除分类
+                {{ $t('dictionaryPage.deleteTypeButton') }}
               </el-button>
               <el-button :disabled="!selectedType" type="primary" :icon="Plus" @click="openItemDialog()">
-                新增字典项
+                {{ $t('dictionaryPage.addItem') }}
               </el-button>
             </div>
           </div>
@@ -116,11 +125,11 @@
             row-key="ItemId"
             :row-class-name="itemRowClassName"
             class="table-wrapper dt-table"
-            empty-text="暂无字典项"
+            :empty-text="$t('dictionaryPage.emptyItems')"
           >
             <el-table-column label="" width="52" align="center">
               <template #default>
-                <el-icon class="item-drag-handle" title="拖拽排序"><Rank /></el-icon>
+                <el-icon class="item-drag-handle" :title="$t('dictionaryPage.dragSort')"><Rank /></el-icon>
               </template>
             </el-table-column>
             <el-table-column label="#" width="72" align="center">
@@ -128,49 +137,52 @@
                 <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="标签" prop="ItemLabel" min-width="160" show-overflow-tooltip>
+            <el-table-column :label="$t('dictionaryPage.label')" prop="ItemLabel" min-width="160" show-overflow-tooltip>
               <template #default="{ row }">
                 <span class="dt-name-copy">
                   <strong>{{ row.ItemLabel }}</strong>
-                  <small>{{ row.Remark || '未设置备注' }}</small>
+                  <small>{{ row.Remark || $t('dictionaryPage.noRemark') }}</small>
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="值" prop="ItemValue" min-width="160" show-overflow-tooltip>
+            <el-table-column :label="$t('dictionaryPage.value')" prop="ItemValue" min-width="160" show-overflow-tooltip>
               <template #default="{ row }">
                 <code class="dt-code">{{ row.ItemValue }}</code>
               </template>
             </el-table-column>
-            <el-table-column label="标签样式" prop="TagType" width="120">
+            <el-table-column :label="$t('dictionaryPage.tagType')" prop="TagType" width="120">
               <template #default="{ row }">
                 <span v-if="row.TagType" class="dt-badge dt-badge--neutral">{{ row.TagType }}</span>
-                <span v-else class="dt-muted-pill">默认</span>
+                <span v-else class="dt-muted-pill">{{ $t('dictionaryPage.defaultTag') }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="排序" prop="Sort" width="90">
+            <el-table-column :label="$t('common.sort')" prop="Sort" width="90">
               <template #default="{ row }">
                 <span class="dt-muted-pill">{{ row.Sort }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="状态" prop="Enabled" width="96" align="center">
+            <el-table-column :label="$t('common.status')" prop="Enabled" width="96" align="center">
               <template #default="{ row }">
                 <span :class="['dt-badge', row.Enabled ? 'dt-badge--success' : 'dt-badge--warning']">
-                  {{ row.Enabled ? '启用' : '禁用' }}
+                  {{ row.Enabled ? $t('common.enabled') : $t('common.disabled') }}
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="启用" prop="Enabled" width="90" align="center">
+            <el-table-column :label="$t('dictionaryPage.enabledColumn')" prop="Enabled" width="90" align="center">
               <template #default="{ row }">
                 <el-switch v-model="row.Enabled" @change="toggleItem(row)"></el-switch>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="108" fixed="right" align="right">
+            <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="right">
               <template #default="{ row }">
                 <div class="dt-operation-buttons dictionary-actions">
-                  <el-tooltip content="编辑字典项" placement="top">
+                  <el-tooltip :content="$t('dictionaryPage.editItem')" placement="top">
                     <el-button class="dt-icon-action dt-icon-action--edit" :icon="Edit" @click="openItemDialog(row)" />
                   </el-tooltip>
-                  <el-tooltip content="删除字典项" placement="top">
+                  <el-tooltip
+                    :content="$t('dictionaryPage.deleteItemConfirm', { name: row.ItemLabel })"
+                    placement="top"
+                  >
                     <el-button class="dt-icon-action dt-icon-action--danger" :icon="Delete" @click="removeItem(row)" />
                   </el-tooltip>
                 </div>
@@ -181,71 +193,83 @@
       </div>
     </section>
 
-    <el-dialog v-model="typeDialogVisible" :title="typeForm.ItemId ? '编辑字典分类' : '新增字典分类'" width="520px">
+    <el-dialog
+      v-model="typeDialogVisible"
+      :title="typeForm.ItemId ? $t('dictionaryPage.editType') : $t('dictionaryPage.addTypeTitle')"
+      width="520px"
+    >
       <el-form ref="typeFormRef" :model="typeForm" label-width="96px">
         <el-form-item
-          label="字典编码"
+          :label="$t('dictionaryPage.typeCode')"
           prop="DictCode"
-          :rules="[{ required: true, message: '请输入字典编码', trigger: 'blur' }]"
+          :rules="[{ required: true, message: $t('dictionaryPage.typeCodeRequired'), trigger: 'blur' }]"
         >
-          <el-input v-model="typeForm.DictCode" placeholder="例如：order_status"></el-input>
+          <el-input v-model="typeForm.DictCode" :placeholder="$t('dictionaryPage.typeCodePlaceholder')"></el-input>
         </el-form-item>
         <el-form-item
-          label="字典名称"
+          :label="$t('dictionaryPage.typeName')"
           prop="DictName"
-          :rules="[{ required: true, message: '请输入字典名称', trigger: 'blur' }]"
+          :rules="[{ required: true, message: $t('dictionaryPage.typeNameRequired'), trigger: 'blur' }]"
         >
-          <el-input v-model="typeForm.DictName" placeholder="请输入字典名称"></el-input>
+          <el-input v-model="typeForm.DictName" :placeholder="$t('dictionaryPage.typeNamePlaceholder')"></el-input>
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="$t('common.sort')">
           <el-input-number v-model="typeForm.Sort" :min="0" :max="9999"></el-input-number>
         </el-form-item>
-        <el-form-item label="启用">
+        <el-form-item :label="$t('common.enabled')">
           <el-switch v-model="typeForm.Enabled"></el-switch>
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="$t('dictionaryPage.description')">
           <el-input v-model="typeForm.Description" type="textarea" :rows="3" maxlength="500" show-word-limit></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="typeDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="savingType" @click="saveType">保存</el-button>
+        <el-button @click="typeDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="savingType" @click="saveType">{{ $t('common.save') }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="itemDialogVisible" :title="itemForm.ItemId ? '编辑字典项' : '新增字典项'" width="560px">
+    <el-dialog
+      v-model="itemDialogVisible"
+      :title="itemForm.ItemId ? $t('dictionaryPage.editItem') : $t('dictionaryPage.addItemTitle')"
+      width="560px"
+    >
       <el-form ref="itemFormRef" :model="itemForm" label-width="96px">
         <el-form-item
-          label="标签"
+          :label="$t('dictionaryPage.label')"
           prop="ItemLabel"
-          :rules="[{ required: true, message: '请输入标签', trigger: 'blur' }]"
+          :rules="[{ required: true, message: $t('dictionaryPage.itemLabelRequired'), trigger: 'blur' }]"
         >
-          <el-input v-model="itemForm.ItemLabel" placeholder="页面显示文本"></el-input>
+          <el-input v-model="itemForm.ItemLabel" :placeholder="$t('dictionaryPage.itemLabelPlaceholder')"></el-input>
         </el-form-item>
-        <el-form-item label="值" prop="ItemValue" :rules="[{ required: true, message: '请输入值', trigger: 'blur' }]">
-          <el-input v-model="itemForm.ItemValue" placeholder="控件提交值"></el-input>
+        <el-form-item
+          :label="$t('dictionaryPage.value')"
+          prop="ItemValue"
+          :rules="[{ required: true, message: $t('dictionaryPage.itemValueRequired'), trigger: 'blur' }]"
+        >
+          <el-input v-model="itemForm.ItemValue" :placeholder="$t('dictionaryPage.itemValuePlaceholder')"></el-input>
         </el-form-item>
-        <el-form-item label="标签样式">
-          <el-select v-model="itemForm.TagType" clearable placeholder="可选">
+        <el-form-item :label="$t('dictionaryPage.tagType')">
+          <el-select v-model="itemForm.TagType" clearable :placeholder="$t('dictionaryPage.optional')">
             <el-option label="success" value="success"></el-option>
             <el-option label="warning" value="warning"></el-option>
             <el-option label="danger" value="danger"></el-option>
             <el-option label="info" value="info"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="$t('common.sort')">
           <el-input-number v-model="itemForm.Sort" :min="0" :max="9999"></el-input-number>
         </el-form-item>
-        <el-form-item label="启用">
+        <el-form-item :label="$t('common.enabled')">
           <el-switch v-model="itemForm.Enabled"></el-switch>
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="$t('dictionaryPage.remark')">
           <el-input v-model="itemForm.Remark" type="textarea" :rows="3" maxlength="500" show-word-limit></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="itemDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="savingItem" @click="saveItem">保存</el-button>
+        <el-button @click="itemDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="savingItem" @click="saveItem">{{ $t('common.save') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -369,10 +393,10 @@ export default {
             this.dictionaryItems = []
           }
         } else {
-          this.$message.error(res.Msg || '字典分类获取失败')
+          this.$message.error(res.Msg || this.$t('dictionaryPage.typeLoadFailed'))
         }
       } catch (error) {
-        this.$message.error('字典分类获取失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.typeLoadFailed')}：${error?.message || error}`)
       } finally {
         this.typeLoading = false
       }
@@ -402,10 +426,10 @@ export default {
           this.dictionaryItems = res.data || []
           this.$nextTick(() => this.bindItemRowDragEvents())
         } else {
-          this.$message.error(res.Msg || '字典项获取失败')
+          this.$message.error(res.Msg || this.$t('dictionaryPage.itemLoadFailed'))
         }
       } catch (error) {
-        this.$message.error('字典项获取失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.itemLoadFailed')}：${error?.message || error}`)
       } finally {
         this.itemLoading = false
       }
@@ -420,14 +444,14 @@ export default {
       try {
         const { data: res } = await saveDictionaryType(this.typeForm)
         if (res.success) {
-          this.$message.success('保存成功')
+          this.$message.success(this.$t('language.saveSuccess'))
           this.typeDialogVisible = false
           await this.loadTypes()
         } else {
-          this.$message.error(res.Msg || '保存失败')
+          this.$message.error(res.Msg || this.$t('dictionaryPage.saveFailed'))
         }
       } catch (error) {
-        this.$message.error('保存失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.saveFailed')}：${error?.message || error}`)
       } finally {
         this.savingType = false
       }
@@ -435,20 +459,24 @@ export default {
     async removeType() {
       if (!this.selectedType) return
       try {
-        await this.$confirm(`确定删除字典“${this.selectedType.DictName}”及其所有字典项吗？`, '提示', {
-          type: 'warning'
-        })
+        await this.$confirm(
+          this.$t('dictionaryPage.deleteTypeConfirm', { name: this.selectedType.DictName }),
+          this.$t('organization.prompt'),
+          {
+            type: 'warning'
+          }
+        )
       } catch (error) {
         return
       }
 
       const { data: res } = await deleteDictionaryType(this.selectedType.ItemId)
       if (res.success) {
-        this.$message.success('删除成功')
+        this.$message.success(this.$t('language.deleteSuccess'))
         this.selectedType = null
         await this.loadTypes()
       } else {
-        this.$message.error(res.Msg || '删除失败')
+        this.$message.error(res.Msg || this.$t('language.deleteFailed'))
       }
     },
     openItemDialog(row) {
@@ -465,15 +493,15 @@ export default {
           DictCode: this.selectedType.DictCode
         })
         if (res.success) {
-          this.$message.success('保存成功')
+          this.$message.success(this.$t('language.saveSuccess'))
           this.itemDialogVisible = false
           await this.loadItems()
           await this.loadTypes()
         } else {
-          this.$message.error(res.Msg || '保存失败')
+          this.$message.error(res.Msg || this.$t('dictionaryPage.saveFailed'))
         }
       } catch (error) {
-        this.$message.error('保存失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.saveFailed')}：${error?.message || error}`)
       } finally {
         this.savingItem = false
       }
@@ -493,28 +521,32 @@ export default {
         if (res.success) return
 
         row.Enabled = !row.Enabled
-        this.$message.error(res.Msg || '状态更新失败')
+        this.$message.error(res.Msg || this.$t('dictionaryPage.statusUpdateFailed'))
       } catch (error) {
         row.Enabled = !row.Enabled
-        this.$message.error('状态更新失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.statusUpdateFailed')}：${error?.message || error}`)
       }
     },
     async removeItem(row) {
       try {
-        await this.$confirm(`确定删除字典项“${row.ItemLabel}”吗？`, '提示', {
-          type: 'warning'
-        })
+        await this.$confirm(
+          this.$t('dictionaryPage.deleteItemConfirm', { name: row.ItemLabel }),
+          this.$t('organization.prompt'),
+          {
+            type: 'warning'
+          }
+        )
       } catch (error) {
         return
       }
 
       const { data: res } = await deleteDictionaryItem(row.ItemId)
       if (res.success) {
-        this.$message.success('删除成功')
+        this.$message.success(this.$t('language.deleteSuccess'))
         await this.loadItems()
         await this.loadTypes()
       } else {
-        this.$message.error(res.Msg || '删除失败')
+        this.$message.error(res.Msg || this.$t('language.deleteFailed'))
       }
     },
     itemRowClassName() {
@@ -557,14 +589,14 @@ export default {
             Sort: type.Sort
           }))
         })
-        if (!res.success) throw new Error(res.Msg || '排序保存失败')
-        this.$message.success('排序已保存')
+        if (!res.success) throw new Error(res.Msg || this.$t('dictionaryPage.sortSaveFailed'))
+        this.$message.success(this.$t('dictionaryPage.sortSaved'))
       } catch (error) {
         this.dictionaryTypes = previousTypes
         this.selectedType = selectedTypeId
           ? this.dictionaryTypes.find((type) => type.ItemId === selectedTypeId) || null
           : this.selectedType
-        this.$message.error('排序保存失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.sortSaveFailed')}：${error?.message || error}`)
         await this.loadTypes()
       } finally {
         this.onTypeDragEnd()
@@ -667,11 +699,11 @@ export default {
             Sort: item.Sort
           }))
         })
-        if (!res.success) throw new Error(res.Msg || '排序保存失败')
-        this.$message.success('排序已保存')
+        if (!res.success) throw new Error(res.Msg || this.$t('dictionaryPage.sortSaveFailed'))
+        this.$message.success(this.$t('dictionaryPage.sortSaved'))
       } catch (error) {
         this.dictionaryItems = previousItems
-        this.$message.error('排序保存失败：' + (error?.message || error))
+        this.$message.error(`${this.$t('dictionaryPage.sortSaveFailed')}：${error?.message || error}`)
         await this.loadItems()
       } finally {
         this.clearItemDragState()

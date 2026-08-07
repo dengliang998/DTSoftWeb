@@ -1,18 +1,22 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog v-model="dialogVisible" title="修改角色" width="50%" @close="handleClose">
+  <el-dialog v-model="dialogVisible" :title="$t('rolePage.editRole')" width="50%" @close="handleClose">
     <el-form ref="formRef" :model="form" label-width="80px">
-      <el-form-item label="角色编号">
+      <el-form-item :label="$t('rolePage.roleCode')">
         <el-input v-model="form.id" disabled></el-input>
       </el-form-item>
-      <el-form-item label="角色名称" prop="RoleName" :rules="[{ required: true, message: '角色名称不能为空' }]">
+      <el-form-item
+        :label="$t('rolePage.roleName')"
+        prop="RoleName"
+        :rules="[{ required: true, message: $t('rolePage.roleNameRequired') }]"
+      >
         <el-input v-model="form.RoleName"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submit">确 定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submit">{{ $t('common.confirm') }}</el-button>
       </span>
     </template>
   </el-dialog>
@@ -51,13 +55,13 @@ export default {
             if (response.data.success) {
               me.dialogVisible = false
               me.$emit('success')
-              me.$message.success('更新角色信息成功')
+              me.$message.success(me.$t('rolePage.updateSuccess'))
             } else {
-              me.$message.error('更新角色信息失败：' + response.data.Msg)
+              me.$message.error(`${me.$t('rolePage.updateFailed')}：${response.data.Msg}`)
             }
           })
           .catch(function () {
-            me.$message.error('修改失败，请稍后重试！')
+            me.$message.error(`${me.$t('rolePage.modifyFailed')}，${me.$t('user.selector.retryLater')}！`)
           })
       })
     }

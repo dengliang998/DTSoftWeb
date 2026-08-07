@@ -18,9 +18,11 @@
         :width="column.width || undefined"
         show-overflow-tooltip
       ></el-table-column>
-      <el-table-column v-if="mode === 'field'" label="操作" width="80" fixed="right">
+      <el-table-column v-if="mode === 'field'" :label="$t('common.actions')" width="80" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" size="small" @click="$emit('select-row', row)">选择</el-button>
+          <el-button type="primary" size="small" @click="$emit('select-row', row)">
+            {{ $t('microRuntime.selectData') }}
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -35,8 +37,10 @@
     </div>
     <template v-if="mode === 'subTable'" #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="selectedCount === 0" @click="$emit('confirm')">确定选择</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :disabled="selectedCount === 0" @click="$emit('confirm')">
+          {{ $t('microRuntime.confirmSelection') }}
+        </el-button>
       </span>
     </template>
   </el-dialog>
@@ -47,7 +51,7 @@ export default {
   name: 'MicroAppLookupDialog',
   props: {
     modelValue: { type: Boolean, default: false },
-    title: { type: String, default: '开窗查询' },
+    title: { type: String, default: '' },
     loading: { type: Boolean, default: false },
     rows: { type: Array, default: () => [] },
     columns: { type: Array, default: () => [] },

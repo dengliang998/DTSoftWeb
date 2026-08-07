@@ -28,7 +28,7 @@
             <el-icon v-if="item.Icon">
               <component :is="getIconComponent(item.Icon)" />
             </el-icon>
-            <span>{{ item.MenuName }}</span>
+            <span>{{ getMenuDisplayName(item) }}</span>
           </el-menu-item>
         </el-menu>
       </div>
@@ -38,8 +38,8 @@
           type="button"
           class="theme-toggle"
           :class="{ 'is-animating': themeAnimating }"
-          :aria-label="currentAppearance === 'dark' ? '切换到日间模式' : '切换到夜间模式'"
-          :title="currentAppearance === 'dark' ? '切换到日间模式' : '切换到夜间模式'"
+          :aria-label="currentAppearance === 'dark' ? $t('theme.switchToLight') : $t('theme.switchToDark')"
+          :title="currentAppearance === 'dark' ? $t('theme.switchToLight') : $t('theme.switchToDark')"
           @click="toggleAppearance"
         >
           <transition name="theme-icon" mode="out-in">
@@ -49,6 +49,24 @@
             </el-icon>
           </transition>
         </button>
+        <el-dropdown trigger="click" popper-class="language-menu-popper" @command="handleLanguageChange">
+          <button type="button" class="language-trigger" :title="$t('language.switchLabel')">
+            <span>{{ currentLanguageLabel }}</span>
+            <el-icon class="user-arrow"><ArrowDown /></el-icon>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="item in enabledLanguages"
+                :key="item.LanguageCode"
+                :command="item.LanguageCode"
+                :disabled="item.LanguageCode === currentLanguage"
+              >
+                <span>{{ item.NativeName || item.LanguageName || item.LanguageCode }}</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <!-- 用户信息区域 -->
         <div class="header-user-info">
           <el-dropdown trigger="click" popper-class="user-menu-popper" @command="handleCommand">
@@ -63,15 +81,15 @@
               <el-dropdown-menu>
                 <el-dropdown-item command="ModifyPwdDialog">
                   <el-icon><Lock /></el-icon>
-                  <span>修改密码</span>
+                  <span>{{ $t('user.changePassword') }}</span>
                 </el-dropdown-item>
                 <el-dropdown-item command="ModifyAccountInfoDialog">
                   <el-icon><User /></el-icon>
-                  <span>账号信息</span>
+                  <span>{{ $t('user.profile') }}</span>
                 </el-dropdown-item>
                 <el-dropdown-item command="logout" divided>
                   <el-icon><SwitchButton /></el-icon>
-                  <span>退出登录</span>
+                  <span>{{ $t('user.logout') }}</span>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -103,7 +121,7 @@
                 <el-icon v-if="item.Icon">
                   <component :is="getIconComponent(item.Icon)" />
                 </el-icon>
-                <span>{{ item.MenuName }}</span>
+                <span>{{ getMenuDisplayName(item) }}</span>
               </template>
 
               <!-- 子菜单项 -->
@@ -117,7 +135,7 @@
                   <component :is="getIconComponent(subItem.Icon)" />
                 </el-icon>
                 <template #title>
-                  <span>{{ subItem.MenuName }}</span>
+                  <span>{{ getMenuDisplayName(subItem) }}</span>
                 </template>
               </el-menu-item>
             </el-sub-menu>
@@ -128,7 +146,7 @@
                 <component :is="getIconComponent(item.Icon)" />
               </el-icon>
               <template #title>
-                <span>{{ item.MenuName }}</span>
+                <span>{{ getMenuDisplayName(item) }}</span>
               </template>
             </el-menu-item>
           </template>
@@ -171,13 +189,13 @@
     <ModifyPwdDialog v-model="ModifyPwdDialogVisible" :form="ModifyPwdForm" @success="ModifyPwdDialogVisible = false" />
 
     <!-- 修改用户的对话框 -->
-    <el-dialog v-model="UserDialogVisible" title="修改用户信息" width="50%" @close="UserDialogClosed">
+    <el-dialog v-model="UserDialogVisible" :title="$t('user.profile')" width="50%" @close="UserDialogClosed">
       <UserInfo-components ref="UserInfo" :Account="LoginAcc" OpenType="Edit"></UserInfo-components>
       <!-- 底部区域 -->
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="UserDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="UpdateUserInfo">确 定</el-button>
+          <el-button @click="UserDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="UpdateUserInfo">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -194,6 +212,7 @@ import {
   filterHiddenMenus,
   findFirstNavigableMenu,
   findChildrenByMenuId,
+  getMenuDisplayName as resolveMenuDisplayName,
   getIconComponent,
   getMenuTitleByPath,
   getRootMenus,
@@ -217,6 +236,8 @@ import {
   getCachedSystemName,
   toggleUserAppearance
 } from '@/utils/sysConfig'
+import { getEnabledLanguages, getLanguageResourceValues } from '@/api/language'
+import { cacheEnabledLanguages, getCurrentLanguage, i18nState, setLanguage } from '@/i18n'
 import defaultHomeLogo from '@/assets/imgs/homelogo.png'
 export default {
   name: 'Home',
@@ -239,6 +260,9 @@ export default {
       UserDisplayName: '',
       circleUrl: '',
       currentAppearance: getCachedAppearance(),
+      currentLanguage: getCurrentLanguage(),
+      enabledLanguages: i18nState.enabledLanguages,
+      dynamicResources: {},
       themeAnimating: false,
       themeAnimationTimer: null,
       //完整的菜单数据存放的位置
@@ -265,6 +289,12 @@ export default {
       activeTab: ''
     }
   },
+  computed: {
+    currentLanguageLabel() {
+      const current = this.enabledLanguages.find((item) => item.LanguageCode === this.currentLanguage)
+      return current?.NativeName || current?.LanguageName || this.currentLanguage
+    }
+  },
   watch: {
     // 监听路由变化，自动添加标签页
     $route(to) {
@@ -285,6 +315,7 @@ export default {
       .catch(() => {})
 
     // 在创建的生命周期执行获取菜单操作
+    this.loadEnabledLanguages()
     this.getAllMenuList()
     // 在创建生命周期函数的时候获取保存的路径并赋值到数据中
     //this.activePath = window.sessionStorage.getItem('activePath')
@@ -304,6 +335,9 @@ export default {
   methods: {
     getCacheNameByPath(path) {
       return getCacheNameByPath(this.$router, path)
+    },
+    getMenuDisplayName(menu) {
+      return resolveMenuDisplayName(menu, this.dynamicResources)
     },
     refreshOpenedTabsTitles() {
       if (!Array.isArray(this.openedTabs) || this.openedTabs.length === 0) return
@@ -327,6 +361,34 @@ export default {
         this.UserDialogVisible = true
       }
     },
+    async loadEnabledLanguages() {
+      try {
+        const { data: res } = await getEnabledLanguages()
+        if (res?.success && Array.isArray(res.data)) {
+          cacheEnabledLanguages(res.data)
+          this.enabledLanguages = i18nState.enabledLanguages
+          this.currentLanguage = i18nState.language
+        }
+      } catch {
+        this.enabledLanguages = i18nState.enabledLanguages
+      }
+    },
+    async loadDynamicResources() {
+      try {
+        const { data: res } = await getLanguageResourceValues(this.currentLanguage)
+        this.dynamicResources = res?.success && res.data ? res.data : {}
+      } catch {
+        this.dynamicResources = {}
+      }
+    },
+    async handleLanguageChange(language) {
+      if (!language || language === this.currentLanguage) return
+      setLanguage(language)
+      this.currentLanguage = i18nState.language
+      this.enabledLanguages = i18nState.enabledLanguages
+      await this.loadDynamicResources()
+      this.refreshOpenedTabsTitles()
+    },
     // 退出登录
     logout() {
       logoutAndClearSession()
@@ -340,7 +402,7 @@ export default {
         this.UserDisplayName = profile.displayName
         this.circleUrl = profile.avatarUrl
       } catch (e) {
-        this.$message.error('用户信息初始化失败，请稍后重试！')
+        this.$message.error(this.$t('user.loadFailed'))
       }
     },
 
@@ -354,6 +416,7 @@ export default {
     // 获取所有菜单数据
     async getAllMenuList() {
       const me = this
+      await this.loadDynamicResources()
       getMenu()
         .then(function (response) {
           const menuData = response.data.data || response.data
@@ -386,7 +449,7 @@ export default {
           })
         })
         .catch(function () {
-          me.$message.error('获取菜单数据失败，请稍后重试！')
+          me.$message.error(me.$t('menuPage.loadFailed'))
         })
     },
 
@@ -466,7 +529,7 @@ export default {
 
     // 根据路径获取菜单标题
     getMenuTitleByPath(path) {
-      return getMenuTitleByPath(this.menuList, path)
+      return getMenuTitleByPath(this.menuList, path, this.dynamicResources)
     },
 
     // 处理标签页点击
@@ -1901,6 +1964,36 @@ export default {
 
 .user-trigger:hover,
 .user-trigger:focus-visible {
+  color: var(--dt-top-hover-text);
+  background: color-mix(in srgb, var(--dt-top-hover-bg) 86%, transparent);
+  border-color: color-mix(in srgb, var(--dt-top-hover-text) 32%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dt-top-hover-text) 14%, transparent);
+}
+
+.language-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 78px;
+  padding: 0 11px;
+  color: var(--dt-top-text);
+  background: color-mix(in srgb, var(--dt-top-text) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dt-top-text) 16%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.language-trigger:hover,
+.language-trigger:focus-visible {
   color: var(--dt-top-hover-text);
   background: color-mix(in srgb, var(--dt-top-hover-bg) 86%, transparent);
   border-color: color-mix(in srgb, var(--dt-top-hover-text) 32%, transparent);

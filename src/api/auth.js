@@ -1,7 +1,9 @@
 import http from './http'
 import { getData, getMessage, getPayload, isSuccessPayload } from '@/core/response'
+import { translate } from '@/i18n'
 
-const LOGIN_DECRYPTION_FAILED_MESSAGE = '登录参数解密失败，请刷新页面后重试'
+const LOGIN_DECRYPTION_FAILED_MESSAGE =
+  '\u767b\u5f55\u53c2\u6570\u89e3\u5bc6\u5931\u8d25\uff0c\u8bf7\u5237\u65b0\u9875\u9762\u540e\u91cd\u8bd5'
 
 let loginEncryptionKey = null
 let loginEncryptionKeyRequest = null
@@ -10,7 +12,7 @@ const getCrypto = () => {
   const cryptoApi = typeof window !== 'undefined' ? window.crypto : null
 
   if (!cryptoApi?.subtle) {
-    throw new Error('当前浏览器环境不支持登录加密，请使用 HTTPS 或现代浏览器后重试')
+    throw new Error(translate('auth.cryptoUnsupported'))
   }
 
   return cryptoApi
@@ -38,7 +40,10 @@ const arrayBufferToBase64 = (buffer) => {
   return window.btoa(binary)
 }
 
-const isLoginDecryptionFailed = (response) => getMessage(response) === LOGIN_DECRYPTION_FAILED_MESSAGE
+const isLoginDecryptionFailed = (response) => {
+  const message = getMessage(response)
+  return message === translate('auth.loginDecryptionFailed') || message === LOGIN_DECRYPTION_FAILED_MESSAGE
+}
 
 export const loadLoginEncryptionKey = ({ force = false } = {}) => {
   if (loginEncryptionKey && !force) {
@@ -57,7 +62,7 @@ export const loadLoginEncryptionKey = ({ force = false } = {}) => {
       const keyId = data.KeyId || data.keyId
 
       if (!publicKey || !keyId) {
-        throw new Error('登录加密公钥数据不完整，请刷新页面后重试')
+        throw new Error(translate('auth.publicKeyIncomplete'))
       }
 
       const key = await getCrypto().subtle.importKey(

@@ -1,4 +1,5 @@
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { translate } from '@/i18n'
 
 export const toPascalCase = (name) =>
   String(name)
@@ -54,6 +55,37 @@ export const flattenMenus = (menus = []) => {
   return flatMenus
 }
 
+const menuKeyByPath = {
+  welcome: 'menu.welcome',
+  'user/organization': 'menu.organizationList',
+  'role/rolesmenu': 'menu.roles',
+  'common/systemsettings': 'menu.systemSettings',
+  'common/systeminfo': 'menu.systemInfo',
+  'common/onlineusers': 'menu.onlineUsers',
+  'log/logaction': 'menu.systemLog',
+  'common/dictionaries': 'menu.dictionaries',
+  'attachment/attachmentlist': 'menu.attachments',
+  'common/menus': 'menu.menus',
+  'common/languages': 'menu.languages',
+  'MicroApp/MicroApiConfig': 'menu.microAppConfig',
+  'common/esb-connections': 'menu.esbConnections',
+  'common/esb': 'menu.esbDataSources',
+  'integration/api-keys': 'menu.apiKeys'
+}
+
+export const getMenuDisplayName = (menu = {}, dynamicResources = {}) => {
+  const i18nKey = String(menu.I18nKey || menu.i18nKey || '').trim()
+  if (i18nKey && dynamicResources[i18nKey]) return dynamicResources[i18nKey]
+  if (i18nKey) {
+    const translated = translate(i18nKey)
+    if (translated !== i18nKey) return translated
+  }
+
+  const key = menuKeyByPath[String(menu.path || menu.MenuPath || '').replace(/^\/+/, '')]
+  if (key) return translate(key)
+  return menu.MenuName || menu.menuName || translate('tabs.unnamed')
+}
+
 export const getRootMenus = (menus = []) => menus.filter((item) => item.pid === 0)
 
 export const toRoutePath = (menuPath = '') => {
@@ -75,11 +107,11 @@ export const findFirstNavigableMenu = (menus = []) => {
   return null
 }
 
-export const getMenuTitleByPath = (menus = [], path = '') => {
+export const getMenuTitleByPath = (menus = [], path = '', dynamicResources = {}) => {
   const cleanPath = path.startsWith('/') ? path.substring(1) : path
 
   const found = flattenMenus(menus).find((menu) => menu.path === cleanPath)
-  return found ? found.MenuName || found.menuName || '未命名' : '页面'
+  return found ? getMenuDisplayName(found, dynamicResources) : translate('tabs.page')
 }
 
 export const findChildrenByMenuId = (menus = [], menuId) => {

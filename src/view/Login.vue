@@ -1,7 +1,7 @@
 <template>
   <div class="login_container" :style="loginContainerStyle">
     <div class="login_shell">
-      <section class="login_brand" aria-label="系统信息">
+      <section class="login_brand" :aria-label="$t('login.systemAria')">
         <div class="brand_panel">
           <div class="brand_copy">
             <div class="login_brand-title">{{ systemName }}</div>
@@ -9,15 +9,15 @@
         </div>
       </section>
 
-      <section class="login_box" aria-label="账号登录">
+      <section class="login_box" :aria-label="$t('login.loginAria')">
         <div class="login_box-header">
           <div>
-            <h1>账号登录</h1>
-            <p>使用工作台账号继续</p>
+            <h1>{{ $t('login.title') }}</h1>
+            <p>{{ $t('login.subtitle') }}</p>
           </div>
           <!-- 头像区域 -->
           <div class="avatar_box">
-            <img :src="avatarUrl" alt="用户头像" @error="onAvatarError" />
+            <img :src="avatarUrl" :alt="$t('login.avatarAlt')" @error="onAvatarError" />
           </div>
         </div>
 
@@ -25,14 +25,18 @@
         <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">
           <!-- 用户名 -->
           <el-form-item prop="username">
-            <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User"></el-input>
+            <el-input
+              v-model="loginForm.username"
+              :placeholder="$t('login.usernamePlaceholder')"
+              prefix-icon="User"
+            ></el-input>
           </el-form-item>
           <!-- 密码 -->
           <el-form-item prop="password">
             <el-input
               v-model="loginForm.password"
               type="password"
-              placeholder="请输入密码"
+              :placeholder="$t('login.passwordPlaceholder')"
               prefix-icon="Lock"
               show-password
               @keyup.enter="login"
@@ -44,7 +48,7 @@
               <el-input
                 v-model="loginForm.captchaCode"
                 maxlength="4"
-                placeholder="请输入验证码"
+                :placeholder="$t('login.captchaPlaceholder')"
                 prefix-icon="Key"
                 autocomplete="off"
                 @input="formatCaptchaCode"
@@ -55,17 +59,19 @@
                 class="captcha-image"
                 :class="{ 'is-loading': captchaLoading }"
                 :disabled="captchaLoading"
-                title="点击刷新验证码"
+                :title="$t('login.captchaRefreshTitle')"
                 @click="loadCaptcha"
               >
-                <img v-if="captchaImage" :src="captchaImage" alt="验证码" />
-                <span v-else>刷新</span>
+                <img v-if="captchaImage" :src="captchaImage" :alt="$t('login.captchaAlt')" />
+                <span v-else>{{ $t('login.refreshCaptcha') }}</span>
               </button>
             </div>
           </el-form-item>
           <!-- 按钮 -->
           <el-form-item class="btns">
-            <el-button type="primary" class="login-btn" :loading="loggingIn" @click="login">登录</el-button>
+            <el-button type="primary" class="login-btn" :loading="loggingIn" @click="login">
+              {{ $t('login.submit') }}
+            </el-button>
           </el-form-item>
         </el-form>
 
@@ -90,6 +96,7 @@ import {
   getCachedSystemName,
   normalizeBase64Image
 } from '@/utils/sysConfig'
+import { translate } from '@/i18n'
 
 export default defineComponent({
   name: 'Login',
@@ -98,7 +105,7 @@ export default defineComponent({
     const route = useRoute()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
-    const systemName = ref(getCachedSystemName() || '管理工作台')
+    const systemName = ref(getCachedSystemName() || translate('login.defaultSystemName'))
     const captchaEnabled = ref(getCachedLoginCaptchaEnabled())
     const captchaImage = ref('')
     const captchaLoading = ref(false)
@@ -121,12 +128,16 @@ export default defineComponent({
 
     // 这是表单的验证规则
     const loginFormRules = computed(() => ({
-      username: [{ required: true, message: '请输入登录名称', trigger: 'blur' }],
-      password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }],
-      captchaCode: captchaEnabled.value ? [{ required: true, message: '请输入验证码', trigger: 'blur' }] : []
+      username: [{ required: true, message: translate('login.usernameRequired'), trigger: 'blur' }],
+      password: [{ required: true, message: translate('login.passwordRequired'), trigger: 'blur' }],
+      captchaCode: captchaEnabled.value
+        ? [{ required: true, message: translate('login.captchaRequired'), trigger: 'blur' }]
+        : []
     }))
 
-    const securityNote = computed(() => (captchaEnabled.value ? '加密传输 · 验证码保护' : '加密传输'))
+    const securityNote = computed(() =>
+      captchaEnabled.value ? translate('login.securityWithCaptcha') : translate('login.security')
+    )
 
     // 当头像加载失败时，使用默认头像
     const onAvatarError = () => {
@@ -176,7 +187,7 @@ export default defineComponent({
         .catch(() => {
           loginForm.captchaId = ''
           captchaImage.value = ''
-          ElMessage.error('验证码加载失败，请刷新后重试')
+          ElMessage.error(translate('login.captchaLoadFailed'))
         })
         .finally(() => {
           captchaLoading.value = false
@@ -196,15 +207,15 @@ export default defineComponent({
         if (!valid) return
 
         if (loginForm.username === '') {
-          ElMessage.error('用户名不能为空！')
+          ElMessage.error(translate('login.usernameEmpty'))
           return
         } else if (loginForm.password === '') {
-          ElMessage.error('密码不能为空！')
+          ElMessage.error(translate('login.passwordEmpty'))
           return
         }
 
         if (captchaEnabled.value && !loginForm.captchaId) {
-          ElMessage.error('请先获取验证码')
+          ElMessage.error(translate('login.captchaMissing'))
           loadCaptcha()
           return
         }
@@ -219,10 +230,10 @@ export default defineComponent({
         })
           .then(function (response) {
             if (isSuccessPayload(response)) {
-              ElMessage.success(getMessage(response, '登录成功'))
+              ElMessage.success(getMessage(response, translate('login.success')))
               const token = getLoginToken(response)
               if (!token) {
-                ElMessage.error('登录失败：服务端未返回有效令牌')
+                ElMessage.error(translate('login.missingToken'))
                 if (captchaEnabled.value) loadCaptcha()
                 return
               }
@@ -230,12 +241,14 @@ export default defineComponent({
               const redirect = Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect
               router.push(redirect || '/home')
             } else {
-              ElMessage.error('登录失败：' + getMessage(response, '未知错误'))
+              ElMessage.error(
+                `${translate('login.failedPrefix')}：${getMessage(response, translate('welcome.unknownError'))}`
+              )
               if (captchaEnabled.value) loadCaptcha()
             }
           })
           .catch(function (error) {
-            ElMessage.error(getMessage(error.response || error, '登录失败，请稍后重试！'))
+            ElMessage.error(getMessage(error.response || error, translate('login.failedRetry')))
             if (captchaEnabled.value) loadCaptcha()
           })
           .finally(function () {

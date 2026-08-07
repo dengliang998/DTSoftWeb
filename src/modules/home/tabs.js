@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from '@/constants/storage'
+import { translate } from '@/i18n'
 
 export const shouldSkipTab = (path) => path === '/login' || path === '/home'
 
@@ -37,7 +38,8 @@ export const upsertTab = ({ tabs, path, title, cacheName }) => {
   if (!existing.cacheName && cacheName) {
     existing.cacheName = cacheName
   }
-  if ((existing.title === '页面' || !existing.title) && title && title !== '页面') {
+  const pageTitle = translate('tabs.page')
+  if ((existing.title === pageTitle || !existing.title) && title && title !== pageTitle) {
     existing.title = title
   }
 }
@@ -49,7 +51,7 @@ export const refreshTabTitles = ({ tabs, getTitle, getCacheName }) =>
     const title = getTitle(tab.path)
     return {
       ...tab,
-      title: title && title !== '页面' ? title : tab.title,
+      title: title && title !== translate('tabs.page') ? title : tab.title,
       cacheName: tab.cacheName || getCacheName(tab.path)
     }
   })

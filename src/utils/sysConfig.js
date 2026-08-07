@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from '@/constants/storage'
 export const THEME_PRESETS = Object.freeze([
   {
     key: 'ocean',
-    name: '深海蓝',
+    nameKey: 'systemSettings.themePreset.ocean',
     colors: {
       primary: '#1890ff',
       primaryLight: '#40a9ff',
@@ -28,7 +28,7 @@ export const THEME_PRESETS = Object.freeze([
   },
   {
     key: 'workbenchGreen',
-    name: '工作台绿',
+    nameKey: 'systemSettings.themePreset.workbenchGreen',
     colors: {
       primary: '#0f766e',
       primaryLight: '#0f9f8f',
@@ -52,7 +52,7 @@ export const THEME_PRESETS = Object.freeze([
   },
   {
     key: 'emerald',
-    name: '松石绿',
+    nameKey: 'systemSettings.themePreset.emerald',
     colors: {
       primary: '#10b981',
       primaryLight: '#34d399',
@@ -76,7 +76,7 @@ export const THEME_PRESETS = Object.freeze([
   },
   {
     key: 'graphite',
-    name: '石墨金',
+    nameKey: 'systemSettings.themePreset.graphite',
     colors: {
       primary: '#d97706',
       primaryLight: '#f59e0b',
@@ -100,7 +100,7 @@ export const THEME_PRESETS = Object.freeze([
   },
   {
     key: 'rose',
-    name: '蔷薇红',
+    nameKey: 'systemSettings.themePreset.rose',
     colors: {
       primary: '#e11d48',
       primaryLight: '#fb7185',

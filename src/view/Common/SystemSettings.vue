@@ -3,45 +3,57 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>系统设置</h1>
-          <p>维护系统名称、登录视觉和后台主题配色。</p>
+          <h1>{{ $t('systemSettings.title') }}</h1>
+          <p>{{ $t('systemSettings.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadSystemInfo">刷新</el-button>
-          <el-button type="primary" :icon="Check" :loading="saving" @click="save">保存</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="loadSystemInfo">
+            {{ $t('common.refresh') }}
+          </el-button>
+          <el-button type="primary" :icon="Check" :loading="saving" @click="save">{{ $t('common.save') }}</el-button>
         </div>
       </div>
 
       <div class="dt-panel settings-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>设置项</strong>
+            <strong>{{ $t('systemSettings.panelTitle') }}</strong>
             <span>{{ form.systemName || 'DT Program' }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">基础信息</span>
-            <span class="dt-chip dt-chip--success">视觉标识</span>
-            <span class="dt-chip">主题</span>
+            <span class="dt-chip">{{ $t('systemSettings.baseInfo') }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('systemSettings.visualIdentity') }}</span>
+            <span class="dt-chip">{{ $t('systemSettings.theme') }}</span>
           </div>
         </div>
 
         <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="settings-form">
           <section class="settings-section">
-            <div class="section-title">基础信息</div>
-            <el-form-item label="系统名称" prop="systemName">
-              <el-input v-model="form.systemName" placeholder="请输入系统名称" maxlength="50" show-word-limit />
+            <div class="section-title">{{ $t('systemSettings.baseInfo') }}</div>
+            <el-form-item :label="$t('systemSettings.systemName')" prop="systemName">
+              <el-input
+                v-model="form.systemName"
+                :placeholder="$t('systemSettings.systemNamePlaceholder')"
+                maxlength="50"
+                show-word-limit
+              />
             </el-form-item>
-            <el-form-item label="登录验证码">
+            <el-form-item :label="$t('systemSettings.loginCaptcha')">
               <div class="switch-setting">
-                <el-switch v-model="form.loginCaptchaEnabled" active-text="启用" inactive-text="停用" inline-prompt />
-                <span class="hint">停用后登录页不显示验证码，登录接口也不校验验证码</span>
+                <el-switch
+                  v-model="form.loginCaptchaEnabled"
+                  :active-text="$t('common.enabled')"
+                  :inactive-text="$t('common.disabled')"
+                  inline-prompt
+                />
+                <span class="hint">{{ $t('systemSettings.loginCaptchaHint') }}</span>
               </div>
             </el-form-item>
           </section>
 
           <section class="settings-section">
-            <div class="section-title">视觉标识</div>
-            <el-form-item label="登录背景图">
+            <div class="section-title">{{ $t('systemSettings.visualIdentity') }}</div>
+            <el-form-item :label="$t('systemSettings.loginBackground')">
               <div class="upload-row">
                 <el-upload
                   class="upload"
@@ -52,22 +64,24 @@
                   :on-change="handleLoginImgChange"
                   :before-upload="beforeLoginImgUpload"
                 >
-                  <el-button type="primary">选择图片</el-button>
+                  <el-button type="primary">{{ $t('systemSettings.chooseImage') }}</el-button>
                 </el-upload>
 
-                <el-button :disabled="!selectedLoginImgFile" @click="clearSelectedLoginImg">清除已选</el-button>
-                <span class="hint">支持 JPG、PNG、WebP；不超过 {{ loginImgLimitText }}，不选则保留当前背景图</span>
+                <el-button :disabled="!selectedLoginImgFile" @click="clearSelectedLoginImg">
+                  {{ $t('systemSettings.clearSelected') }}
+                </el-button>
+                <span class="hint">{{ $t('systemSettings.loginImageHint', { size: loginImgLimitText }) }}</span>
               </div>
 
               <div class="preview">
-                <div class="preview-title">预览</div>
+                <div class="preview-title">{{ $t('systemSettings.preview') }}</div>
                 <div class="login-preview-box" :style="loginPreviewStyle">
-                  <div v-if="!loginPreviewUrl" class="preview-empty">暂无图片</div>
+                  <div v-if="!loginPreviewUrl" class="preview-empty">{{ $t('systemSettings.noImage') }}</div>
                 </div>
               </div>
             </el-form-item>
 
-            <el-form-item label="Tab 小 Logo">
+            <el-form-item :label="$t('systemSettings.browserLogo')">
               <div class="logo-setting">
                 <div class="upload-row">
                   <el-upload
@@ -79,11 +93,13 @@
                     :on-change="handleBrowserLogoChange"
                     :before-upload="beforeBrowserLogoUpload"
                   >
-                    <el-button type="primary">选择图片</el-button>
+                    <el-button type="primary">{{ $t('systemSettings.chooseImage') }}</el-button>
                   </el-upload>
 
-                  <el-button :disabled="!selectedBrowserLogoFile" @click="clearSelectedBrowserLogo">清除已选</el-button>
-                  <span class="hint">建议使用正方形 PNG、ICO、SVG 或 WebP；不超过 {{ browserLogoLimitText }}</span>
+                  <el-button :disabled="!selectedBrowserLogoFile" @click="clearSelectedBrowserLogo">
+                    {{ $t('systemSettings.clearSelected') }}
+                  </el-button>
+                  <span class="hint">{{ $t('systemSettings.browserLogoHint', { size: browserLogoLimitText }) }}</span>
                 </div>
 
                 <div class="favicon-preview">
@@ -105,15 +121,15 @@
           </section>
 
           <section class="settings-section">
-            <div class="section-title">系统主题</div>
-            <el-form-item label="主题模式">
+            <div class="section-title">{{ $t('systemSettings.systemTheme') }}</div>
+            <el-form-item :label="$t('systemSettings.themeMode')">
               <el-radio-group v-model="form.theme.mode" @change="handleThemeModeChange">
-                <el-radio-button label="preset">预设</el-radio-button>
-                <el-radio-button label="custom">自定义</el-radio-button>
+                <el-radio-button label="preset">{{ $t('systemSettings.preset') }}</el-radio-button>
+                <el-radio-button label="custom">{{ $t('systemSettings.custom') }}</el-radio-button>
               </el-radio-group>
             </el-form-item>
 
-            <el-form-item label="主题配色">
+            <el-form-item :label="$t('systemSettings.themeColors')">
               <div class="theme-panel">
                 <div class="preset-grid">
                   <button
@@ -124,7 +140,7 @@
                     :class="{ active: form.theme.preset === preset.key }"
                     @click="selectThemePreset(preset.key)"
                   >
-                    <span class="preset-name">{{ preset.name }}</span>
+                    <span class="preset-name">{{ $t(preset.nameKey) }}</span>
                     <span class="preset-swatches">
                       <span
                         v-for="color in getPresetSwatches(preset)"
@@ -240,44 +256,51 @@ export default defineComponent({
     const loginImgLimitText = '1MB'
     const browserLogoLimitText = '256KB'
 
-    const colorGroups = [
+    const colorGroups = computed(() => [
       {
-        title: '通用',
+        title: proxy.$t('systemSettings.general'),
         fields: [
-          { key: 'primary', label: '主色' },
-          { key: 'primaryLight', label: '亮色' },
-          { key: 'primaryDark', label: '深色' },
-          { key: 'pageBg', label: '页面背景' }
+          { key: 'primary', label: proxy.$t('systemSettings.primary') },
+          { key: 'primaryLight', label: proxy.$t('systemSettings.primaryLight') },
+          { key: 'primaryDark', label: proxy.$t('systemSettings.primaryDark') },
+          { key: 'pageBg', label: proxy.$t('systemSettings.pageBg') }
         ]
       },
       {
-        title: '顶部菜单栏',
+        title: proxy.$t('systemSettings.topMenu'),
         fields: [
-          { key: 'topBg', label: '背景' },
-          { key: 'topBorder', label: '边框' },
-          { key: 'topText', label: '文字' },
-          { key: 'topHoverBg', label: '悬停背景' },
-          { key: 'topHoverText', label: '悬停文字' },
-          { key: 'topActiveBg', label: '选中背景' },
-          { key: 'topActiveText', label: '选中文字' }
+          { key: 'topBg', label: proxy.$t('systemSettings.background') },
+          { key: 'topBorder', label: proxy.$t('systemSettings.border') },
+          { key: 'topText', label: proxy.$t('systemSettings.text') },
+          { key: 'topHoverBg', label: proxy.$t('systemSettings.hoverBg') },
+          { key: 'topHoverText', label: proxy.$t('systemSettings.hoverText') },
+          { key: 'topActiveBg', label: proxy.$t('systemSettings.activeBg') },
+          { key: 'topActiveText', label: proxy.$t('systemSettings.activeText') }
         ]
       },
       {
-        title: '左侧菜单列表',
+        title: proxy.$t('systemSettings.sideMenu'),
         fields: [
-          { key: 'sideBg', label: '背景' },
-          { key: 'sideBorder', label: '边框' },
-          { key: 'sideText', label: '文字' },
-          { key: 'sideHoverBg', label: '悬停背景' },
-          { key: 'sideHoverText', label: '悬停文字' },
-          { key: 'sideActiveBg', label: '选中背景' },
-          { key: 'sideActiveText', label: '选中文字' }
+          { key: 'sideBg', label: proxy.$t('systemSettings.background') },
+          { key: 'sideBorder', label: proxy.$t('systemSettings.border') },
+          { key: 'sideText', label: proxy.$t('systemSettings.text') },
+          { key: 'sideHoverBg', label: proxy.$t('systemSettings.hoverBg') },
+          { key: 'sideHoverText', label: proxy.$t('systemSettings.hoverText') },
+          { key: 'sideActiveBg', label: proxy.$t('systemSettings.activeBg') },
+          { key: 'sideActiveText', label: proxy.$t('systemSettings.activeText') }
         ]
       }
-    ]
+    ])
 
     const rules = {
-      systemName: [{ required: true, whitespace: true, message: '请输入系统名称', trigger: ['blur', 'change'] }]
+      systemName: [
+        {
+          required: true,
+          whitespace: true,
+          message: proxy.$t('systemSettings.systemNameRequired'),
+          trigger: ['blur', 'change']
+        }
+      ]
     }
 
     const loginPreviewUrl = computed(() => {
@@ -334,13 +357,16 @@ export default defineComponent({
 
       if (!allowedTypes.includes(fileType)) {
         proxy.$message.error(
-          `${label}格式不支持，请上传 JPG、PNG、WebP${label === 'Tab 小 Logo' ? '、ICO 或 SVG' : ''}`
+          proxy.$t('systemSettings.unsupportedFormat', {
+            label,
+            extra: label === proxy.$t('systemSettings.browserLogo') ? proxy.$t('systemSettings.iconExtraFormats') : ''
+          })
         )
         return false
       }
 
       if (rawFile.size > maxSize) {
-        proxy.$message.error(`${label}不能超过 ${maxSizeText}，请压缩后再上传`)
+        proxy.$message.error(proxy.$t('systemSettings.fileTooLarge', { label, size: maxSizeText }))
         return false
       }
 
@@ -353,7 +379,7 @@ export default defineComponent({
         allowedTypes: LOGIN_IMG_TYPES,
         maxSize: LOGIN_IMG_MAX_SIZE,
         maxSizeText: loginImgLimitText,
-        label: '登录背景图'
+        label: proxy.$t('systemSettings.loginBackground')
       })
 
     const validateBrowserLogoFile = (rawFile) =>
@@ -362,7 +388,7 @@ export default defineComponent({
         allowedTypes: BROWSER_LOGO_TYPES,
         maxSize: BROWSER_LOGO_MAX_SIZE,
         maxSizeText: browserLogoLimitText,
-        label: 'Tab 小 Logo'
+        label: proxy.$t('systemSettings.browserLogo')
       })
 
     const beforeLoginImgUpload = (rawFile) => validateLoginImgFile(rawFile)
@@ -445,7 +471,7 @@ export default defineComponent({
     const loadSystemInfo = async () => {
       const loading = proxy.$loading({
         lock: true,
-        text: '加载中...',
+        text: proxy.$t('systemSettings.loading'),
         background: 'rgba(0, 0, 0, 0.2)'
       })
       try {
@@ -463,10 +489,10 @@ export default defineComponent({
           clearSelectedLoginImg()
           clearSelectedBrowserLogo()
         } else {
-          proxy.$message.error('获取系统设置失败')
+          proxy.$message.error(proxy.$t('systemSettings.loadFailed'))
         }
       } catch (e) {
-        proxy.$message.error('获取系统设置失败：' + (e?.message || e))
+        proxy.$message.error(`${proxy.$t('systemSettings.loadFailed')}：${e?.message || e}`)
       } finally {
         loading.close()
       }
@@ -476,7 +502,7 @@ export default defineComponent({
       if (!formRef.value) return
       const valid = await formRef.value.validate().catch(() => false)
       if (!valid) {
-        proxy.$message.warning('请先填写系统名称')
+        proxy.$message.warning(proxy.$t('systemSettings.fillSystemName'))
         return
       }
 
@@ -494,16 +520,18 @@ export default defineComponent({
           ThemeConfig: serializeThemeConfig(form.theme)
         })
         if (res?.success) {
-          proxy.$message.success('保存成功')
+          proxy.$message.success(proxy.$t('language.saveSuccess'))
           clearSelectedLoginImg()
           clearSelectedBrowserLogo()
           await loadSystemInfo()
         } else {
-          proxy.$message.error(res?.Msg || res?.msg || res?.message || '保存失败')
+          proxy.$message.error(res?.Msg || res?.msg || res?.message || proxy.$t('systemSettings.saveFailed'))
         }
       } catch (e) {
         const errorData = e?.response?.data
-        proxy.$message.error('保存失败：' + (errorData?.Msg || errorData?.msg || errorData?.message || e?.message || e))
+        proxy.$message.error(
+          `${proxy.$t('systemSettings.saveFailed')}：${errorData?.Msg || errorData?.msg || errorData?.message || e?.message || e}`
+        )
       } finally {
         saving.value = false
       }

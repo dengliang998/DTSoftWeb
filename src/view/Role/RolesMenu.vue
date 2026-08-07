@@ -3,12 +3,12 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>角色管理</h1>
-          <p>维护系统角色、成员范围和菜单访问权限。系统内置角色会限制高风险操作。</p>
+          <h1>{{ $t('rolePage.title') }}</h1>
+          <p>{{ $t('rolePage.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="getRoleList">刷新</el-button>
-          <el-button type="primary" :icon="Plus" @click="openAddRoleDialog">添加角色</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getRoleList">{{ $t('common.refresh') }}</el-button>
+          <el-button type="primary" :icon="Plus" @click="openAddRoleDialog">{{ $t('rolePage.addRole') }}</el-button>
         </div>
       </div>
 
@@ -17,7 +17,7 @@
           v-model="queryInfo.query"
           clearable
           class="dt-search"
-          placeholder="搜索角色名称或编码"
+          :placeholder="$t('rolePage.searchPlaceholder')"
           @clear="getRoleList"
           @keyup.enter="getRoleList"
         >
@@ -42,13 +42,13 @@
       <div class="dt-panel">
         <div class="dt-panel__header">
           <div>
-            <strong>角色列表</strong>
+            <strong>{{ $t('rolePage.roleList') }}</strong>
             <span>{{ roleSummaryText }}</span>
           </div>
           <div class="dt-panel__meta">
-            <span class="dt-chip">本页 {{ roleStats.total }}</span>
-            <span class="dt-chip dt-chip--warning">内置 {{ roleStats.system }}</span>
-            <span class="dt-chip dt-chip--success">自定义 {{ roleStats.custom }}</span>
+            <span class="dt-chip">{{ $t('rolePage.currentPage', { count: roleStats.total }) }}</span>
+            <span class="dt-chip dt-chip--warning">{{ $t('rolePage.systemCount', { count: roleStats.system }) }}</span>
+            <span class="dt-chip dt-chip--success">{{ $t('rolePage.customCount', { count: roleStats.custom }) }}</span>
           </div>
         </div>
 
@@ -57,42 +57,44 @@
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
           class="table-wrapper dt-table"
-          empty-text="暂无匹配角色"
+          :empty-text="$t('rolePage.empty')"
         >
           <el-table-column label="#" width="72" align="center">
             <template #default="scope">
               <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="角色" prop="RoleName" min-width="260">
+          <el-table-column :label="$t('rolePage.role')" prop="RoleName" min-width="260">
             <template #default="scope">
               <div class="dt-name-cell">
                 <span :class="['dt-icon-shell', isSystemRole(scope.row.RoleName) ? 'role-icon--system' : '']">
                   <el-icon><component :is="UserIcon" /></el-icon>
                 </span>
                 <span class="dt-name-copy">
-                  <strong>{{ scope.row.RoleName || '未命名角色' }}</strong>
-                  <small>{{ isSystemRole(scope.row.RoleName) ? '系统内置角色' : '自定义业务角色' }}</small>
+                  <strong>{{ scope.row.RoleName || $t('rolePage.unnamedRole') }}</strong>
+                  <small>
+                    {{ isSystemRole(scope.row.RoleName) ? $t('rolePage.systemRole') : $t('rolePage.customRole') }}
+                  </small>
                 </span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="角色编码" prop="id" min-width="220">
+          <el-table-column :label="$t('rolePage.roleCode')" prop="id" min-width="220">
             <template #default="scope">
               <code class="dt-code">{{ scope.row.id }}</code>
             </template>
           </el-table-column>
-          <el-table-column label="类型" width="120">
+          <el-table-column :label="$t('rolePage.type')" width="120">
             <template #default="scope">
               <span :class="['dt-badge', isSystemRole(scope.row.RoleName) ? 'dt-badge--warning' : 'dt-badge--success']">
-                {{ isSystemRole(scope.row.RoleName) ? '内置' : '自定义' }}
+                {{ isSystemRole(scope.row.RoleName) ? $t('rolePage.builtIn') : $t('rolePage.custom') }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="220" align="right" class-name="role-action-column">
+          <el-table-column :label="$t('common.actions')" width="220" align="right" class-name="role-action-column">
             <template #default="scope">
               <div class="dt-operation-buttons role-actions">
-                <el-tooltip content="管理成员" placement="top">
+                <el-tooltip :content="$t('rolePage.manageMembers')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--add"
                     :icon="UserIcon"
@@ -100,7 +102,7 @@
                     @click="showMenuPermDialog(scope.row.id, scope.row.RoleName)"
                   />
                 </el-tooltip>
-                <el-tooltip content="菜单权限" placement="top">
+                <el-tooltip :content="$t('rolePage.menuPermission')" placement="top">
                   <el-button
                     class="dt-icon-action"
                     :icon="Setting"
@@ -108,7 +110,7 @@
                     @click="showEditMenuDialog(scope.row.id)"
                   />
                 </el-tooltip>
-                <el-tooltip content="编辑角色" placement="top">
+                <el-tooltip :content="$t('rolePage.edit')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--edit"
                     :icon="Edit"
@@ -116,7 +118,7 @@
                     @click="showEditDialog(scope.row.id)"
                   />
                 </el-tooltip>
-                <el-tooltip content="删除角色" placement="top">
+                <el-tooltip :content="$t('rolePage.delete')" placement="top">
                   <el-button
                     class="dt-icon-action dt-icon-action--danger"
                     :icon="Delete"
@@ -148,20 +150,25 @@
     <!-- 修改角色对话框 -->
     <RoleEditDialog v-model="editDialogVisible" :form="editForm" @success="getRoleList" />
     <!-- 添加成员 -->
-    <el-dialog v-model="AddMemberDialogVisible" title="添加成员" width="50%" @close="AddMemberDialogVisible = false">
+    <el-dialog
+      v-model="AddMemberDialogVisible"
+      :title="$t('rolePage.addMember')"
+      width="50%"
+      @close="AddMemberDialogVisible = false"
+    >
       <!-- 内容主体区域 -->
       <el-form :model="AddMemberForm" label-width="80px">
-        <el-form-item label="角色名称">
+        <el-form-item :label="$t('rolePage.roleName')">
           <el-input v-model="AddMemberForm.RoleName" disabled></el-input>
         </el-form-item>
-        <el-form-item label="选择用户">
-          <el-button type="primary" icon="Plus" @click="OpenSelUser">选择</el-button>
+        <el-form-item :label="$t('rolePage.selectUser')">
+          <el-button type="primary" icon="Plus" @click="OpenSelUser">{{ $t('user.form.select') }}</el-button>
         </el-form-item>
         <el-table :data="RoleMemberList" height="250" border stripe>
           <el-table-column label="#" type="index"></el-table-column>
-          <el-table-column label="账号" prop="Account"></el-table-column>
-          <el-table-column label="用户名" prop="DisplayName"></el-table-column>
-          <el-table-column label="操作" width="180px">
+          <el-table-column :label="$t('user.form.account')" prop="Account"></el-table-column>
+          <el-table-column :label="$t('user.form.username')" prop="DisplayName"></el-table-column>
+          <el-table-column :label="$t('common.actions')" width="180px">
             <template #default="scope">
               <!-- 删除按钮 -->
               <el-button
@@ -177,8 +184,8 @@
       <!-- 底部区域 -->
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="AddMemberDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="editRoleMemberInfo">确 定</el-button>
+          <el-button @click="AddMemberDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="editRoleMemberInfo">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -229,11 +236,6 @@ export default {
         pagesize: 10
       },
       activeRoleFilter: 'all',
-      roleFilterOptions: [
-        { label: '全部', value: 'all' },
-        { label: '系统内置', value: 'system' },
-        { label: '自定义', value: 'custom' }
-      ],
       // 用户列表
       RoleList: [],
       // 总数据
@@ -281,6 +283,13 @@ export default {
     }
   },
   computed: {
+    roleFilterOptions() {
+      return [
+        { label: this.$t('rolePage.filterAll'), value: 'all' },
+        { label: this.$t('rolePage.filterSystem'), value: 'system' },
+        { label: this.$t('rolePage.filterCustom'), value: 'custom' }
+      ]
+    },
     filteredRoleList() {
       if (this.activeRoleFilter === 'system') return this.RoleList.filter((role) => this.isSystemRole(role.RoleName))
       if (this.activeRoleFilter === 'custom') return this.RoleList.filter((role) => !this.isSystemRole(role.RoleName))
@@ -302,8 +311,8 @@ export default {
     },
     roleSummaryText() {
       const count = this.filteredRoleList.length
-      if (count === this.RoleList.length) return `共 ${count} 个角色，服务端总数 ${this.total}`
-      return `筛选出 ${count} / ${this.RoleList.length} 个角色，服务端总数 ${this.total}`
+      if (count === this.RoleList.length) return this.$t('rolePage.summaryAll', { count, total: this.total })
+      return this.$t('rolePage.summaryFiltered', { count, shownTotal: this.RoleList.length, total: this.total })
     },
     selectedPermissionCount() {
       return new Set(this.TreeChecked.concat(this.HalfChecked)).size
@@ -341,11 +350,11 @@ export default {
             me.RoleList = response.data.data
             me.total = response.data.Total
           } else {
-            me.$message.error('角色列表获取失败：' + response.data.Msg)
+            me.$message.error(`${me.$t('rolePage.listLoadFailed')}：${response.data.Msg}`)
           }
         })
         .catch(function () {
-          me.$message.error('角色列表获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('rolePage.listLoadFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     // 监听 pageSize 改变的事件
@@ -376,7 +385,7 @@ export default {
           me.AddMemberDialogVisible = true
         })
         .catch(function () {
-          me.$message.error('角色成员获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('rolePage.memberLoadFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     editRoleMemberInfo() {
@@ -395,14 +404,14 @@ export default {
       })
         .then(function (response) {
           if (response.data.success) {
-            me.$message.success('操作成功')
+            me.$message.success(me.$t('rolePage.operationSuccess'))
             me.AddMemberDialogVisible = false
           } else {
             me.$message.error(response.data.Msg)
           }
         })
         .catch(function () {
-          me.$message.error('角色成员获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('rolePage.memberLoadFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     // 点击确定按钮，添加新角色
@@ -413,17 +422,17 @@ export default {
         createRole(me.addForm.RoleName)
           .then(function (response) {
             if (response.data.success) {
-              me.$message.success('角色添加成功')
+              me.$message.success(me.$t('rolePage.addSuccess'))
               // 关闭添加用户面板
               me.addDialogVisible = false
               // 重新调用用户列表，刷新结果
               me.getRoleList()
             } else {
-              me.$message.error('添加失败：' + response.data.Msg)
+              me.$message.error(`${me.$t('rolePage.addFailed')}：${response.data.Msg}`)
             }
           })
           .catch(function () {
-            me.$message.error('添加失败，请稍后重试！')
+            me.$message.error(`${me.$t('rolePage.addFailed')}，${me.$t('user.selector.retryLater')}！`)
           })
       })
     },
@@ -437,11 +446,11 @@ export default {
             me.editForm = response.data
             me.editDialogVisible = true
           } else {
-            me.$message.error('角色获取失败：' + (response.data.Msg || '未知错误'))
+            me.$message.error(`${me.$t('rolePage.getFailed')}：${response.data.Msg || me.$t('welcome.unknownError')}`)
           }
         })
         .catch(function () {
-          me.$message.error('角色获取失败，请稍后重试！')
+          me.$message.error(`${me.$t('rolePage.getFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     // 监听关闭修改用户对话框的关闭事件
@@ -464,13 +473,13 @@ export default {
             if (response.data.success) {
               me.editDialogVisible = false
               me.getRoleList()
-              me.$message.success('更新角色信息成功')
+              me.$message.success(me.$t('rolePage.updateSuccess'))
             } else {
-              me.$message.error('更新角色信息失败：' + response.data.Msg)
+              me.$message.error(`${me.$t('rolePage.updateFailed')}：${response.data.Msg}`)
             }
           })
           .catch(function () {
-            me.$message.error('修改失败，请稍后重试！')
+            me.$message.error(`${me.$t('rolePage.modifyFailed')}，${me.$t('user.selector.retryLater')}！`)
           })
       })
     },
@@ -479,9 +488,9 @@ export default {
     // 使用async和await 简化了 Promise 操作，使用catch捕获了错误提示
     async removeRole(id) {
       // 询问用户是否删除数据
-      const confirmResult = await this.$confirm('此操作将永久删除该角色, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      const confirmResult = await this.$confirm(this.$t('rolePage.deleteConfirm'), this.$t('organization.prompt'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).catch((err) => err)
 
@@ -489,7 +498,7 @@ export default {
       //如果用户取消了删除，则字符串返回 cancel
       //console.log(confirmResult);
       if (confirmResult !== 'confirm') {
-        return this.$message.info('已经取消了删除')
+        return this.$message.info(this.$t('organization.deleteCanceled'))
       }
 
       //发起删除请求，判读状态码，删除成功提示消息并且刷新用户列表
@@ -497,14 +506,14 @@ export default {
       deleteRole(id)
         .then(function (response) {
           if (response.data.success) {
-            me.$message.success('删除角色成功')
+            me.$message.success(me.$t('rolePage.deleteSuccess'))
             me.getRoleList()
           } else {
-            me.$message.error('删除角色失败：' + response.data.Msg)
+            me.$message.error(`${me.$t('rolePage.deleteFailed')}：${response.data.Msg}`)
           }
         })
         .catch(function () {
-          me.$message.error('删除失败，请稍后重试！')
+          me.$message.error(`${me.$t('organization.deleteFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     // 监听分配角色对话框的关闭事件
@@ -534,11 +543,11 @@ export default {
         }
         flag = true // 重置标志
       }
-      this.$message.success('成功添加用户')
+      this.$message.success(this.$t('rolePage.userAdded'))
     },
     removeRoleMember(index, rows) {
       if (rows[index].Account === 'admin' && this.CurrentSelRoleName === 'Administrator') {
-        this.$message.error('系统管理员账号不能移除')
+        this.$message.error(this.$t('rolePage.adminCannotRemove'))
       } else {
         rows.splice(index, 1)
       }
@@ -585,7 +594,7 @@ export default {
           }
         })
       } catch (error) {
-        me.$message.error('数据初始化失败，请稍后重试！')
+        me.$message.error(`${me.$t('rolePage.initFailed')}，${me.$t('user.selector.retryLater')}！`)
       }
     },
     normalizeMenuItems(menuList, parentId = 0) {
@@ -703,7 +712,7 @@ export default {
           }
         })
         .catch(function () {
-          me.$message.error('操作失败，请稍后重试！')
+          me.$message.error(`${me.$t('organization.operationFailed')}，${me.$t('user.selector.retryLater')}！`)
         })
     },
     //处理行号

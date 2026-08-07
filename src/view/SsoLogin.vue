@@ -6,7 +6,7 @@
       </span>
       <h1>{{ statusTitle }}</h1>
       <p>{{ statusText }}</p>
-      <el-button v-if="failed" type="primary" @click="goLogin">返回登录</el-button>
+      <el-button v-if="failed" type="primary" @click="goLogin">{{ $t('sso.backToLogin') }}</el-button>
     </section>
   </div>
 </template>
@@ -17,6 +17,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Key } from '@element-plus/icons-vue'
 import { setAuthSession } from '@/core/session'
+import { translate } from '@/i18n'
 
 const INTERNAL_PATH_RE = /^\/(?!\/)/
 const ACCOUNT_CLAIMS = [
@@ -72,8 +73,8 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const failed = ref(false)
-    const statusTitle = ref('正在单点登录')
-    const statusText = ref('正在校验外部系统传入的登录令牌。')
+    const statusTitle = ref(translate('sso.processingTitle'))
+    const statusText = ref(translate('sso.processingText'))
 
     const goLogin = () => {
       router.replace('/login')
@@ -89,14 +90,14 @@ export default defineComponent({
 
       if (!token || !account) {
         failed.value = true
-        statusTitle.value = '单点登录失败'
-        statusText.value = '登录令牌或用户账号缺失，请从外部系统重新进入。'
+        statusTitle.value = translate('sso.failedTitle')
+        statusText.value = translate('sso.missingTokenText')
         ElMessage.error(statusText.value)
         return
       }
 
       setAuthSession({ token, account })
-      ElMessage.success('单点登录成功')
+      ElMessage.success(translate('sso.success'))
       router.replace(normalizeRedirect(route.query.redirect))
     })
 

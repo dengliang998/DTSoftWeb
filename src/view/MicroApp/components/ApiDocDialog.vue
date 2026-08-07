@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="接口文档" width="80%" :top="'20vh'" :close-on-click-modal="false">
+  <el-dialog
+    v-model="dialogVisible"
+    :title="$t('apiDoc.title')"
+    width="80%"
+    :top="'20vh'"
+    :close-on-click-modal="false"
+  >
     <div class="api-doc-container">
       <el-card v-for="(api, index) in apis" :key="index" class="api-card">
         <template #header>
@@ -25,11 +31,11 @@
         </template>
         <div class="api-content">
           <p>
-            <strong>描述：</strong>
+            <strong>{{ $t('apiDoc.description') }}</strong>
             {{ api.description }}
           </p>
           <p v-if="api.requestParams && api.requestParams.length">
-            <strong>请求参数：</strong>
+            <strong>{{ $t('apiDoc.requestParams') }}</strong>
           </p>
           <el-table
             v-if="api.requestParams && api.requestParams.length"
@@ -38,16 +44,16 @@
             size="small"
             style="margin-bottom: 10px"
           >
-            <el-table-column label="参数名" prop="name"></el-table-column>
-            <el-table-column label="类型" prop="type" width="100"></el-table-column>
-            <el-table-column label="必填" width="80">
+            <el-table-column :label="$t('apiDoc.paramName')" prop="name"></el-table-column>
+            <el-table-column :label="$t('apiDoc.type')" prop="type" width="100"></el-table-column>
+            <el-table-column :label="$t('apiDoc.required')" width="80">
               <template #default="scope">
                 <el-tag :type="scope.row.required ? 'danger' : 'info'" size="small">
-                  {{ scope.row.required ? '是' : '否' }}
+                  {{ scope.row.required ? $t('common.yes') : $t('common.no') }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="描述" prop="description"></el-table-column>
+            <el-table-column :label="$t('apiDoc.descriptionColumn')" prop="description"></el-table-column>
           </el-table>
           <div v-if="api.responseExample" class="json-preview">
             <pre>{{ api.responseExample }}</pre>
@@ -56,7 +62,7 @@
       </el-card>
     </div>
     <template #footer>
-      <el-button @click="dialogVisible = false">关 闭</el-button>
+      <el-button @click="dialogVisible = false">{{ $t('apiDoc.close') }}</el-button>
     </template>
   </el-dialog>
 </template>

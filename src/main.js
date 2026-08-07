@@ -6,6 +6,7 @@ import { installElementPlus } from './plugins/elementPlus'
 import { installResizeObserverPatch } from './plugins/resizeObserverPatch'
 import { formatDateTime } from './utils/date'
 import { applyCachedSystemAppearance, warmThemeTransition } from './utils/sysConfig'
+import { installI18n } from './i18n'
 
 /*导入字体图标*/
 import './assets/fonts/iconfont.css'
@@ -20,6 +21,7 @@ applyCachedSystemAppearance()
 
 const app = createApp(App)
 
+installI18n(app)
 installElementPlus(app)
 app.use(router)
 

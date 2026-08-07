@@ -3,12 +3,14 @@
     <section class="dt-workbench">
       <div class="dt-commandbar">
         <div class="dt-page-title">
-          <h1>组织架构</h1>
-          <p>维护部门层级、成员信息和账号状态。右键部门可快速编辑结构。</p>
+          <h1>{{ $t('organization.title') }}</h1>
+          <p>{{ $t('organization.subtitle') }}</p>
         </div>
         <div class="dt-command-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="getDeptTree(true)">刷新组织</el-button>
-          <el-button type="primary" :icon="Plus" @click="showAddDeptDialog">新增部门</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getDeptTree(true)">
+            {{ $t('organization.refreshOrg') }}
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddDeptDialog">{{ $t('organization.addDept') }}</el-button>
         </div>
       </div>
 
@@ -17,7 +19,7 @@
           v-model="queryInfo.query"
           clearable
           class="dt-search"
-          placeholder="搜索用户账号、姓名或邮箱"
+          :placeholder="$t('organization.searchPlaceholder')"
           @clear="getUserList"
           @keyup.enter="getUserList"
         >
@@ -39,8 +41,10 @@
         </div>
 
         <div class="dt-toolbar-actions">
-          <el-button class="dt-ghost-action" :icon="Refresh" @click="getUserList">刷新用户</el-button>
-          <el-button type="primary" :icon="Plus" @click="showAddUserDialog">添加用户</el-button>
+          <el-button class="dt-ghost-action" :icon="Refresh" @click="getUserList">
+            {{ $t('organization.refreshUsers') }}
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="showAddUserDialog">{{ $t('organization.addUser') }}</el-button>
         </div>
       </div>
 
@@ -48,13 +52,13 @@
         <div class="dt-panel dt-side-panel dept-tree-panel">
           <div class="dt-panel__header">
             <div>
-              <strong>部门结构</strong>
+              <strong>{{ $t('organization.deptStructure') }}</strong>
               <span>{{ deptSummaryText }}</span>
             </div>
             <div class="dt-panel__meta">
-              <span class="dt-chip">部门 {{ deptStats.total }}</span>
+              <span class="dt-chip">{{ $t('organization.deptCount', { count: deptStats.total }) }}</span>
               <el-button class="dt-ghost-action dept-reset-button" size="small" @click="resetDeptSelection">
-                全部
+                {{ $t('organization.all') }}
               </el-button>
             </div>
           </div>
@@ -91,15 +95,15 @@
           >
             <div class="context-menu-item" @click="handleEditDept">
               <el-icon><Edit /></el-icon>
-              <span>编辑部门</span>
+              <span>{{ $t('organization.editDept') }}</span>
             </div>
             <div class="context-menu-item" @click="handleAddChildDept">
               <el-icon><Plus /></el-icon>
-              <span>添加子部门</span>
+              <span>{{ $t('organization.addChildDept') }}</span>
             </div>
             <div class="context-menu-item delete" @click="handleDeleteDept">
               <el-icon><Delete /></el-icon>
-              <span>删除部门</span>
+              <span>{{ $t('organization.deleteDept') }}</span>
             </div>
           </div>
         </div>
@@ -107,13 +111,17 @@
         <div class="dt-panel user-list-panel">
           <div class="dt-panel__header">
             <div>
-              <strong>{{ currentDeptName || '全部用户' }}</strong>
+              <strong>{{ currentDeptName || $t('organization.allUsers') }}</strong>
               <span>{{ userSummaryText }}</span>
             </div>
             <div class="dt-panel__meta">
-              <span class="dt-chip">本页 {{ userStats.total }}</span>
-              <span class="dt-chip dt-chip--success">启用 {{ userStats.enabled }}</span>
-              <span class="dt-chip dt-chip--warning">禁用 {{ userStats.disabled }}</span>
+              <span class="dt-chip">{{ $t('organization.currentPage', { count: userStats.total }) }}</span>
+              <span class="dt-chip dt-chip--success">
+                {{ $t('organization.enabledCount', { count: userStats.enabled }) }}
+              </span>
+              <span class="dt-chip dt-chip--warning">
+                {{ $t('organization.disabledCount', { count: userStats.disabled }) }}
+              </span>
             </div>
           </div>
 
@@ -122,14 +130,14 @@
             :row-style="{ height: '52px' }"
             :cell-style="{ padding: '0px' }"
             class="table-wrapper dt-table"
-            empty-text="暂无匹配用户"
+            :empty-text="$t('organization.emptyUsers')"
           >
             <el-table-column label="#" width="72" align="center">
               <template #default="scope">
                 <span class="dt-index-chip">{{ indexMethod(scope.$index) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="用户" prop="DisplayName" min-width="220">
+            <el-table-column :label="$t('organization.user')" prop="DisplayName" min-width="220">
               <template #default="scope">
                 <div class="dt-name-cell">
                   <span class="dt-icon-shell user-avatar-shell">
@@ -137,41 +145,41 @@
                   </span>
                   <span class="dt-name-copy">
                     <strong>{{ scope.row.DisplayName || scope.row.Account }}</strong>
-                    <small>{{ scope.row.Account || '未设置账号' }}</small>
+                    <small>{{ scope.row.Account || $t('organization.accountNotSet') }}</small>
                   </span>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="性别" prop="Sex" width="86">
+            <el-table-column :label="$t('organization.gender')" prop="Sex" width="86">
               <template #default="scope">
                 <span class="dt-badge dt-badge--neutral">{{ SetSex(scope.row, null, scope.row.Sex) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="职位" prop="Position" min-width="130">
+            <el-table-column :label="$t('user.form.position')" prop="Position" min-width="130">
               <template #default="scope">
-                <span class="dt-muted-pill">{{ scope.row.Position || '未设置' }}</span>
+                <span class="dt-muted-pill">{{ scope.row.Position || $t('menuPage.notSet') }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="邮箱" prop="Email" min-width="220">
+            <el-table-column :label="$t('user.form.email')" prop="Email" min-width="220">
               <template #default="scope">
-                <code class="dt-code">{{ scope.row.Email || '未设置' }}</code>
+                <code class="dt-code">{{ scope.row.Email || $t('menuPage.notSet') }}</code>
               </template>
             </el-table-column>
-            <el-table-column label="直属主管" prop="SupervisorDisplayName" min-width="160">
+            <el-table-column :label="$t('organization.supervisor')" prop="SupervisorDisplayName" min-width="160">
               <template #default="scope">
                 <span class="dt-muted-pill">
-                  {{ scope.row.SupervisorDisplayName || scope.row.SupervisorAcc || '未设置' }}
+                  {{ scope.row.SupervisorDisplayName || scope.row.SupervisorAcc || $t('menuPage.notSet') }}
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="状态" width="96">
+            <el-table-column :label="$t('common.status')" width="96">
               <template #default="scope">
                 <span :class="['dt-badge', scope.row.Disable ? 'dt-badge--warning' : 'dt-badge--success']">
-                  {{ scope.row.Disable ? '禁用' : '启用' }}
+                  {{ scope.row.Disable ? $t('common.disabled') : $t('common.enabled') }}
                 </span>
               </template>
             </el-table-column>
-            <el-table-column label="禁用" width="86" align="center">
+            <el-table-column :label="$t('organization.disabledColumn')" width="86" align="center">
               <template #default="scope">
                 <el-switch
                   v-model="scope.row.Disable"
@@ -180,24 +188,24 @@
                 />
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="132" align="right">
+            <el-table-column :label="$t('common.actions')" width="132" align="right">
               <template #default="scope">
                 <div class="dt-operation-buttons">
-                  <el-tooltip content="编辑用户" placement="top">
+                  <el-tooltip :content="$t('organization.editUser')" placement="top">
                     <el-button
                       class="dt-icon-action dt-icon-action--edit"
                       :icon="Edit"
                       @click="showEditUserDialog(scope.row.Account)"
                     />
                   </el-tooltip>
-                  <el-tooltip content="重置密码" placement="top">
+                  <el-tooltip :content="$t('organization.resetPassword')" placement="top">
                     <el-button
                       class="dt-icon-action"
                       :icon="Unlock"
                       @click="showResetPasswordDialog(scope.row.Account)"
                     />
                   </el-tooltip>
-                  <el-tooltip content="删除用户" placement="top">
+                  <el-tooltip :content="$t('organization.deleteUser')" placement="top">
                     <el-button
                       class="dt-icon-action dt-icon-action--danger"
                       :icon="Delete"
@@ -237,7 +245,7 @@
     <!-- 添加用户的对话框 -->
     <el-dialog
       v-model="UserAddDialogVisible"
-      title="添加用户"
+      :title="$t('organization.addUser')"
       width="760px"
       align-center
       class="user-form-dialog"
@@ -252,8 +260,8 @@
       ></UserInfo-components>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="UserAddDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="AddUser">确 定</el-button>
+          <el-button @click="UserAddDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="AddUser">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -261,7 +269,7 @@
     <!-- 修改用户的对话框 -->
     <el-dialog
       v-model="UserDialogVisible"
-      title="修改用户"
+      :title="$t('organization.editUserTitle')"
       width="760px"
       align-center
       class="user-form-dialog"
@@ -276,8 +284,8 @@
       ></UserInfo-components>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="UserDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="UpdateUserInfo">确 定</el-button>
+          <el-button @click="UserDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="UpdateUserInfo">{{ $t('common.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -346,12 +354,6 @@ export default {
         pagesize: 10
       },
       activeUserFilter: 'all',
-      userFilterOptions: [
-        { label: '全部', value: 'all' },
-        { label: '启用', value: 'enabled' },
-        { label: '禁用', value: 'disabled' },
-        { label: '管理员', value: 'admin' }
-      ],
       userList: [],
       total: 0,
       ResetPwdDialogVisible: false,
@@ -363,13 +365,23 @@ export default {
     }
   },
   computed: {
+    userFilterOptions() {
+      return [
+        { label: this.$t('organization.filterAll'), value: 'all' },
+        { label: this.$t('organization.filterEnabled'), value: 'enabled' },
+        { label: this.$t('organization.filterDisabled'), value: 'disabled' },
+        { label: this.$t('organization.filterAdmin'), value: 'admin' }
+      ]
+    },
     deptStats() {
       return {
         total: this.countDepartments(this.deptTree)
       }
     },
     deptSummaryText() {
-      return this.currentDeptName ? `当前选中：${this.currentDeptName}` : '选择部门查看成员，右键管理部门'
+      return this.currentDeptName
+        ? this.$t('organization.currentDept', { name: this.currentDeptName })
+        : this.$t('organization.deptHint')
     },
     filteredUserList() {
       if (this.activeUserFilter === 'enabled') return this.userList.filter((user) => !user.Disable)
@@ -397,8 +409,8 @@ export default {
     },
     userSummaryText() {
       const count = this.filteredUserList.length
-      if (count === this.userList.length) return `共 ${count} 人，服务端总数 ${this.total}`
-      return `筛选出 ${count} / ${this.userList.length} 人，服务端总数 ${this.total}`
+      if (count === this.userList.length) return this.$t('organization.userSummaryAll', { count, total: this.total })
+      return this.$t('organization.userSummaryFiltered', { count, shownTotal: this.userList.length, total: this.total })
     }
   },
   created() {
@@ -438,10 +450,10 @@ export default {
             })
           }
         } else {
-          this.$message.error('获取部门列表失败:' + res.Msg)
+          this.$message.error(`${this.$t('organization.deptLoadFailed')}: ${res.Msg}`)
         }
       } catch (error) {
-        this.$message.error('获取部门列表失败,请稍后重试!')
+        this.$message.error(`${this.$t('organization.deptLoadFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
 
@@ -508,7 +520,7 @@ export default {
     // 显示新增部门对话框
     showAddDeptDialog() {
       this.deptAction = 'add'
-      this.deptDialogTitle = '新增部门'
+      this.deptDialogTitle = this.$t('organization.deptForm.addTitle')
       this.deptForm = {
         ItemId: null,
         OuName: '',
@@ -524,7 +536,7 @@ export default {
     // 显示新增子部门对话框
     showAddChildDeptDialog(data) {
       this.deptAction = 'add'
-      this.deptDialogTitle = '新增子部门'
+      this.deptDialogTitle = this.$t('organization.deptForm.addChildTitle')
       this.deptForm = {
         ItemId: null,
         OuName: '',
@@ -540,7 +552,7 @@ export default {
     // 显示编辑部门对话框
     showEditDeptDialog(data) {
       this.deptAction = 'edit'
-      this.deptDialogTitle = '编辑部门'
+      this.deptDialogTitle = this.$t('organization.deptForm.editTitle')
       this.deptForm = { ...data }
       this.deptDialogVisible = true
     },
@@ -548,7 +560,7 @@ export default {
     // 保存部门
     async saveDept() {
       if (!this.deptForm.OuName) {
-        return this.$message.error('部门名称不能为空')
+        return this.$message.error(this.$t('organization.deptRequired'))
       }
 
       try {
@@ -569,7 +581,9 @@ export default {
         }
 
         if (res.data.success) {
-          this.$message.success(this.deptAction === 'add' ? '新增部门成功' : '编辑部门成功')
+          this.$message.success(
+            this.deptAction === 'add' ? this.$t('organization.addDeptSuccess') : this.$t('organization.editDeptSuccess')
+          )
           this.deptDialogVisible = false
 
           // 保存当前展开的节点
@@ -595,29 +609,33 @@ export default {
             })
           })
         } else {
-          this.$message.error('操作失败:' + res.data.Msg)
+          this.$message.error(`${this.$t('organization.operationFailed')}: ${res.data.Msg}`)
         }
       } catch (error) {
-        this.$message.error('操作失败,请稍后重试!')
+        this.$message.error(`${this.$t('organization.operationFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
 
     // 删除部门
     async removeDept(deptId) {
-      const confirmResult = await this.$confirm('此操作将永久删除该部门, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch((err) => err)
+      const confirmResult = await this.$confirm(
+        this.$t('organization.deleteDeptConfirm'),
+        this.$t('organization.prompt'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      ).catch((err) => err)
 
       if (confirmResult !== 'confirm') {
-        return this.$message.info('已经取消了删除')
+        return this.$message.info(this.$t('organization.deleteCanceled'))
       }
 
       try {
         const { data: res } = await deleteOu(deptId)
         if (res.success) {
-          this.$message.success('删除部门成功')
+          this.$message.success(this.$t('organization.deleteDeptSuccess'))
 
           // 保存当前展开的节点
           const expandedKeys = []
@@ -648,10 +666,10 @@ export default {
             this.getUserList()
           }
         } else {
-          this.$message.error('删除部门失败:' + res.Msg)
+          this.$message.error(`${this.$t('organization.deleteDeptFailed')}: ${res.Msg}`)
         }
       } catch (error) {
-        this.$message.error('删除部门失败,请稍后重试!')
+        this.$message.error(`${this.$t('organization.deleteDeptFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
 
@@ -676,15 +694,15 @@ export default {
           this.userList = res.data
           this.total = res.Total
         } else {
-          this.$message.error('用户列表获取失败:' + res.Msg)
+          this.$message.error(`${this.$t('organization.userListFailed')}: ${res.Msg}`)
         }
       } catch (error) {
-        this.$message.error('用户列表获取失败,请稍后重试!')
+        this.$message.error(`${this.$t('organization.userListFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
 
     SetSex(row, column, cellValue, _index) {
-      return cellValue === 'Male' ? '男' : '女'
+      return cellValue === 'Male' ? this.$t('user.form.male') : this.$t('user.form.female')
     },
 
     // 监听 pageSize 改变的事件
@@ -708,12 +726,12 @@ export default {
 
         const { data: res } = await modifyUserInfo(params)
         if (res.success) {
-          this.$message.success('更新用户信息成功')
+          this.$message.success(this.$t('organization.updateUserSuccess'))
         } else {
-          this.$message.error('修改失败:' + res.Msg)
+          this.$message.error(`${this.$t('organization.modifyFailed')}: ${res.Msg}`)
         }
       } catch (error) {
-        this.$message.error('修改失败:' + error.message)
+        this.$message.error(`${this.$t('organization.modifyFailed')}: ${error.message}`)
       }
     },
 
@@ -734,7 +752,7 @@ export default {
 
     showAddUserDialog() {
       if (!this.currentDeptId) {
-        return this.$message.warning('请先选择一个部门')
+        return this.$message.warning(this.$t('organization.selectDeptFirst'))
       }
       this.UserAddDialogVisible = true
       this.imageUrl = ''
@@ -768,26 +786,30 @@ export default {
     },
 
     async removeUserById(Account) {
-      const confirmResult = await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).catch((err) => err)
+      const confirmResult = await this.$confirm(
+        this.$t('organization.deleteUserConfirm'),
+        this.$t('organization.prompt'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      ).catch((err) => err)
 
       if (confirmResult !== 'confirm') {
-        return this.$message.info('已经取消了删除')
+        return this.$message.info(this.$t('organization.deleteCanceled'))
       }
 
       try {
         const { data: res } = await deleteUser(Account)
         if (res.success) {
-          this.$message.success('删除用户成功')
+          this.$message.success(this.$t('organization.deleteUserSuccess'))
           this.getUserList()
         } else {
-          this.$message.error('删除用户失败:' + res.Msg)
+          this.$message.error(`${this.$t('organization.deleteUserFailed')}: ${res.Msg}`)
         }
       } catch (error) {
-        this.$message.error('删除失败,请稍后重试!')
+        this.$message.error(`${this.$t('organization.deleteFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
 

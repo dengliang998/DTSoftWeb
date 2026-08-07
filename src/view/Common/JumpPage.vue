@@ -1,12 +1,12 @@
 <template>
   <div>
-    <!-- 面包屑导航区域 -->
+    <!-- Breadcrumb navigation -->
     <el-breadcrumb separator="/">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/home' }">{{ $t('menu.welcome') }}</el-breadcrumb-item>
       <el-breadcrumb-item>{{ PMenuName }}</el-breadcrumb-item>
       <el-breadcrumb-item>{{ MenuName }}</el-breadcrumb-item>
     </el-breadcrumb>
-    <!-- 卡片视图区域 -->
+    <!-- Content frame -->
     <el-card>
       <iframe
         id="bdIframe"
@@ -37,9 +37,9 @@ export default {
   },
   watch: {
     $route(to, from) {
-      //监听路由是否变化
+      // Watch route changes.
       if (to.query.PageCode != from.query.PageCode && to.query.PageCode != null) {
-        this.LoadPage() //调接口，请求数据
+        this.LoadPage()
       }
     }
   },
@@ -80,7 +80,7 @@ export default {
           }
         })
         .catch(function () {
-          me.$message.error('加载错误，请稍后重试！')
+          me.$message.error(me.$t('jumpPage.loadFailed'))
         })
     },
     onIframeLoad() {

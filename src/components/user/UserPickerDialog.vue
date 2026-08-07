@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    :title="title"
+    :title="resolvedTitle"
     :model-value="modelValue"
     width="60%"
     align-center
@@ -12,7 +12,7 @@
       <el-card class="left-card">
         <template #header>
           <div class="card-header">
-            <span>部门</span>
+            <span>{{ $t('user.selector.department') }}</span>
           </div>
         </template>
         <el-tree
@@ -29,13 +29,18 @@
       <el-card class="right-card">
         <template #header>
           <div class="card-header">
-            <span>{{ currentDeptName || '请选择左侧部门' }}</span>
+            <span>{{ currentDeptName || $t('user.selector.selectDepartment') }}</span>
           </div>
         </template>
 
         <el-row :gutter="12" class="toolbar">
           <el-col :span="10">
-            <el-input v-model="queryInfo.query" clearable placeholder="请输入用户账号或姓名" @clear="getUserList">
+            <el-input
+              v-model="queryInfo.query"
+              clearable
+              :placeholder="$t('user.selector.searchPlaceholder')"
+              @clear="getUserList"
+            >
               <template #append>
                 <el-button :icon="Search" @click="getUserList" />
               </template>
@@ -44,10 +49,10 @@
         </el-row>
 
         <el-table v-loading="loading" :data="userList" border stripe class="table-wrapper" @row-dblclick="selectRow">
-          <el-table-column label="账号" prop="Account" width="180" />
-          <el-table-column label="用户名" prop="DisplayName" />
-          <el-table-column label="职位" prop="Position" />
-          <el-table-column label="操作" width="120">
+          <el-table-column :label="$t('user.form.account')" prop="Account" width="180" />
+          <el-table-column :label="$t('user.form.username')" prop="DisplayName" />
+          <el-table-column :label="$t('user.form.position')" prop="Position" />
+          <el-table-column :label="$t('common.actions')" width="120">
             <template #default="scope">
               <el-button
                 type="primary"
@@ -55,7 +60,7 @@
                 :disabled="excludeAccount && scope.row.Account === excludeAccount"
                 @click="selectRow(scope.row)"
               >
-                选择
+                {{ $t('user.form.select') }}
               </el-button>
             </template>
           </el-table-column>
@@ -86,7 +91,7 @@ export default {
   name: 'UserPickerDialog',
   props: {
     modelValue: { type: Boolean, default: false },
-    title: { type: String, default: '选择人员' },
+    title: { type: String, default: '' },
     excludeAccount: { type: String, default: '' }
   },
   emits: ['update:modelValue', 'select'],
@@ -104,6 +109,11 @@ export default {
       userList: [],
       total: 0,
       loading: false
+    }
+  },
+  computed: {
+    resolvedTitle() {
+      return this.title || this.$t('user.selector.personTitle')
     }
   },
   watch: {
@@ -132,10 +142,10 @@ export default {
         if (res && res.success) {
           this.deptTree = res.data || []
         } else {
-          this.$message.error('获取部门列表失败:' + (res?.Msg || ''))
+          this.$message.error(`${this.$t('user.selector.deptListLoadFailed')}: ${res?.Msg || ''}`)
         }
       } catch (e) {
-        this.$message.error('获取部门列表失败,请稍后重试!')
+        this.$message.error(`${this.$t('user.selector.deptListLoadFailed')},${this.$t('user.selector.retryLater')}!`)
       }
     },
     handleDeptClick(data) {
@@ -165,10 +175,10 @@ export default {
         } else {
           this.userList = []
           this.total = 0
-          this.$message.error('用户列表获取失败:' + (res?.Msg || ''))
+          this.$message.error(`${this.$t('user.selector.userListGetFailed')}: ${res?.Msg || ''}`)
         }
       } catch (e) {
-        this.$message.error('用户列表获取失败,请稍后重试!')
+        this.$message.error(`${this.$t('user.selector.userListGetFailed')},${this.$t('user.selector.retryLater')}!`)
       } finally {
         this.loading = false
       }
@@ -185,7 +195,7 @@ export default {
     selectRow(row) {
       if (!row || !row.Account) return
       if (this.excludeAccount && row.Account === this.excludeAccount) {
-        return this.$message.warning('直属主管不能是自己')
+        return this.$message.warning(this.$t('user.selector.supervisorCannotSelf'))
       }
       this.$emit('select', row)
       this.$emit('update:modelValue', false)

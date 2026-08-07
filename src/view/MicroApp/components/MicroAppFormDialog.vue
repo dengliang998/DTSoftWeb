@@ -15,15 +15,19 @@
         <div class="form-workspace">
           <aside class="form-rail">
             <div class="rail-card rail-card--summary">
-              <div class="rail-kicker">{{ dialogType === 'create' ? '新增记录' : '编辑记录' }}</div>
-              <div class="rail-title">{{ appConfig?.configName || appConfig?.modelName || '微应用数据' }}</div>
+              <div class="rail-kicker">
+                {{ dialogType === 'create' ? $t('microRuntime.createRecord') : $t('microRuntime.editRecord') }}
+              </div>
+              <div class="rail-title">
+                {{ appConfig?.configName || appConfig?.modelName || $t('microRuntime.appDataFallback') }}
+              </div>
               <div class="rail-progress">
                 <span class="rail-progress__value">{{ completedRequiredFieldCount }}/{{ requiredFieldCount }}</span>
-                <span class="rail-progress__label">必填完成</span>
+                <span class="rail-progress__label">{{ $t('microRuntime.requiredComplete') }}</span>
               </div>
             </div>
             <div class="rail-card">
-              <div class="rail-card-title">操作位置</div>
+              <div class="rail-card-title">{{ $t('microRuntime.operationPosition') }}</div>
               <button
                 class="rail-nav-item"
                 :class="{ 'is-active': activeWorkSection === 'main' }"
@@ -31,8 +35,8 @@
                 @click="scrollToMainFields"
               >
                 <span>
-                  <strong>基础信息</strong>
-                  <em>{{ orderedFields.length }} 个字段</em>
+                  <strong>{{ $t('microRuntime.baseInfo') }}</strong>
+                  <em>{{ $t('microRuntime.fieldCount', { count: orderedFields.length }) }}</em>
                 </span>
                 <b>{{ completedRequiredFieldCount }}/{{ requiredFieldCount }}</b>
               </button>
@@ -47,7 +51,7 @@
                 <span>
                   <strong>{{ subTable.label || subTable.tableName }}</strong>
                   <em>
-                    {{ getSubTableRows(subTable).length }} 行
+                    {{ $t('microRuntime.rowCount', { count: getSubTableRows(subTable).length }) }}
                     <template v-if="subTable.maxRows">/ {{ subTable.maxRows }}</template>
                   </em>
                 </span>
@@ -210,12 +214,16 @@ export default {
     lookupDialogTitle() {
       if (this.lookupDialogMode === 'subTable') {
         return this.activeLookupSubTable
-          ? `选择${this.activeLookupSubTable.label || this.activeLookupSubTable.tableName}`
-          : '选择数据'
+          ? this.$t('microRuntime.selectPlaceholder', {
+              label: this.activeLookupSubTable.label || this.activeLookupSubTable.tableName
+            })
+          : this.$t('microRuntime.selectData')
       }
       return this.activeLookupField
-        ? `选择${this.activeLookupField.label || this.activeLookupField.fieldName}`
-        : '开窗查询'
+        ? this.$t('microRuntime.selectPlaceholder', {
+            label: this.activeLookupField.label || this.activeLookupField.fieldName
+          })
+        : this.$t('microRuntime.lookupTitle')
     },
     activeLookupColumns() {
       const configured = this.normalizeLookupColumns(this.getActiveLookupConfig()?.lookupColumns)
@@ -302,7 +310,7 @@ export default {
           rules.push({
             validator: (rule, value, callback) => {
               if (this.normalizeAttachmentValue(value).length === 0) {
-                callback(new Error(`${field.label || field.fieldName}不能为空`))
+                callback(new Error(this.$t('microRuntime.requiredMessage', { label: field.label || field.fieldName })))
                 return
               }
               callback()
@@ -313,13 +321,20 @@ export default {
         return rules
       }
       if (field.required) {
-        rules.push({ required: true, message: `${field.label || field.fieldName}不能为空`, trigger: 'blur' })
+        rules.push({
+          required: true,
+          message: this.$t('microRuntime.requiredMessage', { label: field.label || field.fieldName }),
+          trigger: 'blur'
+        })
       }
       if (field.minLength || field.maxLength) {
         rules.push({
           min: field.minLength || 0,
           max: field.maxLength || 99999,
-          message: `长度${field.minLength || 0}-${field.maxLength || 99999}个字符`,
+          message: this.$t('microRuntime.lengthRange', {
+            min: field.minLength || 0,
+            max: field.maxLength || 99999
+          }),
           trigger: 'blur'
         })
       }
@@ -327,11 +342,11 @@ export default {
         rules.push({
           validator: (rule, value, callback) => {
             if (value === null || value === undefined) return callback()
-            if (isNaN(Number(value))) return callback(new Error('请输入数字'))
+            if (isNaN(Number(value))) return callback(new Error(this.$t('microRuntime.inputNumber')))
             if (field.minValue !== null && field.minValue !== undefined && Number(value) < Number(field.minValue))
-              return callback(new Error(`不能小于${field.minValue}`))
+              return callback(new Error(this.$t('microRuntime.minMessage', { min: field.minValue })))
             if (field.maxValue !== null && field.maxValue !== undefined && Number(value) > Number(field.maxValue))
-              return callback(new Error(`不能大于${field.maxValue}`))
+              return callback(new Error(this.$t('microRuntime.maxMessage', { max: field.maxValue })))
             callback()
           },
           trigger: 'blur'
@@ -339,7 +354,11 @@ export default {
       }
       if (field.pattern) {
         try {
-          rules.push({ pattern: new RegExp(field.pattern), message: '格式不正确', trigger: 'blur' })
+          rules.push({
+            pattern: new RegExp(field.pattern),
+            message: this.$t('microRuntime.invalidFormat'),
+            trigger: 'blur'
+          })
         } catch (e) {}
       }
       return rules
@@ -353,21 +372,21 @@ export default {
     normalizeUploadedAttachment(item, file) {
       return {
         FileID: item.FileID || item.fileId || item.FileId || '',
-        FileName: item.FileName || item.fileName || file?.name || '未命名附件',
+        FileName: item.FileName || item.fileName || file?.name || this.$t('microRuntime.unnamedAttachment'),
         Ext: item.Ext || item.ext || '',
         Size: item.Size || item.size || file?.size || 0
       }
     },
     handleAttachmentUploadSuccess(response, file, field) {
       if (!response?.success) {
-        this.$message.error(response?.Msg || response?.message || '附件上传失败')
+        this.$message.error(response?.Msg || response?.message || this.$t('microRuntime.uploadFailed'))
         return
       }
 
       const uploaded = Array.isArray(response.data) ? response.data : []
       const items = uploaded.map((item) => this.normalizeUploadedAttachment(item, file)).filter((item) => item.FileID)
       if (items.length === 0) {
-        this.$message.error('附件上传失败：未返回文件编号')
+        this.$message.error(this.$t('microRuntime.uploadMissingFileId'))
         return
       }
 
@@ -375,10 +394,10 @@ export default {
       // eslint-disable-next-line vue/no-mutating-props
       this.formData[field.fieldName] = current.concat(items)
       this.$refs.formRef?.validateField(field.fieldName)
-      this.$message.success('附件上传成功')
+      this.$message.success(this.$t('microRuntime.uploadSuccess'))
     },
     handleAttachmentUploadError() {
-      this.$message.error('附件上传失败')
+      this.$message.error(this.$t('microRuntime.uploadFailed'))
     },
     removeAttachment(field, index) {
       const current = this.getAttachmentList(field)
@@ -404,7 +423,7 @@ export default {
     },
     async openLookupDialog(field) {
       if (!field.lookupDataSourceCode) {
-        this.$message.warning('请先配置开窗查询数据源')
+        this.$message.warning(this.$t('microRuntime.configLookupFirst'))
         return
       }
 
@@ -421,7 +440,7 @@ export default {
     },
     async openSubTableLookupDialog(subTable) {
       if (!subTable.lookupDataSourceCode) {
-        this.$message.warning('请先配置子表开窗查询数据源')
+        this.$message.warning(this.$t('microRuntime.configSubTableLookupFirst'))
         return
       }
 
@@ -452,7 +471,7 @@ export default {
       } catch (error) {
         this.lookupRows = []
         this.lookupTotal = 0
-        this.$message.error(error.message || '查询失败')
+        this.$message.error(error.message || this.$t('microRuntime.queryFailed'))
       } finally {
         this.lookupLoading = false
       }
@@ -504,7 +523,7 @@ export default {
       const maxRows = Number(this.activeLookupSubTable.maxRows) || 0
       const availableCount = maxRows > 0 ? Math.max(maxRows - rows.length, 0) : this.lookupSelectedRows.length
       if (availableCount <= 0) {
-        this.$message.warning('已达到子表最大行数')
+        this.$message.warning(this.$t('microRuntime.subTableMaxReached'))
         return
       }
 
@@ -519,7 +538,7 @@ export default {
       })
 
       if (selectedRows.length < this.lookupSelectedRows.length) {
-        this.$message.warning(`已按最大行数限制新增 ${selectedRows.length} 行`)
+        this.$message.warning(this.$t('microRuntime.maxLimitAdded', { count: selectedRows.length }))
       }
       this.lookupDialogVisible = false
       this.lookupSelectedRows = []
@@ -624,20 +643,24 @@ export default {
           } else {
             const id = this.formData.ItemId || this.formData.itemId || this.formData.id || this.formData.Id
             if (!id) {
-              this.$message.error('更新失败：无法获取数据ID')
+              this.$message.error(this.$t('microRuntime.updateMissingId'))
               return
             }
             res = await updateMicroRuntimeData({ modelName: this.appConfig.modelName, id, data: submitData })
           }
           if (res.data.success) {
-            this.$message.success(this.dialogType === 'create' ? '新增成功' : '更新成功')
+            this.$message.success(
+              this.dialogType === 'create'
+                ? this.$t('microRuntime.createSuccess')
+                : this.$t('microRuntime.updateSuccess')
+            )
             this.dialogVisible = false
             this.$emit('success')
           } else {
-            this.$message.error(res.data.msg || '操作失败')
+            this.$message.error(res.data.msg || this.$t('microRuntime.operationFailed'))
           }
         } catch (error) {
-          this.$message.error(error.message || '网络错误')
+          this.$message.error(error.message || this.$t('microRuntime.networkError'))
         } finally {
           this.submitLoading = false
         }

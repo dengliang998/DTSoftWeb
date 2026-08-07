@@ -1,3 +1,5 @@
+import { translate } from '@/i18n'
+
 const DATE_FORMAT_MAP = {
   year: 'YYYY',
   month: 'YYYY-MM',
@@ -174,7 +176,11 @@ export function getAttachmentKey(attachment, index) {
 
 export function getAttachmentName(attachment) {
   return (
-    attachment.FileName || attachment.fileName || attachment.name || getAttachmentFileId(attachment) || '未命名附件'
+    attachment.FileName ||
+    attachment.fileName ||
+    attachment.name ||
+    getAttachmentFileId(attachment) ||
+    translate('microRuntime.unnamedAttachment')
   )
 }
 
