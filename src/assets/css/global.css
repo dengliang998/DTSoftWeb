@@ -2191,3 +2191,449 @@ html.theme-switching .brand_copy::before {
     border-color 0.32s ease,
     box-shadow 0.32s ease !important;
 }
+
+/* SRM-style admin polish */
+.el-card,
+.dt-panel,
+.dt-commandbar,
+.dt-toolbar {
+  border-radius: 4px !important;
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+  box-shadow: none !important;
+}
+
+.el-card__header,
+.dt-panel__header {
+  background: var(--dt-surface-soft) !important;
+}
+
+.el-button {
+  min-height: 34px;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
+.el-button--primary,
+.dt-page-shell .el-button--primary {
+  background: var(--dt-primary) !important;
+  box-shadow: none !important;
+}
+
+.el-button--primary:hover,
+.dt-page-shell .el-button--primary:hover {
+  background: var(--dt-primary-hover) !important;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--dt-primary) 18%, transparent) !important;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select .el-input__wrapper,
+.el-input-number .el-input__wrapper {
+  border-radius: 4px !important;
+}
+
+.el-table,
+.dt-table.el-table,
+.dt-table {
+  border-radius: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.el-table th,
+.el-table__header-wrapper th,
+.dt-table .el-table__header-wrapper th {
+  height: 42px;
+  color: var(--dt-text) !important;
+  background: var(--dt-surface-soft) !important;
+  font-weight: 700 !important;
+}
+
+.el-table td,
+.el-table th.is-leaf,
+.dt-table .el-table__row td {
+  border-bottom-color: color-mix(in srgb, var(--dt-border) 76%, transparent) !important;
+}
+
+.el-table tr.current-row > td,
+.el-table__body tr.current-row > td,
+.el-table__body tr.is-current > td,
+.dt-table .el-table__row.current-row > td {
+  background: var(--dt-primary-subtle) !important;
+}
+
+.el-table tr:hover > td,
+.dt-table .el-table__row:hover > td {
+  background: color-mix(in srgb, var(--dt-primary) 6%, var(--dt-surface)) !important;
+}
+
+.el-pagination {
+  padding: 10px 0 0 !important;
+}
+
+.el-dialog,
+.el-message-box {
+  border-radius: 6px !important;
+}
+
+.el-dialog__header,
+.el-message-box__header,
+.el-dialog__footer,
+.el-message-box__footer {
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .el-card,
+html[data-theme='dark'] .dt-panel,
+html[data-theme='dark'] .dt-commandbar,
+html[data-theme='dark'] .dt-toolbar,
+html[data-theme='dark'] .el-dialog,
+html[data-theme='dark'] .el-message-box {
+  background: var(--dt-surface) !important;
+  border-color: var(--dt-border) !important;
+}
+
+/* Dark mode compatibility layer for page-level hardcoded surfaces. */
+html[data-theme='dark'] .content-wrapper,
+html[data-theme='dark'] .dt-page-shell,
+html[data-theme='dark'] .dt-workbench,
+html[data-theme='dark'] .menus-container,
+html[data-theme='dark'] .organization-container,
+html[data-theme='dark'] .system-settings-container,
+html[data-theme='dark'] .system-info-container,
+html[data-theme='dark'] .dictionary-page,
+html[data-theme='dark'] .role-container,
+html[data-theme='dark'] .attachment-container,
+html[data-theme='dark'] .integration-api-key-container,
+html[data-theme='dark'] .crud-config-container,
+html[data-theme='dark'] .dynamic-app-container,
+html[data-theme='dark'] .online-users-container,
+html[data-theme='dark'] .log-container,
+html[data-theme='dark'] .custom-page-container {
+  color: var(--dt-text) !important;
+  background: var(--dt-bg) !important;
+}
+
+html[data-theme='dark'] .dt-commandbar,
+html[data-theme='dark'] .dt-toolbar,
+html[data-theme='dark'] .dt-panel,
+html[data-theme='dark'] .dt-side-panel,
+html[data-theme='dark'] .dept-tree-panel,
+html[data-theme='dark'] .user-list-panel,
+html[data-theme='dark'] .menu-commandbar,
+html[data-theme='dark'] .menu-toolbar,
+html[data-theme='dark'] .menu-table-panel,
+html[data-theme='dark'] .type-filter-bar,
+html[data-theme='dark'] .item-toolbar,
+html[data-theme='dark'] .type-list,
+html[data-theme='dark'] .item-panel,
+html[data-theme='dark'] .summary-card,
+html[data-theme='dark'] .runtime-card,
+html[data-theme='dark'] .dashboard-panel,
+html[data-theme='dark'] .info-panel,
+html[data-theme='dark'] .workspace-panel,
+html[data-theme='dark'] .field-sidebar,
+html[data-theme='dark'] .field-detail,
+html[data-theme='dark'] .field-card,
+html[data-theme='dark'] .config-card,
+html[data-theme='dark'] .subtable-config-card,
+html[data-theme='dark'] .subtable-panel,
+html[data-theme='dark'] .data-detail-card,
+html[data-theme='dark'] .detail-section,
+html[data-theme='dark'] .subtable-card,
+html[data-theme='dark'] .advanced-query,
+html[data-theme='dark'] .attachment-cell-item,
+html[data-theme='dark'] .attachment-item,
+html[data-theme='dark'] .form-section,
+html[data-theme='dark'] .rail-card,
+html[data-theme='dark'] .route-summary,
+html[data-theme='dark'] .user-info-panel,
+html[data-theme='dark'] .user-selector-dialog,
+html[data-theme='dark'] .selector-pane,
+html[data-theme='dark'] .selector-panel {
+  color: var(--dt-text) !important;
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+  box-shadow: var(--dt-shadow-soft) !important;
+}
+
+html[data-theme='dark'] .dt-panel__header,
+html[data-theme='dark'] .dt-toolbar,
+html[data-theme='dark'] .table-panel__header,
+html[data-theme='dark'] .type-filter-bar,
+html[data-theme='dark'] .item-toolbar,
+html[data-theme='dark'] .detail-section__header,
+html[data-theme='dark'] .subtable-card__header,
+html[data-theme='dark'] .subtable-panel-header,
+html[data-theme='dark'] .form-section-head,
+html[data-theme='dark'] .rail-card__header,
+html[data-theme='dark'] .field-editor-head,
+html[data-theme='dark'] .dialog-footer,
+html[data-theme='dark'] .selector-header,
+html[data-theme='dark'] .selector-footer {
+  color: var(--dt-text) !important;
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .dt-page-title h1,
+html[data-theme='dark'] .dt-panel__header strong,
+html[data-theme='dark'] .menu-title h1,
+html[data-theme='dark'] .table-panel__header strong,
+html[data-theme='dark'] .summary-content strong,
+html[data-theme='dark'] .runtime-card strong,
+html[data-theme='dark'] .panel-header h3,
+html[data-theme='dark'] .field-name,
+html[data-theme='dark'] .config-title,
+html[data-theme='dark'] .field-editor-title,
+html[data-theme='dark'] .config-section-title,
+html[data-theme='dark'] .section-title,
+html[data-theme='dark'] .metric-value,
+html[data-theme='dark'] .subtable-title,
+html[data-theme='dark'] .subtable-config-card__head,
+html[data-theme='dark'] .form-section-title,
+html[data-theme='dark'] .rail-card__title,
+html[data-theme='dark'] .attachment-name,
+html[data-theme='dark'] .type-name,
+html[data-theme='dark'] .dt-name-copy strong,
+html[data-theme='dark'] .selector-title {
+  color: var(--dt-text) !important;
+}
+
+html[data-theme='dark'] .dt-page-title p,
+html[data-theme='dark'] .dt-panel__header span,
+html[data-theme='dark'] .menu-title p,
+html[data-theme='dark'] .table-panel__header span,
+html[data-theme='dark'] .summary-content span,
+html[data-theme='dark'] .panel-header p,
+html[data-theme='dark'] .field-meta,
+html[data-theme='dark'] .config-subtitle,
+html[data-theme='dark'] .field-editor-meta,
+html[data-theme='dark'] .section-kicker,
+html[data-theme='dark'] .metric-label,
+html[data-theme='dark'] .subtable-meta,
+html[data-theme='dark'] .subtable-empty-text,
+html[data-theme='dark'] .form-section-desc,
+html[data-theme='dark'] .rail-card__desc,
+html[data-theme='dark'] .attachment-empty,
+html[data-theme='dark'] .type-code,
+html[data-theme='dark'] .dt-name-copy small,
+html[data-theme='dark'] .selector-subtitle,
+html[data-theme='dark'] .query-label {
+  color: var(--dt-text-muted) !important;
+}
+
+html[data-theme='dark'] .dt-search .el-input__wrapper,
+html[data-theme='dark'] .menu-search .el-input__wrapper,
+html[data-theme='dark'] .el-input__wrapper,
+html[data-theme='dark'] .el-textarea__inner,
+html[data-theme='dark'] .el-select .el-input__wrapper,
+html[data-theme='dark'] .el-input-number .el-input__wrapper,
+html[data-theme='dark'] .el-date-editor {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface-soft) !important;
+  box-shadow: 0 0 0 1px var(--dt-border) inset !important;
+}
+
+html[data-theme='dark'] .dt-search .el-input__wrapper.is-focus,
+html[data-theme='dark'] .menu-search .el-input__wrapper.is-focus,
+html[data-theme='dark'] .el-input__wrapper.is-focus,
+html[data-theme='dark'] .el-textarea__inner:focus {
+  background: var(--dt-surface) !important;
+  box-shadow:
+    0 0 0 1px var(--dt-primary) inset,
+    0 0 0 3px var(--dt-primary-focus) !important;
+}
+
+html[data-theme='dark'] .dt-filter-tabs,
+html[data-theme='dark'] .filter-tabs {
+  background: var(--dt-surface-soft) !important;
+  border-color: var(--dt-border) !important;
+}
+
+html[data-theme='dark'] .dt-filter-tab,
+html[data-theme='dark'] .filter-tab {
+  color: var(--dt-text-muted) !important;
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .dt-filter-tab:hover,
+html[data-theme='dark'] .filter-tab:hover {
+  color: var(--dt-primary-light) !important;
+}
+
+html[data-theme='dark'] .dt-filter-tab.is-active,
+html[data-theme='dark'] .filter-tab.is-active {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+}
+
+html[data-theme='dark'] .dt-chip,
+html[data-theme='dark'] .dt-muted-pill,
+html[data-theme='dark'] .dt-code,
+html[data-theme='dark'] .dt-badge--neutral,
+html[data-theme='dark'] .metric-chip,
+html[data-theme='dark'] .time-chip,
+html[data-theme='dark'] .status-chip,
+html[data-theme='dark'] .type-item,
+html[data-theme='dark'] .route-summary code {
+  color: var(--dt-text-muted) !important;
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .dt-chip--success,
+html[data-theme='dark'] .dt-badge--success,
+html[data-theme='dark'] .type-item.active,
+html[data-theme='dark'] .type-item:hover {
+  color: var(--dt-primary-light) !important;
+  border-color: var(--dt-primary-border) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .dt-index-chip,
+html[data-theme='dark'] .dt-icon-shell,
+html[data-theme='dark'] .attachment-type-badge {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .dept-tree,
+html[data-theme='dark'] .el-tree,
+html[data-theme='dark'] .menu-auth-tree,
+html[data-theme='dark'] .field-tree {
+  color: var(--dt-text) !important;
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .dept-tree .el-tree-node__content,
+html[data-theme='dark'] .el-tree-node__content {
+  color: var(--dt-text) !important;
+  background: transparent !important;
+}
+
+html[data-theme='dark'] .dept-tree .el-tree-node__content:hover,
+html[data-theme='dark'] .dept-tree .el-tree-node.is-current > .el-tree-node__content,
+html[data-theme='dark'] .el-tree-node__content:hover,
+html[data-theme='dark'] .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] .dept-tree .el-tree-node__children::before,
+html[data-theme='dark'] .dept-tree .el-tree-node__children .el-tree-node__content::before {
+  background: var(--dt-border) !important;
+}
+
+html[data-theme='dark'] .tree-node-icon,
+html[data-theme='dark'] .el-tree-node__expand-icon {
+  color: var(--dt-text-muted) !important;
+}
+
+html[data-theme='dark'] .context-menu {
+  color: var(--dt-text) !important;
+  border: 1px solid var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+  box-shadow: var(--dt-shadow) !important;
+}
+
+html[data-theme='dark'] .context-menu-item {
+  color: var(--dt-text) !important;
+}
+
+html[data-theme='dark'] .context-menu-item:hover {
+  color: var(--dt-primary-light) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .context-menu-item.delete,
+html[data-theme='dark'] .context-menu-item.delete:hover {
+  color: var(--dt-danger) !important;
+}
+
+html[data-theme='dark'] .el-table,
+html[data-theme='dark'] .el-table__inner-wrapper,
+html[data-theme='dark'] .el-table__body-wrapper,
+html[data-theme='dark'] .el-table__empty-block,
+html[data-theme='dark'] .el-table__expanded-cell {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface) !important;
+}
+
+html[data-theme='dark'] .el-table th,
+html[data-theme='dark'] .el-table__header-wrapper th {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .el-table td,
+html[data-theme='dark'] .el-table th.is-leaf {
+  color: var(--dt-text) !important;
+  border-bottom-color: var(--dt-border) !important;
+  background: var(--dt-surface) !important;
+}
+
+html[data-theme='dark'] .el-table tr:hover > td,
+html[data-theme='dark'] .el-table tr.current-row > td,
+html[data-theme='dark'] .el-table__body tr.current-row > td {
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .el-button--default,
+html[data-theme='dark'] .dt-ghost-action,
+html[data-theme='dark'] .ghost-action,
+html[data-theme='dark'] .dt-icon-action,
+html[data-theme='dark'] .icon-action {
+  color: var(--dt-text) !important;
+  border-color: var(--dt-border) !important;
+  background: var(--dt-surface-soft) !important;
+}
+
+html[data-theme='dark'] .el-button--default:hover,
+html[data-theme='dark'] .dt-ghost-action:hover,
+html[data-theme='dark'] .ghost-action:hover,
+html[data-theme='dark'] .dt-icon-action:hover,
+html[data-theme='dark'] .icon-action:hover {
+  color: var(--dt-primary-light) !important;
+  border-color: var(--dt-primary-border) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .el-table,
+html[data-theme='dark'] .dt-table.el-table,
+html[data-theme='dark'] .log-container .el-table {
+  --el-table-bg-color: var(--dt-surface) !important;
+  --el-table-tr-bg-color: var(--dt-surface) !important;
+  --el-table-expanded-cell-bg-color: var(--dt-surface) !important;
+  --el-table-header-bg-color: var(--dt-surface-soft) !important;
+  --el-table-row-hover-bg-color: var(--dt-primary-subtle) !important;
+  --el-table-current-row-bg-color: var(--dt-primary-subtle) !important;
+  --el-table-text-color: var(--dt-text) !important;
+  --el-table-header-text-color: var(--dt-text) !important;
+  --el-table-border-color: var(--dt-border) !important;
+  color: var(--dt-text) !important;
+  background: var(--dt-surface) !important;
+}
+
+html[data-theme='dark'] .log-container .el-table__row,
+html[data-theme='dark'] .log-container .el-table__row td,
+html[data-theme='dark'] .log-container .el-table__cell,
+html[data-theme='dark'] .log-container .el-table__body tr,
+html[data-theme='dark'] .log-container .el-table__body tr > td {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface) !important;
+}
+
+html[data-theme='dark'] .log-container .el-table__body tr:hover > td,
+html[data-theme='dark'] .log-container .el-table__body tr.current-row > td {
+  color: var(--dt-text) !important;
+  background: var(--dt-primary-subtle) !important;
+}
+
+html[data-theme='dark'] .log-container .result-preview,
+html[data-theme='dark'] .log-container .empty-result {
+  color: var(--dt-text-muted) !important;
+}
