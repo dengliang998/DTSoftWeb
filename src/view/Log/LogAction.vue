@@ -127,6 +127,8 @@
           </div>
         </div>
         <el-table
+          ref="logTableRef"
+          :key="tableRenderKey"
           :data="LogActionList"
           :row-style="{ height: '52px' }"
           :cell-style="{ padding: '0px' }"
@@ -224,11 +226,18 @@ export default {
       // 用户列表
       LogActionList: [],
       // 总数据
-      total: 0
+      total: 0,
+      tableRenderKey: 0
     }
   },
   created() {
     this.GetLogActionList()
+  },
+  mounted() {
+    window.addEventListener('dt-theme-applied', this.handleThemeApplied)
+  },
+  beforeUnmount() {
+    window.removeEventListener('dt-theme-applied', this.handleThemeApplied)
   },
   methods: {
     async GetLogActionList() {
@@ -315,6 +324,12 @@ export default {
     },
     formatResultPreview(result) {
       return this.normalizeResult(result).replace(/\s+/g, ' ')
+    },
+    handleThemeApplied() {
+      this.tableRenderKey += 1
+      this.$nextTick(() => {
+        this.$refs.logTableRef?.doLayout?.()
+      })
     }
   }
 }

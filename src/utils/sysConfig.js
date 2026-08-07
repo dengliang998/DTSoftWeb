@@ -609,6 +609,16 @@ export const applyThemeConfig = (themeConfig = getCachedThemeConfig(), appearanc
   )
   rootStyle.setProperty('--el-box-shadow', palette.shadow)
   rootStyle.setProperty('--el-box-shadow-light', palette.shadowSoft)
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('dt-theme-applied', {
+        detail: {
+          appearance: resolvedAppearance
+        }
+      })
+    )
+  }
 }
 
 export const setUserAppearance = (appearance, options = {}) => {
