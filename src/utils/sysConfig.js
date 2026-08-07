@@ -543,6 +543,26 @@ export const applyThemeConfig = (themeConfig = getCachedThemeConfig(), appearanc
   rootStyle.setProperty('--dt-danger-soft', palette.dangerSoft)
   rootStyle.setProperty('--dt-shadow', palette.shadow)
   rootStyle.setProperty('--dt-shadow-soft', palette.shadowSoft)
+  rootStyle.setProperty('--dt-shell-header-bg', resolvedAppearance === 'dark' ? runtimeColors.topBg : palette.surface)
+  rootStyle.setProperty(
+    '--dt-shell-header-border',
+    resolvedAppearance === 'dark' ? runtimeColors.topBorder : palette.border
+  )
+  rootStyle.setProperty('--dt-shell-header-text', resolvedAppearance === 'dark' ? runtimeColors.topText : palette.text)
+  rootStyle.setProperty(
+    '--dt-shell-header-muted',
+    resolvedAppearance === 'dark' ? runtimeColors.topText : palette.textMuted
+  )
+  rootStyle.setProperty(
+    '--dt-shell-header-hover-bg',
+    resolvedAppearance === 'dark' ? runtimeColors.topHoverBg : palette.surfaceSoft
+  )
+  rootStyle.setProperty(
+    '--dt-shell-header-hover-text',
+    resolvedAppearance === 'dark' ? runtimeColors.topHoverText : runtimeColors.primary
+  )
+  rootStyle.setProperty('--dt-shell-tabs-bg', resolvedAppearance === 'dark' ? palette.surfaceSoft : '#f7f9fc')
+  rootStyle.setProperty('--dt-shell-content-bg', resolvedAppearance === 'dark' ? runtimeColors.pageBg : '#eef3f9')
   rootStyle.setProperty('--el-color-primary', runtimeColors.primary)
   rootStyle.setProperty('--el-color-primary-light-3', runtimeColors.primaryLight)
   rootStyle.setProperty(

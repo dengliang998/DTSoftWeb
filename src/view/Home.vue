@@ -2093,4 +2093,308 @@ export default {
 :global(html[data-theme='dark']) :global(.user-menu-popper .el-dropdown-menu__item--divided) {
   border-top-color: var(--dt-border);
 }
+
+/* SRM workbench skin */
+.home-container {
+  background: var(--dt-side-bg) !important;
+}
+
+.home-container .header-container {
+  height: 60px;
+  gap: 12px;
+  padding: 0 20px 0 0;
+  background: var(--dt-shell-header-bg) !important;
+  border-bottom: 1px solid var(--dt-shell-header-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+}
+
+.home-container .header-left {
+  align-self: stretch;
+  flex: 0 0 214px;
+  min-width: 214px;
+  justify-content: center;
+  background: var(--dt-side-bg);
+  border-right: 1px solid var(--dt-side-border);
+}
+
+.home-container .header-logo {
+  display: none;
+}
+
+.home-container .header-title {
+  color: var(--dt-side-active-text) !important;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.home-container .collapse-btn,
+.home-container .theme-toggle {
+  width: 32px;
+  height: 32px;
+  color: var(--dt-shell-header-muted) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  border-radius: 6px;
+  box-shadow: none !important;
+}
+
+.home-container .collapse-btn {
+  margin: 0 8px 0 0;
+}
+
+.home-container .collapse-btn:hover,
+.home-container .theme-toggle:hover,
+.home-container .theme-toggle:focus-visible {
+  color: var(--dt-shell-header-hover-text) !important;
+  background: var(--dt-shell-header-hover-bg) !important;
+  transform: none;
+}
+
+.top-menu :deep(.el-menu) {
+  --el-menu-text-color: var(--dt-shell-header-text);
+  --el-menu-hover-text-color: var(--dt-primary);
+  --el-menu-hover-bg-color: transparent;
+  --el-menu-active-color: var(--dt-primary);
+  height: 60px;
+}
+
+.top-menu :deep(.el-menu-item) {
+  height: 60px !important;
+  line-height: 60px !important;
+  padding: 0 18px !important;
+  margin: 0 2px !important;
+  color: var(--dt-shell-header-text) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.top-menu :deep(.el-menu-item:hover) {
+  color: var(--dt-primary) !important;
+  background: transparent !important;
+}
+
+.top-menu :deep(.el-menu-item.is-active) {
+  color: var(--dt-primary) !important;
+  background: transparent !important;
+  box-shadow: inset 0 -3px 0 var(--dt-primary) !important;
+}
+
+.home-container .header-right {
+  margin-left: 10px;
+  gap: 8px;
+}
+
+.home-container .user-trigger {
+  height: 38px;
+  color: var(--dt-shell-header-text);
+  background: transparent;
+  border-color: transparent;
+  border-radius: 6px;
+}
+
+.home-container .user-trigger:hover,
+.home-container .user-trigger:focus-visible {
+  color: var(--dt-shell-header-hover-text);
+  background: var(--dt-shell-header-hover-bg);
+  box-shadow: none;
+}
+
+.home-container .user-name {
+  color: inherit !important;
+  font-weight: 500;
+}
+
+.home-container .main-content {
+  gap: 0;
+  padding: 0;
+  background: var(--dt-shell-content-bg);
+}
+
+.home-container .sidebar-container {
+  width: 214px;
+  padding: 18px 12px;
+  border: 0 !important;
+  border-right: 1px solid var(--dt-side-border) !important;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.home-container .sidebar-container.collapsed {
+  width: 64px;
+  padding: 18px 8px;
+}
+
+.sidebar-container :deep(.el-menu-item),
+.sidebar-container :deep(.el-sub-menu__title) {
+  height: 44px;
+  line-height: 44px;
+  margin: 4px 0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-container :deep(.el-menu-item.is-active),
+.sidebar-container :deep(.el-sub-menu__title.is-active),
+.sidebar-container :deep(.el-sub-menu .el-menu-item.is-active) {
+  box-shadow: none !important;
+}
+
+.home-container .main-container {
+  border: 0;
+  border-radius: 0;
+  background: var(--dt-shell-content-bg);
+  box-shadow: none;
+}
+
+.home-container .tabs-container {
+  height: 54px;
+  padding: 10px 16px 8px;
+  background: var(--dt-shell-tabs-bg);
+  border-bottom: 1px solid var(--dt-border);
+}
+
+.tabs-container :deep(.el-tabs__item) {
+  min-width: 74px;
+  height: 34px;
+  line-height: 32px;
+  color: var(--dt-text);
+  background: var(--dt-surface);
+  border-color: var(--dt-border) !important;
+  border-radius: 5px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.tabs-container :deep(.el-tabs__item.is-active) {
+  color: var(--dt-primary);
+  background: var(--dt-primary-subtle);
+  border-color: var(--dt-primary-border) !important;
+  box-shadow: none;
+}
+
+.home-container .content-wrapper {
+  padding: 10px;
+  background: var(--dt-shell-content-bg);
+}
+
+.home-container .content-wrapper > * {
+  border-radius: 4px;
+}
+
+:global(html[data-theme='dark']) .home-container .header-container,
+:global(html[data-theme='dark']) .home-container .main-container,
+:global(html[data-theme='dark']) .home-container .content-wrapper {
+  background: var(--dt-shell-content-bg);
+}
+
+:global(html[data-theme='dark']) .home-container .header-container {
+  background: var(--dt-shell-header-bg) !important;
+}
+
+/* Sidebar navigation refinement */
+.home-container .sidebar-container {
+  padding: 14px 10px 18px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--dt-side-bg) 96%, #ffffff 4%) 0%, var(--dt-side-bg) 100%),
+    var(--dt-side-bg) !important;
+}
+
+.sidebar-container :deep(.el-menu) {
+  padding: 2px 0;
+  border-right: 0 !important;
+}
+
+.sidebar-container :deep(.el-sub-menu) {
+  margin: 1px 0;
+}
+
+.sidebar-container :deep(.el-menu-item),
+.sidebar-container :deep(.el-sub-menu__title) {
+  position: relative;
+  height: 42px;
+  line-height: 42px;
+  margin: 3px 0;
+  padding: 0 12px !important;
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--dt-side-text) 86%, transparent) !important;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.sidebar-container :deep(.el-menu-item .el-icon),
+.sidebar-container :deep(.el-sub-menu__title .el-icon) {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.sidebar-container :deep(.el-menu-item span),
+.sidebar-container :deep(.el-sub-menu__title span) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-container :deep(.el-menu-item:hover),
+.sidebar-container :deep(.el-sub-menu__title:hover) {
+  color: var(--dt-side-hover-text) !important;
+  background: color-mix(in srgb, var(--dt-side-hover-bg) 82%, transparent) !important;
+}
+
+.sidebar-container :deep(.el-sub-menu.is-opened > .el-sub-menu__title) {
+  color: var(--dt-side-hover-text) !important;
+  background: color-mix(in srgb, var(--dt-side-hover-bg) 68%, transparent) !important;
+}
+
+.sidebar-container :deep(.el-menu-item.is-active),
+.sidebar-container :deep(.el-sub-menu__title.is-active),
+.sidebar-container :deep(.el-sub-menu .el-menu-item.is-active) {
+  color: var(--dt-side-active-text) !important;
+  background: var(--dt-side-active-bg) !important;
+  font-weight: 650;
+}
+
+.sidebar-container :deep(.el-sub-menu .el-menu) {
+  margin: 2px 0 6px;
+  padding: 3px 0 4px;
+  background: color-mix(in srgb, var(--dt-side-bg) 88%, #ffffff 12%) !important;
+  border-radius: 4px;
+}
+
+.sidebar-container :deep(.el-sub-menu .el-menu-item) {
+  height: 36px;
+  line-height: 36px;
+  margin: 2px 4px;
+  padding-left: 38px !important;
+  color: color-mix(in srgb, var(--dt-side-text) 76%, transparent) !important;
+  font-size: 13px;
+}
+
+.sidebar-container :deep(.el-sub-menu__icon-arrow) {
+  right: 12px;
+  color: color-mix(in srgb, var(--dt-side-text) 64%, transparent) !important;
+  font-size: 12px;
+}
+
+.home-container .sidebar-container.collapsed {
+  padding: 14px 8px 18px;
+}
+
+.home-container .sidebar-container.collapsed :deep(.el-menu-item),
+.home-container .sidebar-container.collapsed :deep(.el-sub-menu__title) {
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.home-container .sidebar-container.collapsed :deep(.el-menu-item .el-icon),
+.home-container .sidebar-container.collapsed :deep(.el-sub-menu__title .el-icon) {
+  margin-right: 0;
+}
 </style>
