@@ -10,5 +10,6 @@ export const STORAGE_KEYS = Object.freeze({
   themeConfig: 'sysconfig.themeConfig',
   appearance: 'user.appearance',
   language: 'user.language',
+  languageSource: 'user.languageSource',
   enabledLanguages: 'sysconfig.enabledLanguages'
 })

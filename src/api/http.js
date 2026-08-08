@@ -4,7 +4,7 @@ import NProgress from 'nprogress'
 import { ElMessage } from 'element-plus'
 import { clearAuthSession, getToken } from '@/core/session'
 import { getMessage, isUnauthorizedPayload } from '@/core/response'
-import { getCurrentLanguage, translate } from '@/i18n'
+import { getCurrentLanguage, hasUserLanguagePreference, translate } from '@/i18n'
 
 const http = axios.create({
   timeout: 20000
@@ -46,7 +46,9 @@ http.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`
       }
     }
-    config.headers['X-Language'] = getCurrentLanguage()
+    if (hasUserLanguagePreference()) {
+      config.headers['X-Language'] = getCurrentLanguage()
+    }
     return config
   },
   (error) => {

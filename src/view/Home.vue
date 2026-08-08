@@ -320,8 +320,9 @@ export default {
       .catch(() => {})
 
     // 在创建的生命周期执行获取菜单操作
-    this.loadEnabledLanguages()
-    this.getAllMenuList()
+    this.loadEnabledLanguages().finally(() => {
+      this.getAllMenuList()
+    })
     // 在创建生命周期函数的时候获取保存的路径并赋值到数据中
     //this.activePath = window.sessionStorage.getItem('activePath')
     this.loadUserProfile()

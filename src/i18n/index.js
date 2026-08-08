@@ -24,17 +24,15 @@ const normalizeLanguageCode = (value) => {
   return Object.prototype.hasOwnProperty.call(messages, code) ? code : ''
 }
 
-const getBrowserLanguage = () => {
-  const language = normalizeLanguageCode(navigator.language)
-  if (language) return language
-  return navigator.language?.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN'
-}
+const getStoredLanguage = () => normalizeLanguageCode(localStorage.getItem(STORAGE_KEYS.language))
 
-export const getCurrentLanguage = () =>
-  normalizeLanguageCode(localStorage.getItem(STORAGE_KEYS.language)) || getBrowserLanguage() || 'zh-CN'
+export const hasUserLanguagePreference = () =>
+  Boolean(getStoredLanguage() && localStorage.getItem(STORAGE_KEYS.languageSource) === 'manual')
+
+export const getCurrentLanguage = () => i18nState.language
 
 export const i18nState = reactive({
-  language: getCurrentLanguage(),
+  language: getStoredLanguage() || 'zh-CN',
   enabledLanguages: []
 })
 
@@ -54,13 +52,21 @@ export const translate = (key, params = {}) => {
   )
 }
 
-export const setLanguage = (language) => {
+const applyLanguage = (language, { persist = false } = {}) => {
   const normalized = normalizeLanguageCode(language) || 'zh-CN'
   i18nState.language = normalized
-  localStorage.setItem(STORAGE_KEYS.language, normalized)
+  if (persist) {
+    localStorage.setItem(STORAGE_KEYS.language, normalized)
+    localStorage.setItem(STORAGE_KEYS.languageSource, 'manual')
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.language)
+    localStorage.removeItem(STORAGE_KEYS.languageSource)
+  }
   document.documentElement.lang = normalized
   window.dispatchEvent(new CustomEvent('dt-language-changed', { detail: { language: normalized } }))
 }
+
+export const setLanguage = (language) => applyLanguage(language, { persist: true })
 
 export const cacheEnabledLanguages = (languages) => {
   const normalized = Array.isArray(languages)
@@ -77,9 +83,10 @@ export const cacheEnabledLanguages = (languages) => {
 
   i18nState.enabledLanguages = normalized
   localStorage.setItem(STORAGE_KEYS.enabledLanguages, JSON.stringify(i18nState.enabledLanguages))
-  if (!i18nState.enabledLanguages.some((item) => item.LanguageCode === i18nState.language)) {
-    const defaultLanguage = i18nState.enabledLanguages.find((item) => item.IsDefault) || i18nState.enabledLanguages[0]
-    setLanguage(defaultLanguage?.LanguageCode || 'zh-CN')
+  const defaultLanguage = i18nState.enabledLanguages.find((item) => item.IsDefault) || i18nState.enabledLanguages[0]
+  const currentEnabled = i18nState.enabledLanguages.some((item) => item.LanguageCode === i18nState.language)
+  if (!hasUserLanguagePreference() || !currentEnabled) {
+    applyLanguage(defaultLanguage?.LanguageCode || 'zh-CN')
   }
 }
 
