@@ -1933,9 +1933,9 @@ html[data-theme='dark'] .dt-page-shell .link-button {
 .el-message-box {
   overflow: hidden !important;
   border: 1px solid color-mix(in srgb, var(--dt-border) 88%, var(--dt-primary) 12%) !important;
-  border-radius: 16px !important;
+  border-radius: 8px !important;
   background: var(--dt-surface) !important;
-  box-shadow: 0 24px 72px color-mix(in srgb, #0f172a 24%, transparent) !important;
+  box-shadow: 0 18px 48px color-mix(in srgb, #0f172a 18%, transparent) !important;
 }
 
 .el-message-box {
@@ -1945,8 +1945,9 @@ html[data-theme='dark'] .dt-page-shell .link-button {
 
 .el-dialog__header,
 .el-message-box__header {
+  position: relative !important;
   margin-right: 0 !important;
-  padding: 22px 28px 18px !important;
+  padding: 8px 48px 8px 20px !important;
   border-bottom: 1px solid var(--dt-border) !important;
   background: var(--dt-surface) !important;
 }
@@ -1957,17 +1958,17 @@ html[data-theme='dark'] .dt-page-shell .link-button {
   align-items: center;
   gap: 0;
   color: var(--dt-text) !important;
-  font-size: 19px !important;
+  font-size: 16px !important;
   font-weight: 760 !important;
-  line-height: 1.4;
+  line-height: 22px;
 }
 
 .el-dialog__title::before,
 .el-message-box__title::before {
   display: inline-block;
   width: 4px !important;
-  height: 24px !important;
-  margin-right: 12px;
+  height: 18px !important;
+  margin-right: 10px;
   border-radius: 999px !important;
   background: linear-gradient(180deg, var(--dt-primary) 0%, var(--dt-accent) 100%) !important;
   content: '';
@@ -1975,13 +1976,14 @@ html[data-theme='dark'] .dt-page-shell .link-button {
 
 .el-dialog__headerbtn,
 .el-message-box__headerbtn {
-  top: 16px !important;
-  right: 18px !important;
-  width: 34px !important;
-  height: 34px !important;
+  top: 50% !important;
+  right: 12px !important;
+  width: 28px !important;
+  height: 28px !important;
   border: 1px solid transparent !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   background: transparent !important;
+  transform: translateY(-50%) !important;
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease,
@@ -2007,38 +2009,54 @@ html[data-theme='dark'] .dt-page-shell .link-button {
 }
 
 .el-dialog__body {
-  padding: 26px 28px 28px !important;
+  padding: 13px 14px 14px !important;
   background: var(--dt-surface) !important;
 }
 
 .el-message-box__content {
-  padding: 22px 24px 24px !important;
+  padding: 11px 12px 12px !important;
   background: var(--dt-surface) !important;
   color: var(--dt-text-muted) !important;
 }
 
 .el-dialog__footer,
 .el-message-box__footer {
-  padding: 16px 28px 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 20px !important;
   border-top: 1px solid var(--dt-border) !important;
   background: var(--dt-surface) !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+
+.el-dialog__footer > *,
+.el-message-box__footer > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .el-dialog__footer > .dialog-footer,
 .el-message-box__footer > .dialog-footer {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
+  width: 100%;
   padding: 0 !important;
   background: transparent !important;
 }
 
 .el-dialog__footer .el-button,
 .el-message-box__footer .el-button {
-  min-width: 92px !important;
-  min-height: 40px !important;
-  padding: 0 18px !important;
-  border-radius: 10px !important;
+  min-width: 80px !important;
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
   font-weight: 700 !important;
   transition:
     background-color 0.2s ease,
@@ -2274,14 +2292,14 @@ html.theme-switching .brand_copy::before {
 
 .el-dialog,
 .el-message-box {
-  border-radius: 6px !important;
+  border-radius: 8px !important;
 }
 
 .el-dialog__header,
 .el-message-box__header,
 .el-dialog__footer,
 .el-message-box__footer {
-  background: var(--dt-surface-soft) !important;
+  background: var(--dt-surface) !important;
 }
 
 html[data-theme='dark'] .el-card,

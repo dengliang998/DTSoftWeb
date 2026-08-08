@@ -685,38 +685,41 @@ export default {
 }
 
 :deep(.micro-app-form-dialog .el-dialog__header) {
+  position: relative;
   flex: 0 0 auto;
   margin-right: 0;
-  padding: 12px 24px 10px;
+  padding: 6px 16px 5px;
   border-bottom: 1px solid #e6ebf2;
+  background: var(--dt-surface);
 }
 
 :deep(.micro-app-form-dialog .el-dialog__title) {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: 24px;
   color: #172033;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 28px;
+  line-height: 24px;
 }
 
 :deep(.micro-app-form-dialog .el-dialog__title::before) {
   width: 4px;
-  height: 24px;
-  margin-right: 12px;
+  height: 18px;
+  margin-right: 10px;
   border-radius: 4px;
   background: #16a6a0;
   content: '';
 }
 
 :deep(.micro-app-form-dialog .el-dialog__headerbtn) {
-  top: 12px;
-  right: 24px;
-  width: 40px;
-  height: 40px;
+  top: 50%;
+  right: 14px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #f3f6fb;
+  transform: translateY(-50%);
 }
 
 :deep(.micro-app-form-dialog .el-dialog__headerbtn:hover) {
@@ -731,10 +734,16 @@ export default {
 }
 
 :deep(.micro-app-form-dialog .el-dialog__footer) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   flex: 0 0 auto;
-  padding: 10px 24px;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 16px;
   border-top: 1px solid #e6ebf2;
-  background: #f8fafc;
+  background: var(--dt-surface);
 }
 
 .dialog-form-container {

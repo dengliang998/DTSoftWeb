@@ -206,7 +206,7 @@ export default {
 
 <style scoped>
 .user-picker-dialog :deep(.el-dialog__header) {
-  padding: 10px 16px 6px;
+  padding: 8px 16px 5px;
   margin-right: 0;
 }
 .user-picker-dialog :deep(.el-dialog__title) {
@@ -214,10 +214,11 @@ export default {
   line-height: 20px;
 }
 .user-picker-dialog :deep(.el-dialog__headerbtn) {
-  top: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 .user-picker-dialog :deep(.el-dialog__body) {
-  padding: 8px 16px 14px;
+  padding: 4px 8px 7px;
 }
 
 .picker-body {

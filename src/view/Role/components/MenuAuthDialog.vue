@@ -362,9 +362,11 @@ export default {
   overflow: hidden;
 }
 :deep(.menu-auth-dialog .el-dialog__header) {
+  position: relative;
   margin: 0;
-  padding: 14px 20px 12px;
+  padding: 7px 16px 6px;
   border-bottom: 1px solid #e8edf3;
+  background: var(--dt-surface);
 }
 :deep(.menu-auth-dialog .el-dialog__body) {
   flex: 1;
@@ -374,9 +376,15 @@ export default {
   overflow: hidden;
 }
 :deep(.menu-auth-dialog .el-dialog__footer) {
-  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 16px;
   border-top: 1px solid #e8edf3;
-  background: #fff;
+  background: var(--dt-surface);
 }
 html[data-theme='dark'] .menu-auth-title {
   color: var(--dt-text);

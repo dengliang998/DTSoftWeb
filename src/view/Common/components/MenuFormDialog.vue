@@ -309,18 +309,26 @@ export default {
 }
 
 :deep(.menu-form-dialog .el-dialog__header) {
-  padding: 18px 24px 14px !important;
+  position: relative !important;
+  padding: 9px 16px 7px !important;
+  background: var(--dt-surface) !important;
 }
 
 :deep(.menu-form-dialog .el-dialog__body) {
-  padding: 18px 24px 20px !important;
+  padding: 9px 12px 10px !important;
   background: #ffffff !important;
 }
 
 :deep(.menu-form-dialog .el-dialog__footer) {
-  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 16px !important;
   border-top: 1px solid #e5eaf3 !important;
-  background: transparent !important;
+  background: var(--dt-surface) !important;
 }
 
 :deep(.menu-form-dialog .el-dialog__title) {
@@ -431,11 +439,13 @@ export default {
 }
 
 .dialog-footer {
-  padding: 14px 24px;
-  background: #fafbfc;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
 }
 
 .dialog-footer :deep(.el-button) {
@@ -489,7 +499,7 @@ export default {
   }
 
   .dialog-footer {
-    padding: 12px 16px;
+    padding: 0;
   }
 }
 

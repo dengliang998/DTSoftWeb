@@ -395,49 +395,58 @@ export default {
 }
 
 .user-selector-dialog :deep(.el-dialog__header) {
+  position: relative;
   margin-right: 0;
-  padding: 18px 22px 14px;
+  padding: 9px 16px 7px;
   border-bottom: 1px solid #e5edf5;
+  background: var(--dt-surface);
 }
 
 .user-selector-dialog :deep(.el-dialog__title) {
   position: relative;
-  padding-left: 18px;
+  padding-left: 14px;
   color: #172033;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 760;
-  line-height: 24px;
+  line-height: 22px;
 }
 
 .user-selector-dialog :deep(.el-dialog__title::before) {
   content: '';
   position: absolute;
   left: 0;
-  top: 3px;
+  top: 4px;
   width: 5px;
-  height: 18px;
+  height: 14px;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--dt-primary-light) 0%, var(--dt-primary) 100%);
 }
 
 .user-selector-dialog :deep(.el-dialog__headerbtn) {
-  top: 13px;
-  right: 16px;
-  width: 36px;
-  height: 36px;
+  top: 50%;
+  right: 12px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #f3f6fb;
+  transform: translateY(-50%);
 }
 
 .user-selector-dialog :deep(.el-dialog__body) {
-  padding: 14px 22px 16px;
+  padding: 7px 11px 8px;
   background: #f5f8fb;
 }
 
 .user-selector-dialog :deep(.el-dialog__footer) {
-  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 16px;
   border-top: 1px solid #e5edf5;
-  background: #f7fafc;
+  background: var(--dt-surface);
 }
 
 .user-selector-container {

@@ -1165,9 +1165,10 @@ export default {
 }
 
 :deep(.el-dialog__header) {
-  background-color: #fafafa;
+  position: relative;
+  background-color: var(--dt-surface);
   border-bottom: 1px solid #ebeef5;
-  padding: 20px 24px;
+  padding: 8px 16px;
 }
 
 :deep(.el-dialog__title) {
@@ -1177,13 +1178,19 @@ export default {
 }
 
 :deep(.el-dialog__body) {
-  padding: 24px;
+  padding: 12px;
 }
 
 :deep(.el-dialog__footer) {
-  background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  background-color: var(--dt-surface);
   border-top: 1px solid #ebeef5;
-  padding: 16px 24px;
+  padding: 0 16px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;

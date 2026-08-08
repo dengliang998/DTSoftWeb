@@ -957,16 +957,25 @@ export default {
 }
 
 .user-form-dialog :deep(.el-dialog__header) {
-  padding: 14px 20px 12px;
+  position: relative;
+  padding: 7px 16px 6px;
+  background: var(--dt-surface);
 }
 
 .user-form-dialog :deep(.el-dialog__body) {
-  padding: 16px 20px 14px;
+  padding: 8px 10px 7px;
   overflow: visible;
 }
 
 .user-form-dialog :deep(.el-dialog__footer) {
-  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 16px;
+  background: var(--dt-surface);
 }
 
 /* 右键菜单样式 */

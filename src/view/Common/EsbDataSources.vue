@@ -144,7 +144,7 @@
     <el-dialog
       v-model="formDialogVisible"
       :title="form.ItemId ? $t('esb.editDataSource') : $t('esb.addDataSource')"
-      width="860px"
+      width="min(980px, calc(100vw - 32px))"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
         <div class="form-grid">
