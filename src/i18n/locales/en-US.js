@@ -600,7 +600,7 @@ export default {
     editConnectionAction: 'Edit Connection',
     deleteConnection: 'Delete Connection',
     connectionCode: 'Connection Code',
-    connectionCodePlaceholder: 'e.g. external_crm',
+    connectionCodePlaceholder: 'Example: external_crm',
     connectionName: 'Connection Name',
     namePlaceholder: 'Enter name',
     selectDatabaseType: 'Select database type',
@@ -608,7 +608,7 @@ export default {
     connectionString: 'Connection String',
     connectionStringPlaceholder: 'Enter database connection string',
     webApiConfig: 'WebApi Config',
-    webApiConfigPlaceholder: 'e.g. {"baseUrl":"https://api.example.com","method":"GET"}',
+    webApiConfigPlaceholder: 'Example: {"baseUrl":"https://api.example.com","method":"GET"}',
     remark: 'Remark',
     loadConnectionsFailed: 'Failed to load ESB service connections',
     saveFailed: 'Save failed',
@@ -625,7 +625,7 @@ export default {
     testExecute: 'Test Execution',
     deleteDataSource: 'Delete Data Source',
     dataSourceCode: 'Data Source Code',
-    dataSourceCodePlaceholder: 'e.g. customer_options',
+    dataSourceCodePlaceholder: 'Example: customer_options',
     dataSourceName: 'Data Source Name',
     sourceType: 'Data Source Type',
     selectServiceConnection: 'Select service connection',
@@ -1137,7 +1137,16 @@ export default {
     missingToken: 'Sign-in failed: the server did not return a valid token',
     failedPrefix: 'Sign-in failed',
     failedRetry: 'Sign-in failed. Please try again later.',
-    defaultSystemName: 'Management Workbench'
+    defaultSystemName: 'Management Workbench',
+    errors: {
+      invalidCredentials: 'Username or password is incorrect.',
+      credentialsRequired: 'Username and password are required.',
+      decryptionFailed: 'Login parameters could not be decrypted. Refresh the page and try again.',
+      concurrentLimitExceeded: 'The number of online users has reached the license limit.',
+      captchaRequired: 'Captcha is required.',
+      captchaExpired: 'Captcha has expired. Refresh it and try again.',
+      captchaInvalid: 'Captcha is incorrect.'
+    }
   },
   auth: {
     loginDecryptionFailed: 'Login parameters could not be decrypted. Refresh the page and try again.',

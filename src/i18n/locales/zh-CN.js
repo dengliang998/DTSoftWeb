@@ -597,7 +597,7 @@ export default {
     editConnectionAction: '编辑连接',
     deleteConnection: '删除连接',
     connectionCode: '连接编码',
-    connectionCodePlaceholder: '例如 external_crm',
+    connectionCodePlaceholder: '示例：external_crm',
     connectionName: '连接名称',
     namePlaceholder: '请输入名称',
     selectDatabaseType: '请选择数据库类型',
@@ -605,7 +605,7 @@ export default {
     connectionString: '连接字符串',
     connectionStringPlaceholder: '请输入数据库连接字符串',
     webApiConfig: 'WebApi 配置',
-    webApiConfigPlaceholder: '例如 {"baseUrl":"https://api.example.com","method":"GET"}',
+    webApiConfigPlaceholder: '示例：{"baseUrl":"https://api.example.com","method":"GET"}',
     remark: '备注',
     loadConnectionsFailed: '获取 ESB 服务连接失败',
     saveFailed: '保存失败',
@@ -622,7 +622,7 @@ export default {
     testExecute: '测试执行',
     deleteDataSource: '删除数据源',
     dataSourceCode: '数据源编码',
-    dataSourceCodePlaceholder: '例如 customer_options',
+    dataSourceCodePlaceholder: '示例：customer_options',
     dataSourceName: '数据源名称',
     sourceType: '数据源类型',
     selectServiceConnection: '请选择服务连接',
@@ -1133,7 +1133,16 @@ export default {
     missingToken: '登录失败：服务端未返回有效令牌',
     failedPrefix: '登录失败',
     failedRetry: '登录失败，请稍后重试！',
-    defaultSystemName: '管理工作台'
+    defaultSystemName: '管理工作台',
+    errors: {
+      invalidCredentials: '用户名或密码错误',
+      credentialsRequired: '用户名和密码不能为空',
+      decryptionFailed: '登录参数解密失败，请刷新页面后重试',
+      concurrentLimitExceeded: '当前在线用户数已达到许可证允许的上限',
+      captchaRequired: '验证码不能为空',
+      captchaExpired: '验证码已过期，请刷新后重试',
+      captchaInvalid: '验证码错误'
+    }
   },
   auth: {
     loginDecryptionFailed: '登录参数解密失败，请刷新页面后重试',

@@ -148,9 +148,10 @@
     <el-dialog
       v-model="formDialogVisible"
       :title="form.ItemId ? $t('esb.editConnection') : $t('esb.addServiceConnection')"
-      width="760px"
+      class="esb-service-dialog"
+      width="min(920px, calc(100vw - 32px))"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <div class="form-grid">
           <el-form-item :label="$t('esb.connectionCode')" prop="Code">
             <el-input v-model="form.Code" :placeholder="$t('esb.connectionCodePlaceholder')"></el-input>
@@ -477,8 +478,26 @@ export default {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 16px;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 2px 18px;
+}
+
+.form-grid :deep(.el-form-item) {
+  min-width: 0;
+}
+
+:global(.esb-service-dialog .el-form-item__label) {
+  height: auto;
+  margin-bottom: 6px;
+  overflow: visible;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+:global(.esb-service-dialog .el-input),
+:global(.esb-service-dialog .el-select),
+:global(.esb-service-dialog .el-input-number) {
+  width: 100%;
 }
 
 .esb-actions {
@@ -493,7 +512,7 @@ export default {
   margin-left: 0;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 720px) {
   .form-grid {
     grid-template-columns: 1fr;
   }

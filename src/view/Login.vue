@@ -198,6 +198,23 @@ export default defineComponent({
       loginForm.captchaCode = String(value || '').toUpperCase()
     }
 
+    const loginMessageKeyMap = {
+      登录成功: 'login.success',
+      用户名或密码错误: 'login.errors.invalidCredentials',
+      用户名和密码不能为空: 'login.errors.credentialsRequired',
+      '登录参数解密失败，请刷新页面后重试': 'login.errors.decryptionFailed',
+      当前在线用户数已达到许可证允许的上限: 'login.errors.concurrentLimitExceeded',
+      验证码不能为空: 'login.errors.captchaRequired',
+      '验证码已过期，请刷新后重试': 'login.errors.captchaExpired',
+      验证码错误: 'login.errors.captchaInvalid'
+    }
+
+    const getLocalizedLoginMessage = (responseOrError, fallback) => {
+      const message = getMessage(responseOrError, fallback)
+      const key = loginMessageKeyMap[message]
+      return key ? translate(key) : message || fallback
+    }
+
     // 登录处理
     const login = () => {
       // 防止重复提交
@@ -230,7 +247,7 @@ export default defineComponent({
         })
           .then(function (response) {
             if (isSuccessPayload(response)) {
-              ElMessage.success(getMessage(response, translate('login.success')))
+              ElMessage.success(getLocalizedLoginMessage(response, translate('login.success')))
               const token = getLoginToken(response)
               if (!token) {
                 ElMessage.error(translate('login.missingToken'))
@@ -242,13 +259,13 @@ export default defineComponent({
               router.push(redirect || '/home')
             } else {
               ElMessage.error(
-                `${translate('login.failedPrefix')}：${getMessage(response, translate('welcome.unknownError'))}`
+                `${translate('login.failedPrefix')}：${getLocalizedLoginMessage(response, translate('welcome.unknownError'))}`
               )
               if (captchaEnabled.value) loadCaptcha()
             }
           })
           .catch(function (error) {
-            ElMessage.error(getMessage(error.response || error, translate('login.failedRetry')))
+            ElMessage.error(getLocalizedLoginMessage(error.response || error, translate('login.failedRetry')))
             if (captchaEnabled.value) loadCaptcha()
           })
           .finally(function () {

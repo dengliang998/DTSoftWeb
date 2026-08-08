@@ -37,7 +37,7 @@
           <el-option
             v-for="connection in databaseConnectionOptions"
             :key="connection.ItemId"
-            :label="connection.Name"
+            :label="getConnectionDisplayName(connection)"
             :value="connection.ItemId"
           />
         </el-select>
@@ -93,7 +93,7 @@
           </el-table-column>
           <el-table-column :label="$t('esb.serviceConnection')" min-width="170">
             <template #default="{ row }">
-              <span class="dt-muted-pill">{{ row.ConnectionName || getConnectionName(row.ConnectionId) }}</span>
+              <span class="dt-muted-pill">{{ getDataSourceConnectionName(row) }}</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('common.status')" width="96">
@@ -164,10 +164,10 @@
               <el-option
                 v-for="connection in databaseConnectionOptions"
                 :key="connection.ItemId"
-                :label="connection.Name"
+                :label="getConnectionDisplayName(connection)"
                 :value="connection.ItemId"
               >
-                <span>{{ connection.Name }}</span>
+                <span>{{ getConnectionDisplayName(connection) }}</span>
                 <span class="connection-option-extra">{{ connection.DbType }}</span>
               </el-option>
             </el-select>
@@ -413,7 +413,23 @@ export default {
     getConnectionName(connectionId) {
       const value = connectionId ?? 0
       const connection = this.connectionOptions.find((item) => item.ItemId === value)
-      return connection?.Name || this.$t('esb.defaultSystemDb')
+      return connection ? this.getConnectionDisplayName(connection) : this.$t('esb.defaultSystemDb')
+    },
+    isDefaultSystemConnection(connection) {
+      return Boolean(connection?.IsDefault) || Number(connection?.ItemId ?? connection?.itemId ?? -1) === 0
+    },
+    getConnectionDisplayName(connection) {
+      if (this.isDefaultSystemConnection(connection)) return this.$t('esb.defaultSystemDb')
+      return connection?.Name || connection?.name || ''
+    },
+    getDataSourceConnectionName(row) {
+      const connectionId = row.ConnectionId ?? row.connectionId ?? 0
+      if (Number(connectionId) === 0) return this.$t('esb.defaultSystemDb')
+
+      const connection = this.connectionOptions.find((item) => item.ItemId === connectionId)
+      if (connection) return this.getConnectionDisplayName(connection)
+
+      return row.ConnectionName || row.connectionName || this.$t('esb.defaultSystemDb')
     },
     handleSizeChange(size) {
       this.query.pageSize = size
