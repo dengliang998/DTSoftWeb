@@ -4,7 +4,7 @@
       <div class="dt-commandbar">
         <div class="dt-page-title">
           <h1>{{ $t('language.title') }}</h1>
-          <p>{{ activeTab === 'languages' ? $t('language.subtitle') : $t('language.resourceSubtitle') }}</p>
+          <p>{{ $t('language.resourceSubtitle') }}</p>
         </div>
         <div class="dt-command-actions">
           <el-button class="dt-ghost-action" :icon="Refresh" :loading="loading" @click="loadActiveData">
@@ -15,151 +15,69 @@
       </div>
 
       <div class="dt-panel">
-        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-          <el-tab-pane :label="$t('language.languageTab')" name="languages">
-            <div class="dt-panel__header">
-              <div>
-                <strong>{{ $t('language.title') }}</strong>
-                <span>{{ $t('language.enabledSummary', { count: enabledCount }) }}</span>
+        <div class="dt-panel__header">
+          <div>
+            <strong>{{ $t('language.resourceTitle') }}</strong>
+            <span>{{ $t('language.resourceSummary', { count: resources.length }) }}</span>
+          </div>
+        </div>
+        <div class="language-dictionary-note">{{ $t('language.resourceNotice') }}</div>
+        <el-table v-loading="loading" :data="resources" row-key="ItemId" class="dt-table">
+          <el-table-column :label="$t('language.resourceKey')" prop="ResourceKey" min-width="200" />
+          <el-table-column :label="$t('language.module')" prop="Module" min-width="120" />
+          <el-table-column :label="$t('language.description')" prop="Description" min-width="180" />
+          <el-table-column
+            v-for="lang in languageColumns"
+            :key="lang.LanguageCode"
+            :label="lang.NativeName || lang.LanguageName || lang.LanguageCode"
+            min-width="160"
+          >
+            <template #default="{ row }">
+              <span class="resource-value">{{ row.Values?.[lang.LanguageCode] || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column :label="$t('common.actions')" width="168" align="right">
+            <template #default="{ row }">
+              <div class="dt-operation-buttons">
+                <el-tooltip :content="$t('common.edit')" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--edit"
+                    :icon="Edit"
+                    @click="openEditResourceDialog(row)"
+                  />
+                </el-tooltip>
+                <el-tooltip :content="$t('common.delete')" placement="top">
+                  <el-button
+                    class="dt-icon-action dt-icon-action--danger"
+                    :icon="Delete"
+                    @click="removeResource(row)"
+                  />
+                </el-tooltip>
               </div>
-            </div>
-            <el-table v-loading="loading" :data="languages" row-key="ItemId" class="dt-table">
-              <el-table-column :label="$t('language.code')" prop="LanguageCode" min-width="140" />
-              <el-table-column :label="$t('language.name')" prop="LanguageName" min-width="160" />
-              <el-table-column :label="$t('language.nativeName')" prop="NativeName" min-width="160" />
-              <el-table-column :label="$t('common.status')" width="120">
-                <template #default="{ row }">
-                  <el-tag :type="row.IsEnabled ? 'success' : 'info'">
-                    {{ row.IsEnabled ? $t('common.enabled') : $t('common.disabled') }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column :label="$t('language.isDefault')" width="120">
-                <template #default="{ row }">
-                  <el-tag v-if="row.IsDefault" type="warning">{{ $t('common.default') }}</el-tag>
-                  <span v-else class="muted-text">-</span>
-                </template>
-              </el-table-column>
-              <el-table-column :label="$t('common.sort')" prop="Sort" width="96" />
-              <el-table-column :label="$t('common.actions')" width="168" align="right">
-                <template #default="{ row }">
-                  <div class="dt-operation-buttons">
-                    <el-tooltip :content="$t('common.edit')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--edit"
-                        :icon="Edit"
-                        @click="openEditDialog(row)"
-                      />
-                    </el-tooltip>
-                    <el-tooltip :content="$t('common.delete')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--danger"
-                        :icon="Delete"
-                        :disabled="row.IsDefault"
-                        @click="removeLanguage(row)"
-                      />
-                    </el-tooltip>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-tab-pane>
-
-          <el-tab-pane :label="$t('language.resourceTab')" name="resources">
-            <div class="dt-panel__header">
-              <div>
-                <strong>{{ $t('language.resourceTitle') }}</strong>
-                <span>{{ $t('language.resourceSummary', { count: resources.length }) }}</span>
-              </div>
-            </div>
-            <el-table v-loading="loading" :data="resources" row-key="ItemId" class="dt-table">
-              <el-table-column :label="$t('language.resourceKey')" prop="ResourceKey" min-width="200" />
-              <el-table-column :label="$t('language.module')" prop="Module" min-width="120" />
-              <el-table-column :label="$t('language.description')" prop="Description" min-width="180" />
-              <el-table-column
-                v-for="lang in languageColumns"
-                :key="lang.LanguageCode"
-                :label="lang.NativeName || lang.LanguageName || lang.LanguageCode"
-                min-width="160"
-              >
-                <template #default="{ row }">
-                  <span class="resource-value">{{ row.Values?.[lang.LanguageCode] || '-' }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column :label="$t('common.actions')" width="168" align="right">
-                <template #default="{ row }">
-                  <div class="dt-operation-buttons">
-                    <el-tooltip :content="$t('common.edit')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--edit"
-                        :icon="Edit"
-                        @click="openEditResourceDialog(row)"
-                      />
-                    </el-tooltip>
-                    <el-tooltip :content="$t('common.delete')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--danger"
-                        :icon="Delete"
-                        @click="removeResource(row)"
-                      />
-                    </el-tooltip>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-tab-pane>
-        </el-tabs>
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
     </section>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="720px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
-        <template v-if="formMode === 'language'">
-          <el-form-item :label="$t('language.code')" prop="LanguageCode">
-            <el-select v-model="form.LanguageCode" :placeholder="$t('language.codePlaceholder')" class="full-width">
-              <el-option
-                v-for="item in languageOptions"
-                :key="item.LanguageCode"
-                :label="`${item.NativeName} (${item.LanguageCode})`"
-                :value="item.LanguageCode"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item :label="$t('language.name')" prop="LanguageName">
-            <el-input v-model="form.LanguageName" :placeholder="$t('language.namePlaceholder')" maxlength="100" />
-          </el-form-item>
-          <el-form-item :label="$t('language.nativeName')" prop="NativeName">
-            <el-input v-model="form.NativeName" :placeholder="$t('language.nativeNamePlaceholder')" maxlength="100" />
-          </el-form-item>
-          <el-form-item :label="$t('language.isEnabled')">
-            <el-switch v-model="form.IsEnabled" />
-          </el-form-item>
-          <el-form-item :label="$t('language.isDefault')">
-            <el-switch v-model="form.IsDefault" />
-          </el-form-item>
-          <el-form-item :label="$t('common.sort')">
-            <el-input-number v-model="form.Sort" :min="0" :step="10" />
-          </el-form-item>
-        </template>
-
-        <template v-else>
-          <el-form-item :label="$t('language.resourceKey')" prop="ResourceKey">
-            <el-input v-model="form.ResourceKey" :placeholder="$t('language.resourceKeyPlaceholder')" maxlength="200" />
-          </el-form-item>
-          <el-form-item :label="$t('language.module')">
-            <el-input v-model="form.Module" :placeholder="$t('language.modulePlaceholder')" maxlength="100" />
-          </el-form-item>
-          <el-form-item :label="$t('language.description')">
-            <el-input v-model="form.Description" :placeholder="$t('language.descriptionPlaceholder')" maxlength="500" />
-          </el-form-item>
-          <el-form-item
-            v-for="lang in languageColumns"
-            :key="lang.LanguageCode"
-            :label="lang.NativeName || lang.LanguageName || lang.LanguageCode"
-          >
-            <el-input v-model="form.Values[lang.LanguageCode]" :placeholder="`${lang.LanguageCode}`" maxlength="500" />
-          </el-form-item>
-        </template>
+        <el-form-item :label="$t('language.resourceKey')" prop="ResourceKey">
+          <el-input v-model="form.ResourceKey" :placeholder="$t('language.resourceKeyPlaceholder')" maxlength="200" />
+        </el-form-item>
+        <el-form-item :label="$t('language.module')">
+          <el-input v-model="form.Module" :placeholder="$t('language.modulePlaceholder')" maxlength="100" />
+        </el-form-item>
+        <el-form-item :label="$t('language.description')">
+          <el-input v-model="form.Description" :placeholder="$t('language.descriptionPlaceholder')" maxlength="500" />
+        </el-form-item>
+        <el-form-item
+          v-for="lang in languageColumns"
+          :key="lang.LanguageCode"
+          :label="lang.NativeName || lang.LanguageName || lang.LanguageCode"
+        >
+          <el-input v-model="form.Values[lang.LanguageCode]" :placeholder="`${lang.LanguageCode}`" maxlength="500" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
@@ -172,26 +90,8 @@
 <script>
 import { computed, defineComponent, getCurrentInstance, onMounted, reactive, ref } from 'vue'
 import { Delete, Edit, Plus, Refresh } from '@element-plus/icons-vue'
-import {
-  deleteLanguage,
-  deleteLanguageResource,
-  getEnabledLanguages,
-  getLanguageResources,
-  getLanguages,
-  saveLanguage,
-  saveLanguageResource
-} from '@/api/language'
-import { SUPPORTED_LANGUAGE_OPTIONS, cacheEnabledLanguages, i18nState } from '@/i18n'
-
-const createLanguageForm = () => ({
-  ItemId: null,
-  LanguageCode: '',
-  LanguageName: '',
-  NativeName: '',
-  IsEnabled: true,
-  IsDefault: false,
-  Sort: 0
-})
+import { deleteLanguageResource, getEnabledLanguages, getLanguageResources, saveLanguageResource } from '@/api/language'
+import { cacheEnabledLanguages, i18nState } from '@/i18n'
 
 const createResourceForm = () => ({
   ItemId: null,
@@ -199,16 +99,6 @@ const createResourceForm = () => ({
   Module: '',
   Description: '',
   Values: {}
-})
-
-const normalizeLanguage = (item = {}) => ({
-  ItemId: item.ItemId ?? item.itemId,
-  LanguageCode: item.LanguageCode ?? item.languageCode ?? '',
-  LanguageName: item.LanguageName ?? item.languageName ?? '',
-  NativeName: item.NativeName ?? item.nativeName ?? '',
-  IsEnabled: Boolean(item.IsEnabled ?? item.isEnabled),
-  IsDefault: Boolean(item.IsDefault ?? item.isDefault),
-  Sort: Number(item.Sort ?? item.sort ?? 0)
 })
 
 const normalizeResource = (item = {}) => ({
@@ -223,82 +113,45 @@ export default defineComponent({
   name: 'Languages',
   setup() {
     const { proxy } = getCurrentInstance()
-    const activeTab = ref('languages')
     const loading = ref(false)
     const saving = ref(false)
     const dialogVisible = ref(false)
-    const formMode = ref('language')
     const formRef = ref(null)
-    const form = reactive(createLanguageForm())
+    const form = reactive(createResourceForm())
     const resources = ref([])
-    const languages = ref([])
-    const languageOptions = ref([...SUPPORTED_LANGUAGE_OPTIONS])
+    const languageOptions = ref([])
 
-    const rules = computed(() => {
-      if (formMode.value === 'resource') {
-        return {
-          ResourceKey: [{ required: true, message: proxy.$t('language.resourceKeyPlaceholder'), trigger: 'blur' }]
-        }
-      }
-      return {
-        LanguageCode: [{ required: true, message: proxy.$t('language.codePlaceholder'), trigger: 'change' }],
-        LanguageName: [{ required: true, message: proxy.$t('language.namePlaceholder'), trigger: 'blur' }],
-        NativeName: [{ required: true, message: proxy.$t('language.nativeNamePlaceholder'), trigger: 'blur' }]
-      }
-    })
+    const rules = computed(() => ({
+      ResourceKey: [{ required: true, message: proxy.$t('language.resourceKeyPlaceholder'), trigger: 'blur' }]
+    }))
 
     const dialogTitle = computed(() =>
-      formMode.value === 'resource'
-        ? proxy.$t(form.ItemId ? 'language.resourceEditTitle' : 'language.resourceAddTitle')
-        : proxy.$t(form.ItemId ? 'language.editTitle' : 'language.addTitle')
+      proxy.$t(form.ItemId ? 'language.resourceEditTitle' : 'language.resourceAddTitle')
     )
 
-    const enabledCount = computed(() => languages.value.filter((item) => item.IsEnabled).length)
-    const languageColumns = computed(() => languages.value.filter((item) => item.IsEnabled))
+    const languageColumns = computed(() => languageOptions.value)
 
     const resetForm = () => {
-      Object.assign(form, createLanguageForm())
-      form.Values = {}
-      formMode.value = 'language'
+      Object.assign(form, createResourceForm())
       formRef.value?.clearValidate?.()
     }
 
     const hydrateLanguageOptions = () => {
-      const enabled =
-        i18nState.enabledLanguages && i18nState.enabledLanguages.length > 0
-          ? i18nState.enabledLanguages
-          : SUPPORTED_LANGUAGE_OPTIONS
-      languageOptions.value = enabled
-    }
-
-    const loadLanguages = async () => {
-      loading.value = true
-      try {
-        const [languageResp, enabledResp] = await Promise.all([getLanguages(), getEnabledLanguages()])
-        if (languageResp?.data?.success) {
-          languages.value = Array.isArray(languageResp.data.data) ? languageResp.data.data.map(normalizeLanguage) : []
-        } else {
-          proxy.$message.error(languageResp?.data?.Msg || proxy.$t('language.loadFailed'))
-        }
-        if (enabledResp?.data?.success && Array.isArray(enabledResp.data.data)) {
-          cacheEnabledLanguages(enabledResp.data.data)
-          hydrateLanguageOptions()
-        }
-      } catch (error) {
-        proxy.$message.error(error?.response?.data?.Msg || proxy.$t('language.loadFailed'))
-      } finally {
-        loading.value = false
-      }
+      languageOptions.value = Array.isArray(i18nState.enabledLanguages) ? i18nState.enabledLanguages : []
     }
 
     const loadResources = async () => {
       loading.value = true
       try {
-        const { data: res } = await getLanguageResources()
-        if (res?.success) {
-          resources.value = Array.isArray(res.data) ? res.data.map(normalizeResource) : []
+        const [resourceResp, enabledResp] = await Promise.all([getLanguageResources(), getEnabledLanguages()])
+        if (enabledResp?.data?.success && Array.isArray(enabledResp.data.data)) {
+          cacheEnabledLanguages(enabledResp.data.data)
+          hydrateLanguageOptions()
+        }
+        if (resourceResp?.data?.success) {
+          resources.value = Array.isArray(resourceResp.data.data) ? resourceResp.data.data.map(normalizeResource) : []
         } else {
-          proxy.$message.error(res?.Msg || proxy.$t('language.resourceLoadFailed'))
+          proxy.$message.error(resourceResp?.data?.Msg || proxy.$t('language.resourceLoadFailed'))
         }
       } catch (error) {
         proxy.$message.error(error?.response?.data?.Msg || proxy.$t('language.resourceLoadFailed'))
@@ -307,50 +160,20 @@ export default defineComponent({
       }
     }
 
-    const loadActiveData = () => {
-      if (activeTab.value === 'resources') return loadResources()
-      return loadLanguages()
-    }
-
-    const handleTabChange = () => {
-      loadActiveData()
-    }
+    const loadActiveData = () => loadResources()
 
     const openAddDialog = () => {
       resetForm()
-      if (activeTab.value === 'resources') {
-        formMode.value = 'resource'
-        form.Values = Object.fromEntries(
-          (languageColumns.value.length > 0 ? languageColumns.value : languageOptions.value).map((item) => [
-            item.LanguageCode,
-            ''
-          ])
-        )
-      } else {
-        formMode.value = 'language'
-        const defaultLanguage = languageOptions.value[0] || SUPPORTED_LANGUAGE_OPTIONS[0]
-        form.LanguageCode = defaultLanguage.LanguageCode
-        form.LanguageName = defaultLanguage.LanguageName
-        form.NativeName = defaultLanguage.NativeName
-        form.Sort = defaultLanguage.Sort
-      }
-      dialogVisible.value = true
-    }
-
-    const openEditDialog = (row) => {
-      resetForm()
-      formMode.value = 'language'
-      Object.assign(form, normalizeLanguage(row))
+      form.Values = Object.fromEntries(languageColumns.value.map((item) => [item.LanguageCode, '']))
       dialogVisible.value = true
     }
 
     const openEditResourceDialog = (row) => {
       resetForm()
-      formMode.value = 'resource'
       Object.assign(form, normalizeResource(row))
       form.Values = {}
       const sourceValues = row.Values || {}
-      ;(languageColumns.value.length > 0 ? languageColumns.value : languageOptions.value).forEach((lang) => {
+      languageColumns.value.forEach((lang) => {
         form.Values[lang.LanguageCode] = sourceValues[lang.LanguageCode] || ''
       })
       dialogVisible.value = true
@@ -363,56 +186,18 @@ export default defineComponent({
       saving.value = true
       try {
         const payload = { ...form, Values: { ...form.Values } }
-        const api = formMode.value === 'resource' ? saveLanguageResource : saveLanguage
-        const { data: res } = await api(payload)
+        const { data: res } = await saveLanguageResource(payload)
         if (res?.success) {
-          proxy.$message.success(
-            formMode.value === 'resource' ? proxy.$t('language.resourceSaveSuccess') : proxy.$t('language.saveSuccess')
-          )
+          proxy.$message.success(proxy.$t('language.resourceSaveSuccess'))
           dialogVisible.value = false
-          await loadActiveData()
+          await loadResources()
         } else {
-          proxy.$message.error(
-            res?.Msg ||
-              (formMode.value === 'resource'
-                ? proxy.$t('language.resourceSaveFailed')
-                : proxy.$t('language.saveFailed'))
-          )
+          proxy.$message.error(res?.Msg || proxy.$t('language.resourceSaveFailed'))
         }
       } catch (error) {
-        proxy.$message.error(
-          error?.response?.data?.Msg ||
-            (formMode.value === 'resource' ? proxy.$t('language.resourceSaveFailed') : proxy.$t('language.saveFailed'))
-        )
+        proxy.$message.error(error?.response?.data?.Msg || proxy.$t('language.resourceSaveFailed'))
       } finally {
         saving.value = false
-      }
-    }
-
-    const removeLanguage = async (row) => {
-      if (row.IsDefault) {
-        proxy.$message.warning(proxy.$t('language.defaultCannotDelete'))
-        return
-      }
-      try {
-        await proxy.$confirm(proxy.$t('language.deleteConfirm'), proxy.$t('common.delete'), {
-          confirmButtonText: proxy.$t('common.confirm'),
-          cancelButtonText: proxy.$t('common.cancel'),
-          type: 'warning'
-        })
-      } catch {
-        return
-      }
-      try {
-        const { data: res } = await deleteLanguage(row.ItemId)
-        if (res?.success) {
-          proxy.$message.success(proxy.$t('language.deleteSuccess'))
-          await loadLanguages()
-        } else {
-          proxy.$message.error(res?.Msg || proxy.$t('language.deleteFailed'))
-        }
-      } catch (error) {
-        proxy.$message.error(error?.response?.data?.Msg || proxy.$t('language.deleteFailed'))
       }
     }
 
@@ -441,7 +226,7 @@ export default defineComponent({
 
     onMounted(async () => {
       hydrateLanguageOptions()
-      await loadLanguages()
+      await loadResources()
     })
 
     return {
@@ -449,23 +234,15 @@ export default defineComponent({
       Edit,
       Plus,
       Refresh,
-      activeTab,
       dialogTitle,
       dialogVisible,
-      enabledCount,
       form,
-      formMode,
       formRef,
-      handleTabChange,
       languageColumns,
-      languageOptions,
-      languages,
       loading,
       loadActiveData,
       openAddDialog,
-      openEditDialog,
       openEditResourceDialog,
-      removeLanguage,
       removeResource,
       resources,
       resetForm,
@@ -486,15 +263,22 @@ export default defineComponent({
   width: 100%;
 }
 
-.muted-text {
-  color: var(--dt-text-muted);
-}
-
 .resource-value {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.language-dictionary-note {
+  margin: 0 16px 12px;
+  padding: 9px 12px;
+  color: var(--dt-text-muted);
+  background: color-mix(in srgb, var(--el-color-primary) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--el-color-primary) 16%, transparent);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 </style>

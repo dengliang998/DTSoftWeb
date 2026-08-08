@@ -49,7 +49,12 @@
             </el-icon>
           </transition>
         </button>
-        <el-dropdown trigger="click" popper-class="language-menu-popper" @command="handleLanguageChange">
+        <el-dropdown
+          v-if="enabledLanguages.length > 0"
+          trigger="click"
+          popper-class="language-menu-popper"
+          @command="handleLanguageChange"
+        >
           <button type="button" class="language-trigger" :title="$t('language.switchLabel')">
             <span>{{ currentLanguageLabel }}</span>
             <el-icon class="user-arrow"><ArrowDown /></el-icon>
@@ -1981,16 +1986,17 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  min-width: 78px;
-  padding: 0 11px;
+  height: 38px;
+  min-width: 104px;
+  padding: 0 12px;
   color: var(--dt-top-text);
-  background: color-mix(in srgb, var(--dt-top-text) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dt-top-text) 16%, transparent);
-  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1;
   outline: none;
   transition:
     color 0.18s ease,
@@ -2002,9 +2008,14 @@ export default {
 .language-trigger:hover,
 .language-trigger:focus-visible {
   color: var(--dt-top-hover-text);
-  background: color-mix(in srgb, var(--dt-top-hover-bg) 86%, transparent);
-  border-color: color-mix(in srgb, var(--dt-top-hover-text) 32%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dt-top-hover-text) 14%, transparent);
+  background: var(--dt-top-hover-bg);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.language-trigger span {
+  color: inherit;
+  opacity: 1;
 }
 
 .home-container .user-name {
@@ -2288,6 +2299,7 @@ export default {
   gap: 8px;
 }
 
+.home-container .language-trigger,
 .home-container .user-trigger {
   height: 38px;
   color: var(--dt-shell-header-text);
@@ -2296,6 +2308,13 @@ export default {
   border-radius: 6px;
 }
 
+.home-container .language-trigger .user-arrow {
+  color: inherit;
+  opacity: 0.72;
+}
+
+.home-container .language-trigger:hover,
+.home-container .language-trigger:focus-visible,
 .home-container .user-trigger:hover,
 .home-container .user-trigger:focus-visible {
   color: var(--dt-shell-header-hover-text);

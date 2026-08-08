@@ -35,7 +35,7 @@ export const getCurrentLanguage = () =>
 
 export const i18nState = reactive({
   language: getCurrentLanguage(),
-  enabledLanguages: [...SUPPORTED_LANGUAGE_OPTIONS]
+  enabledLanguages: []
 })
 
 const readPath = (source, path) =>
@@ -75,7 +75,7 @@ export const cacheEnabledLanguages = (languages) => {
         .filter((item) => item.LanguageCode)
     : []
 
-  i18nState.enabledLanguages = normalized.length > 0 ? normalized : [...SUPPORTED_LANGUAGE_OPTIONS]
+  i18nState.enabledLanguages = normalized
   localStorage.setItem(STORAGE_KEYS.enabledLanguages, JSON.stringify(i18nState.enabledLanguages))
   if (!i18nState.enabledLanguages.some((item) => item.LanguageCode === i18nState.language)) {
     const defaultLanguage = i18nState.enabledLanguages.find((item) => item.IsDefault) || i18nState.enabledLanguages[0]
@@ -88,7 +88,7 @@ export const loadCachedEnabledLanguages = () => {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.enabledLanguages) || '[]')
     cacheEnabledLanguages(parsed)
   } catch {
-    i18nState.enabledLanguages = [...SUPPORTED_LANGUAGE_OPTIONS]
+    i18nState.enabledLanguages = []
   }
 }
 
