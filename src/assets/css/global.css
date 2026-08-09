@@ -50,8 +50,8 @@ html {
   --dt-page-padding: var(--dt-page-padding-block) var(--dt-page-padding-right) var(--dt-page-padding-block)
     var(--dt-page-padding-left);
   --dt-pagination-inline-padding: 10px;
-  --dt-pagination-bottom-padding: 5px;
-  --dt-pagination-min-height: 44px;
+  --dt-pagination-bottom-padding: 8px;
+  --dt-pagination-min-height: 48px;
   --dt-pagination-padding: 8px var(--dt-pagination-inline-padding) var(--dt-pagination-bottom-padding);
   color-scheme: light;
 }
@@ -1498,6 +1498,7 @@ body {
 
 .el-pagination.dt-pagination {
   flex: 0 0 auto;
+  display: flex;
   margin-top: 0 !important;
   min-height: var(--dt-pagination-min-height);
   padding: var(--dt-pagination-padding) !important;
