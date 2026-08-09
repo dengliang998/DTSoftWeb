@@ -236,7 +236,7 @@
                   </template>
                 </el-table-column>
               </template>
-              <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="right">
+              <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="center">
                 <template #default="scope">
                   <div class="dt-operation-buttons operation-buttons runtime-actions">
                     <el-tooltip v-if="appConfig.supportUpdate" :content="$t('microRuntime.editData')" placement="top">
@@ -1902,6 +1902,7 @@ export default {
 
 .runtime-actions {
   min-width: 70px;
+  justify-content: center;
 }
 
 .runtime-actions :deep(.el-button + .el-button) {
