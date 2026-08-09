@@ -1123,7 +1123,6 @@ export default {
     switchToLight: '切换到日间模式'
   },
   login: {
-    systemAria: '系统信息',
     loginAria: '账号登录',
     title: '账号登录',
     subtitle: '使用工作台账号继续',
@@ -1141,8 +1140,6 @@ export default {
     securityWithCaptcha: '加密传输 · 验证码保护',
     security: '加密传输',
     captchaLoadFailed: '验证码加载失败，请刷新后重试',
-    usernameEmpty: '用户名不能为空！',
-    passwordEmpty: '密码不能为空！',
     captchaMissing: '请先获取验证码',
     success: '登录成功',
     missingToken: '登录失败：服务端未返回有效令牌',

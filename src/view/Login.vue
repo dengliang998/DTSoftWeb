@@ -19,25 +19,18 @@
       </button>
     </div>
     <div class="login_shell">
-      <section class="login_brand" :aria-label="$t('login.systemAria')">
-        <div class="brand_panel"></div>
-      </section>
-
       <section class="login_box" :aria-label="$t('login.loginAria')">
         <div class="login_box-header">
           <div>
             <h1>{{ $t('login.title') }}</h1>
             <p>{{ $t('login.subtitle') }}</p>
           </div>
-          <!-- 头像区域 -->
           <div class="avatar_box">
             <img :src="avatarUrl" :alt="$t('login.avatarAlt')" @error="onAvatarError" />
           </div>
         </div>
 
-        <!-- 登录表单区域 -->
         <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">
-          <!-- 用户名 -->
           <el-form-item prop="username">
             <el-input
               v-model="loginForm.username"
@@ -45,7 +38,6 @@
               prefix-icon="User"
             ></el-input>
           </el-form-item>
-          <!-- 密码 -->
           <el-form-item prop="password">
             <el-input
               v-model="loginForm.password"
@@ -56,7 +48,6 @@
               @keyup.enter="login"
             ></el-input>
           </el-form-item>
-          <!-- 验证码 -->
           <el-form-item v-if="captchaEnabled" prop="captchaCode">
             <div class="captcha-row">
               <el-input
@@ -71,7 +62,6 @@
               <button
                 type="button"
                 class="captcha-image"
-                :class="{ 'is-loading': captchaLoading }"
                 :disabled="captchaLoading"
                 :title="$t('login.captchaRefreshTitle')"
                 @click="loadCaptcha"
@@ -81,7 +71,6 @@
               </button>
             </div>
           </el-form-item>
-          <!-- 按钮 -->
           <el-form-item class="btns">
             <el-button type="primary" class="login-btn" :loading="loggingIn" @click="login">
               {{ $t('login.submit') }}
@@ -120,13 +109,11 @@ export default defineComponent({
     const route = useRoute()
     const loginFormRef = ref(null)
     const loginBgUrl = ref(getCachedLoginImgDataUrl())
-    const systemName = ref(getCachedSystemName() || translate('login.defaultSystemName'))
     const captchaEnabled = ref(getCachedLoginCaptchaEnabled())
     const captchaImage = ref('')
     const captchaLoading = ref(false)
     const loggingIn = ref(false)
 
-    // 这是登录表单的数据绑定对象
     const loginForm = reactive({
       username: '',
       password: '',
@@ -134,14 +121,10 @@ export default defineComponent({
       captchaCode: ''
     })
 
-    // 默认头像URL
     const defaultAvatarUrl = 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png'
-
-    // 头像URL
     const avatarUrl = ref(defaultAvatarUrl)
     let avatarDebounceTimer = null
 
-    // 这是表单的验证规则
     const loginFormRules = computed(() => ({
       username: [{ required: true, message: translate('login.usernameRequired'), trigger: 'blur' }],
       password: [{ required: true, message: translate('login.passwordRequired'), trigger: 'blur' }],
@@ -164,7 +147,7 @@ export default defineComponent({
 
     const refreshDefaultSystemName = () => {
       if (!getCachedSystemName()) {
-        systemName.value = translate('login.defaultSystemName')
+        document.title = translate('login.defaultSystemName')
       }
     }
 
@@ -186,31 +169,24 @@ export default defineComponent({
       }
     }
 
-    // 当头像加载失败时，使用默认头像
     const onAvatarError = () => {
       avatarUrl.value = defaultAvatarUrl
     }
 
-    // 加载用户头像
     const loadUserAvatar = () => {
-      if (loginForm.username) {
-        const avatarApiUrl = getUserAvatarUrl(loginForm.username, 'account')
-
-        // 创建一个新的Image对象来检测图像是否可加载
-        const img = new Image()
-        img.onload = () => {
-          // 如果图像加载成功，则更新头像URL
-          avatarUrl.value = avatarApiUrl
-        }
-        img.onerror = () => {
-          // 如果图像加载失败，则使用默认头像
-          avatarUrl.value = defaultAvatarUrl
-        }
-        img.src = avatarApiUrl
-      } else {
-        // 如果没有用户名，则使用默认头像
+      const username = loginForm.username.trim()
+      if (!username) {
         avatarUrl.value = defaultAvatarUrl
+        return
       }
+
+      const avatarApiUrl = getUserAvatarUrl(username, 'account')
+      const img = new Image()
+      img.onload = () => {
+        avatarUrl.value = avatarApiUrl
+      }
+      img.onerror = onAvatarError
+      img.src = avatarApiUrl
     }
 
     const loadCaptcha = () => {
@@ -262,21 +238,11 @@ export default defineComponent({
       return key ? translate(key) : message || fallback
     }
 
-    // 登录处理
     const login = () => {
-      // 防止重复提交
       if (!loginFormRef.value || loggingIn.value) return
 
       loginFormRef.value.validate((valid) => {
         if (!valid) return
-
-        if (loginForm.username === '') {
-          ElMessage.error(translate('login.usernameEmpty'))
-          return
-        } else if (loginForm.password === '') {
-          ElMessage.error(translate('login.passwordEmpty'))
-          return
-        }
 
         if (captchaEnabled.value && !loginForm.captchaId) {
           ElMessage.error(translate('login.captchaMissing'))
@@ -284,7 +250,6 @@ export default defineComponent({
           return
         }
 
-        //请求认证中心获取 token 完成登录
         loggingIn.value = true
         loginApi({
           username: loginForm.username,
@@ -321,19 +286,16 @@ export default defineComponent({
       })
     }
 
-    // 组件挂载时加载头像
     onMounted(() => {
       loadUserAvatar()
       loadEnabledLanguages()
       loadLoginEncryptionKey().catch(() => {})
-      // 加载系统配置（系统名称、登录背景图、登录验证码开关）
       fetchAndCacheSystemInfo()
         .then((res) => {
           loginBgUrl.value = normalizeBase64Image(res?.data?.loginImg) || getCachedLoginImgDataUrl()
           captchaEnabled.value = getCachedLoginCaptchaEnabled()
           const title = getCachedSystemName()
           if (title) {
-            systemName.value = title
             document.title = title
           }
           loadCaptcha()
@@ -343,7 +305,6 @@ export default defineComponent({
         })
     })
 
-    // 监听用户名变化，动态加载头像
     watch(
       () => loginForm.username,
       () => {
@@ -381,7 +342,6 @@ export default defineComponent({
       enabledLanguages,
       loggingIn,
       securityNote,
-      systemName,
       getLanguageShortLabel,
       onAvatarError,
       loadCaptcha,
@@ -399,53 +359,33 @@ export default defineComponent({
 
 <style lang="less" scoped>
 .login_container {
+  --login-card-bg: rgba(255, 255, 255, 0.95);
+  --login-card-border: rgba(255, 255, 255, 0.78);
+  --login-text: #182230;
+  --login-muted: #667085;
+  --login-input-border: #d7e0ec;
+  --login-avatar-bg: #ffffff;
+  --login-captcha-bg: #eef5ff;
+
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background-image: url('../assets/imgs/bg-optimized.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #101828;
-}
-
-.login_container::before {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(8, 20, 36, 0.52) 0%,
-      rgba(8, 20, 36, 0.34) 28%,
-      rgba(8, 20, 36, 0.12) 56%,
-      rgba(8, 20, 36, 0.02) 100%
-    ),
-    linear-gradient(180deg, rgba(8, 20, 36, 0.08) 0%, rgba(8, 20, 36, 0.2) 100%);
-  content: '';
+  background: #101828 url('../assets/imgs/bg-optimized.png') center / cover no-repeat;
 }
 
 .login-language {
   position: absolute;
   top: 24px;
   right: 28px;
-  z-index: 2;
+  z-index: 1;
   display: flex;
-  align-items: center;
-  gap: 0;
   padding: 2px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(226, 232, 240, 0.72);
   border-radius: 7px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(8px);
 }
 
 .login-language-choice {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 26px;
   padding: 0;
@@ -456,33 +396,17 @@ export default defineComponent({
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
-  line-height: 1;
-  outline: none;
-  transition:
-    color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.login-language-choice:hover,
-.login-language-choice:focus-visible {
-  color: var(--dt-primary);
-  background: rgba(238, 246, 255, 0.82);
 }
 
 .login-language-choice.is-active {
   color: #ffffff;
   background: var(--dt-primary);
-  box-shadow: none;
 }
 
 .login_shell {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(360px, 1fr) 400px;
-  gap: 7vw;
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
   width: min(1120px, calc(100% - 96px));
   min-height: 100vh;
   margin: 0 auto;
@@ -490,30 +414,13 @@ export default defineComponent({
   box-sizing: border-box;
 }
 
-.login_brand {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  max-width: 640px;
-  min-height: 100%;
-}
-
-.brand_panel {
-  position: relative;
-  width: min(100%, 620px);
-  color: #f8fafc;
-  box-sizing: border-box;
-}
-
 .login_box {
   width: 400px;
   padding: 30px 32px 28px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.78);
+  color: var(--login-text);
+  background: var(--login-card-bg);
+  border: 1px solid var(--login-card-border);
   border-radius: 12px;
-  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.36);
-  backdrop-filter: blur(22px);
   box-sizing: border-box;
 }
 
@@ -525,30 +432,27 @@ export default defineComponent({
   margin-bottom: 26px;
 }
 
-.login_box h1 {
+.login_box h1,
+.login_box p {
   margin: 0;
-  color: #182230;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
   letter-spacing: 0;
 }
 
-.login_box h1::after {
-  content: '';
-  display: block;
-  width: 44px;
-  height: 4px;
-  margin-top: 8px;
-  background: linear-gradient(90deg, var(--dt-primary) 0%, var(--dt-primary-light) 100%);
-  border-radius: 999px;
+.login_box h1 {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.login_box p,
+.security_note {
+  color: var(--login-muted);
+  font-weight: 500;
 }
 
 .login_box p {
-  margin: 10px 0 0;
-  color: #667085;
+  margin-top: 10px;
   font-size: 13px;
-  font-weight: 500;
 }
 
 .avatar_box {
@@ -557,10 +461,9 @@ export default defineComponent({
   height: 48px;
   padding: 2px;
   overflow: hidden;
-  background: #ffffff;
-  border: 1px solid rgba(201, 213, 228, 0.9);
+  background: var(--login-avatar-bg);
+  border: 1px solid var(--login-input-border);
   border-radius: 50%;
-  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.12);
   box-sizing: border-box;
 }
 
@@ -568,7 +471,7 @@ export default defineComponent({
   display: block;
   width: 100%;
   height: 100%;
-  background-color: #eef2f7;
+  background: #eef2f7;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -583,23 +486,7 @@ export default defineComponent({
 
 .login_form :deep(.el-input__wrapper) {
   min-height: 44px;
-  background: #f8fafc;
   border-radius: 8px !important;
-  box-shadow: 0 0 0 1px #d7e0ec inset !important;
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.login_form :deep(.el-input__wrapper:hover) {
-  background: #ffffff;
-}
-
-.login_form :deep(.el-input__wrapper.is-focus) {
-  background: #ffffff;
-  box-shadow:
-    0 0 0 1px var(--dt-primary) inset,
-    0 0 0 4px color-mix(in srgb, var(--dt-primary) 12%, transparent) !important;
 }
 
 .login_form :deep(.el-input__inner) {
@@ -617,14 +504,12 @@ export default defineComponent({
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0;
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--dt-primary) 24%, transparent);
 }
 
 .captcha-row {
   display: grid;
   grid-template-columns: 1fr 118px;
   gap: 12px;
-  width: 100%;
 }
 
 .captcha-image {
@@ -634,27 +519,13 @@ export default defineComponent({
   height: 42px;
   padding: 0;
   overflow: hidden;
-  color: #475467;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  background: #eef5ff;
-  border: 1px solid #d7e0ec;
+  color: var(--login-muted);
+  background: var(--login-captcha-bg);
+  border: 1px solid var(--login-input-border);
   border-radius: 8px;
   cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.captcha-image:hover,
-.captcha-image:focus-visible {
-  background: #ffffff;
-  border-color: var(--dt-primary);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dt-primary) 12%, transparent);
-  outline: none;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .captcha-image:disabled {
@@ -671,35 +542,26 @@ export default defineComponent({
 
 .security_note {
   margin-top: 18px;
-  color: #667085;
   font-size: 12px;
-  font-weight: 500;
   text-align: center;
 }
 
+html[data-theme='dark'] .login_container {
+  --login-card-bg: rgba(15, 23, 42, 0.82);
+  --login-card-border: color-mix(in srgb, var(--dt-text) 14%, transparent);
+  --login-text: var(--dt-text);
+  --login-muted: var(--dt-text-muted);
+  --login-input-border: var(--dt-border);
+  --login-avatar-bg: var(--dt-surface);
+  --login-captcha-bg: var(--dt-surface-soft);
+  background-color: #09111d;
+}
+
 @media (max-width: 980px) {
-  .login_container::before {
-    background:
-      linear-gradient(180deg, rgba(8, 20, 36, 0.48) 0%, rgba(8, 20, 36, 0.22) 42%, rgba(8, 20, 36, 0.34) 100%),
-      rgba(8, 20, 36, 0.08);
-  }
-
   .login_shell {
-    grid-template-columns: 1fr;
     width: min(460px, calc(100% - 48px));
-    gap: 28px;
-    justify-items: center;
+    justify-content: center;
     padding: 42px 0;
-  }
-
-  .login_brand {
-    align-items: center;
-    text-align: center;
-  }
-
-  .brand_panel {
-    min-height: auto;
-    padding: 0;
   }
 }
 
@@ -707,13 +569,11 @@ export default defineComponent({
   .login-language {
     top: 14px;
     right: 18px;
-    padding: 2px;
   }
 
   .login-language-choice {
     width: 30px;
     height: 24px;
-    font-size: 11px;
   }
 
   .login_shell {
@@ -723,77 +583,12 @@ export default defineComponent({
 
   .login_box {
     width: 100%;
-    padding: 28px 24px 28px;
-  }
-
-  .brand_panel {
-    padding: 0;
+    padding: 28px 24px;
   }
 
   .captcha-row {
     grid-template-columns: 1fr 106px;
     gap: 10px;
   }
-}
-
-html[data-theme='dark'] .login_container {
-  background-color: #09111d;
-}
-
-html[data-theme='dark'] .login_box {
-  background: rgba(15, 23, 42, 0.82);
-  border-color: color-mix(in srgb, var(--dt-text) 14%, transparent);
-  box-shadow: 0 28px 90px rgba(2, 6, 23, 0.5);
-}
-
-html[data-theme='dark'] .login_box h1 {
-  color: var(--dt-text);
-}
-
-html[data-theme='dark'] .login_box p,
-html[data-theme='dark'] .security_note {
-  color: var(--dt-text-muted);
-}
-
-html[data-theme='dark'] .avatar_box {
-  background: var(--dt-surface);
-  border-color: var(--dt-border);
-  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.28);
-}
-
-html[data-theme='dark'] .avatar_box img {
-  background-color: var(--dt-surface-soft);
-}
-
-html[data-theme='dark'] .login_form :deep(.el-input__wrapper) {
-  background: color-mix(in srgb, var(--dt-surface-soft) 88%, #0f172a 12%);
-  box-shadow: 0 0 0 1px var(--dt-border) inset !important;
-}
-
-html[data-theme='dark'] .login_form :deep(.el-input__wrapper:hover),
-html[data-theme='dark'] .login_form :deep(.el-input__wrapper.is-focus) {
-  background: var(--dt-surface);
-}
-
-html[data-theme='dark'] .login_form :deep(.el-input__inner),
-html[data-theme='dark'] .login_form :deep(.el-input__prefix-inner),
-html[data-theme='dark'] .login_form :deep(.el-input__suffix-inner) {
-  color: var(--dt-text);
-}
-
-html[data-theme='dark'] .login_form :deep(.el-input__inner::placeholder) {
-  color: var(--dt-text-muted);
-}
-
-html[data-theme='dark'] .captcha-image {
-  color: var(--dt-text-muted);
-  background: var(--dt-surface-soft);
-  border-color: var(--dt-border);
-}
-
-html[data-theme='dark'] .captcha-image:hover,
-html[data-theme='dark'] .captcha-image:focus-visible {
-  background: var(--dt-surface);
-  border-color: var(--dt-primary);
 }
 </style>

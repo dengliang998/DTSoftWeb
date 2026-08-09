@@ -1128,7 +1128,6 @@ export default {
     switchToLight: 'Switch to light mode'
   },
   login: {
-    systemAria: 'System information',
     loginAria: 'Account sign in',
     title: 'Account Sign In',
     subtitle: 'Continue with your workbench account',
@@ -1146,8 +1145,6 @@ export default {
     securityWithCaptcha: 'Encrypted transport · Captcha protected',
     security: 'Encrypted transport',
     captchaLoadFailed: 'Failed to load captcha. Please refresh and try again.',
-    usernameEmpty: 'Username cannot be empty.',
-    passwordEmpty: 'Password cannot be empty.',
     captchaMissing: 'Please get captcha first.',
     success: 'Signed in successfully',
     missingToken: 'Sign-in failed: the server did not return a valid token',

@@ -2255,8 +2255,7 @@ html.theme-switching .el-textarea__inner,
 html.theme-switching .el-button,
 html.theme-switching .type-item,
 html.theme-switching .dashboard-panel,
-html.theme-switching .login_box,
-html.theme-switching .brand_copy::before {
+html.theme-switching .login_box {
   transition:
     background-color 0.32s ease,
     background 0.32s ease,
