@@ -1039,7 +1039,7 @@ export default {
 /* 内容包装器 */
 .content-wrapper {
   flex: 1;
-  padding: 24px;
+  padding: var(--dt-content-padding);
   overflow: auto;
   min-height: 0;
 }
@@ -2398,7 +2398,7 @@ export default {
 }
 
 .home-container .content-wrapper {
-  padding: 10px;
+  padding: var(--dt-content-padding);
   background: var(--dt-shell-content-bg);
 }
 

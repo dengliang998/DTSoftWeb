@@ -1680,7 +1680,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--dt-page-gap);
   overflow: hidden;
   min-height: 0;
   box-sizing: border-box;
@@ -1717,12 +1717,11 @@ export default {
 .main-pagination {
   flex: 0 0 auto;
   margin-top: 0;
-  padding-right: 10px !important;
 }
 
 .related-data-panel {
   flex: 0 0 auto;
-  margin-top: 12px;
+  margin-top: var(--dt-page-gap);
   overflow: hidden;
   border: 1px solid #dce5f2;
   border-radius: 8px;
@@ -1781,7 +1780,7 @@ export default {
 
 .related-content {
   min-height: 150px;
-  padding: 0 12px 12px;
+  padding: 0 var(--dt-pagination-inline-padding) var(--dt-pagination-bottom-padding);
 }
 
 .related-tabs :deep(.el-tabs__header) {

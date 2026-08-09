@@ -38,6 +38,21 @@ html {
   --dt-danger-soft: #feecec;
   --dt-shadow: 0 14px 36px rgba(18, 38, 63, 0.1);
   --dt-shadow-soft: 0 8px 22px rgba(18, 38, 63, 0.06);
+  --dt-content-padding-block: 10px;
+  --dt-content-padding-left: 10px;
+  --dt-content-padding-right: 5px;
+  --dt-content-padding: var(--dt-content-padding-block) var(--dt-content-padding-right) var(--dt-content-padding-block)
+    var(--dt-content-padding-left);
+  --dt-page-gap: 6px;
+  --dt-page-padding-block: 6px;
+  --dt-page-padding-left: 6px;
+  --dt-page-padding-right: 3px;
+  --dt-page-padding: var(--dt-page-padding-block) var(--dt-page-padding-right) var(--dt-page-padding-block)
+    var(--dt-page-padding-left);
+  --dt-pagination-inline-padding: 10px;
+  --dt-pagination-bottom-padding: 5px;
+  --dt-pagination-min-height: 44px;
+  --dt-pagination-padding: 8px var(--dt-pagination-inline-padding) var(--dt-pagination-bottom-padding);
   color-scheme: light;
 }
 
@@ -958,8 +973,8 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px;
+  gap: var(--dt-page-gap);
+  padding: var(--dt-page-padding);
 }
 
 .dt-commandbar {
@@ -1481,11 +1496,11 @@ body {
   padding: 10px;
 }
 
-.dt-pagination {
+.el-pagination.dt-pagination {
   flex: 0 0 auto;
   margin-top: 0 !important;
-  min-height: 52px;
-  padding: 8px 12px 10px !important;
+  min-height: var(--dt-pagination-min-height);
+  padding: var(--dt-pagination-padding) !important;
   box-sizing: border-box;
   align-items: center;
   justify-content: flex-end;
@@ -1517,7 +1532,7 @@ body {
   }
 
   .dt-workbench {
-    padding: 10px;
+    padding: var(--dt-page-padding);
   }
 
   .dt-commandbar,
