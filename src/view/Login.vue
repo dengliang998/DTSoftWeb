@@ -1,29 +1,23 @@
 <template>
   <div class="login_container" :style="loginContainerStyle">
-    <el-dropdown
+    <div
       v-if="enabledLanguages.length > 0"
       class="login-language"
-      trigger="click"
-      popper-class="language-menu-popper"
-      @command="handleLanguageChange"
+      role="group"
+      :aria-label="$t('language.switchLabel')"
     >
-      <button type="button" class="login-language-trigger" :title="$t('language.switchLabel')">
-        <span>{{ currentLanguageLabel }}</span>
-        <el-icon><ArrowDown /></el-icon>
+      <button
+        v-for="item in enabledLanguages"
+        :key="item.LanguageCode"
+        type="button"
+        :class="['login-language-choice', { 'is-active': item.LanguageCode === currentLanguage }]"
+        :aria-pressed="item.LanguageCode === currentLanguage"
+        :title="item.NativeName || item.LanguageName || item.LanguageCode"
+        @click="handleLanguageChange(item.LanguageCode)"
+      >
+        {{ getLanguageShortLabel(item) }}
       </button>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item
-            v-for="item in enabledLanguages"
-            :key="item.LanguageCode"
-            :command="item.LanguageCode"
-            :disabled="item.LanguageCode === currentLanguage"
-          >
-            <span>{{ item.NativeName || item.LanguageName || item.LanguageCode }}</span>
-          </el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
+    </div>
     <div class="login_shell">
       <section class="login_brand" :aria-label="$t('login.systemAria')">
         <div class="brand_panel"></div>
@@ -105,7 +99,6 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
 import { getCaptcha, getLoginToken, loadLoginEncryptionKey, login as loginApi } from '@/api/auth'
 import { getEnabledLanguages } from '@/api/language'
 import { getUserAvatarUrl } from '@/api/user'
@@ -162,10 +155,12 @@ export default defineComponent({
     )
     const enabledLanguages = computed(() => i18nState.enabledLanguages)
     const currentLanguage = computed(() => getCurrentLanguage())
-    const currentLanguageLabel = computed(() => {
-      const current = enabledLanguages.value.find((item) => item.LanguageCode === currentLanguage.value)
-      return current?.NativeName || current?.LanguageName || currentLanguage.value
-    })
+    const getLanguageShortLabel = (language) =>
+      String(language?.LanguageCode || '')
+        .toLowerCase()
+        .startsWith('zh')
+        ? '中'
+        : 'EN'
 
     const refreshDefaultSystemName = () => {
       if (!getCachedSystemName()) {
@@ -383,12 +378,11 @@ export default defineComponent({
       captchaImage,
       captchaLoading,
       currentLanguage,
-      currentLanguageLabel,
       enabledLanguages,
       loggingIn,
       securityNote,
       systemName,
-      ArrowDown,
+      getLanguageShortLabel,
       onAvatarError,
       loadCaptcha,
       formatCaptchaCode,
@@ -437,49 +431,49 @@ export default defineComponent({
   top: 24px;
   right: 28px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.72);
+  border-radius: 7px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px);
 }
 
-.login-language-trigger {
+.login-language-choice {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 36px;
-  min-width: 104px;
-  padding: 0 12px;
-  color: rgba(255, 255, 255, 0.94);
-  background: rgba(15, 23, 42, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 6px;
-  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.18);
-  backdrop-filter: blur(14px);
+  width: 32px;
+  height: 26px;
+  padding: 0;
+  color: #334155;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   outline: none;
   transition:
     color 0.18s ease,
-    background-color 0.18s ease,
-    border-color 0.18s ease,
+    background 0.18s ease,
     box-shadow 0.18s ease;
 }
 
-.login-language-trigger:hover,
-.login-language-trigger:focus-visible {
+.login-language-choice:hover,
+.login-language-choice:focus-visible {
+  color: var(--dt-primary);
+  background: rgba(238, 246, 255, 0.82);
+}
+
+.login-language-choice.is-active {
   color: #ffffff;
-  background: rgba(15, 23, 42, 0.42);
-  border-color: rgba(255, 255, 255, 0.48);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
-}
-
-.login-language-trigger span {
-  color: inherit;
-}
-
-.login-language-trigger .el-icon {
-  color: inherit;
-  opacity: 0.8;
+  background: var(--dt-primary);
+  box-shadow: none;
 }
 
 .login_shell {
@@ -713,11 +707,13 @@ export default defineComponent({
   .login-language {
     top: 14px;
     right: 18px;
+    padding: 2px;
   }
 
-  .login-language-trigger {
-    height: 34px;
-    min-width: 96px;
+  .login-language-choice {
+    width: 30px;
+    height: 24px;
+    font-size: 11px;
   }
 
   .login_shell {
