@@ -1,5 +1,29 @@
 <template>
   <div class="login_container" :style="loginContainerStyle">
+    <el-dropdown
+      v-if="enabledLanguages.length > 0"
+      class="login-language"
+      trigger="click"
+      popper-class="language-menu-popper"
+      @command="handleLanguageChange"
+    >
+      <button type="button" class="login-language-trigger" :title="$t('language.switchLabel')">
+        <span>{{ currentLanguageLabel }}</span>
+        <el-icon><ArrowDown /></el-icon>
+      </button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item
+            v-for="item in enabledLanguages"
+            :key="item.LanguageCode"
+            :command="item.LanguageCode"
+            :disabled="item.LanguageCode === currentLanguage"
+          >
+            <span>{{ item.NativeName || item.LanguageName || item.LanguageCode }}</span>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     <div class="login_shell">
       <section class="login_brand" :aria-label="$t('login.systemAria')">
         <div class="brand_panel">
@@ -85,7 +109,9 @@
 import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import { getCaptcha, getLoginToken, loadLoginEncryptionKey, login as loginApi } from '@/api/auth'
+import { getEnabledLanguages } from '@/api/language'
 import { getUserAvatarUrl } from '@/api/user'
 import { getData, getMessage, isSuccessPayload } from '@/core/response'
 import { setAuthSession } from '@/core/session'
@@ -96,7 +122,7 @@ import {
   getCachedSystemName,
   normalizeBase64Image
 } from '@/utils/sysConfig'
-import { translate } from '@/i18n'
+import { cacheEnabledLanguages, getCurrentLanguage, i18nState, setLanguage, translate } from '@/i18n'
 
 export default defineComponent({
   name: 'Login',
@@ -138,6 +164,36 @@ export default defineComponent({
     const securityNote = computed(() =>
       captchaEnabled.value ? translate('login.securityWithCaptcha') : translate('login.security')
     )
+    const enabledLanguages = computed(() => i18nState.enabledLanguages)
+    const currentLanguage = computed(() => getCurrentLanguage())
+    const currentLanguageLabel = computed(() => {
+      const current = enabledLanguages.value.find((item) => item.LanguageCode === currentLanguage.value)
+      return current?.NativeName || current?.LanguageName || currentLanguage.value
+    })
+
+    const refreshDefaultSystemName = () => {
+      if (!getCachedSystemName()) {
+        systemName.value = translate('login.defaultSystemName')
+      }
+    }
+
+    const handleLanguageChange = (language) => {
+      if (!language || language === currentLanguage.value) return
+      setLanguage(language)
+      refreshDefaultSystemName()
+      loginFormRef.value?.clearValidate?.()
+    }
+
+    const loadEnabledLanguages = async () => {
+      try {
+        const { data: res } = await getEnabledLanguages()
+        if (res?.success && Array.isArray(res.data)) {
+          cacheEnabledLanguages(res.data)
+        }
+      } catch {
+        // App.vue also attempts to load this; keep the current fallback if the request fails here.
+      }
+    }
 
     // 当头像加载失败时，使用默认头像
     const onAvatarError = () => {
@@ -277,6 +333,7 @@ export default defineComponent({
     // 组件挂载时加载头像
     onMounted(() => {
       loadUserAvatar()
+      loadEnabledLanguages()
       loadLoginEncryptionKey().catch(() => {})
       // 加载系统配置（系统名称、登录背景图、登录验证码开关）
       fetchAndCacheSystemInfo()
@@ -308,6 +365,13 @@ export default defineComponent({
       }
     )
 
+    watch(
+      () => i18nState.language,
+      () => {
+        refreshDefaultSystemName()
+      }
+    )
+
     onUnmounted(() => {
       if (avatarDebounceTimer) {
         clearTimeout(avatarDebounceTimer)
@@ -322,12 +386,17 @@ export default defineComponent({
       captchaEnabled,
       captchaImage,
       captchaLoading,
+      currentLanguage,
+      currentLanguageLabel,
+      enabledLanguages,
       loggingIn,
       securityNote,
       systemName,
+      ArrowDown,
       onAvatarError,
       loadCaptcha,
       formatCaptchaCode,
+      handleLanguageChange,
       login,
       loginContainerStyle: computed(() => {
         if (!loginBgUrl.value) return {}
@@ -365,6 +434,56 @@ export default defineComponent({
     ),
     linear-gradient(180deg, rgba(8, 20, 36, 0.08) 0%, rgba(8, 20, 36, 0.2) 100%);
   content: '';
+}
+
+.login-language {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 2;
+}
+
+.login-language-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 104px;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.94);
+  background: rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.18);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  outline: none;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.login-language-trigger:hover,
+.login-language-trigger:focus-visible {
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.42);
+  border-color: rgba(255, 255, 255, 0.48);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+.login-language-trigger span {
+  color: inherit;
+}
+
+.login-language-trigger .el-icon {
+  color: inherit;
+  opacity: 0.8;
 }
 
 .login_shell {
@@ -644,6 +763,16 @@ export default defineComponent({
 }
 
 @media (max-width: 520px) {
+  .login-language {
+    top: 14px;
+    right: 18px;
+  }
+
+  .login-language-trigger {
+    height: 34px;
+    min-width: 96px;
+  }
+
   .login_shell {
     width: min(400px, calc(100% - 36px));
     padding: 34px 0;
