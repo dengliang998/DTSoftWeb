@@ -96,7 +96,9 @@
                   <el-icon v-if="scope.row.icon && ElementPlusIconsVue[scope.row.icon]">
                     <component :is="ElementPlusIconsVue[scope.row.icon]" />
                   </el-icon>
-                  <el-icon v-else><Grid /></el-icon>
+                  <el-icon v-else>
+                    <component :is="ElementPlusIconsVue.Grid" />
+                  </el-icon>
                 </span>
                 <span class="menu-name-copy dt-name-copy">
                   <strong>{{ getMenuDisplayName(scope.row) }}</strong>
@@ -194,7 +196,7 @@
 
 <script>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from 'vue'
-import { Search, Plus, Edit, Delete, Rank, Refresh, ArrowDown, ArrowUp, Grid } from '@element-plus/icons-vue'
+import { Search, Plus, Edit, Delete, Rank, Refresh, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import MenuFormDialog from './components/MenuFormDialog.vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { addMenu as addMenuApi, deleteMenu, getMenu, updateMenu } from '@/api/menu'
@@ -995,8 +997,7 @@ export default {
       Rank,
       Refresh,
       ArrowDown,
-      ArrowUp,
-      Grid
+      ArrowUp
     }
   }
 }
