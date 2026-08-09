@@ -124,8 +124,8 @@
             <div class="section-title">{{ $t('systemSettings.systemTheme') }}</div>
             <el-form-item :label="$t('systemSettings.themeMode')">
               <el-radio-group v-model="form.theme.mode" @change="handleThemeModeChange">
-                <el-radio-button label="preset">{{ $t('systemSettings.preset') }}</el-radio-button>
-                <el-radio-button label="custom">{{ $t('systemSettings.custom') }}</el-radio-button>
+                <el-radio-button value="preset">{{ $t('systemSettings.preset') }}</el-radio-button>
+                <el-radio-button value="custom">{{ $t('systemSettings.custom') }}</el-radio-button>
               </el-radio-group>
             </el-form-item>
 

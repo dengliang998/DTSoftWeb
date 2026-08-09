@@ -816,9 +816,9 @@
                   </div>
                   <div class="option-source-row">
                     <el-radio-group v-model="selectedFieldData.optionSource" @change="handleOptionSourceChange">
-                      <el-radio label="manual">{{ $t('microConfig.manualOptions') }}</el-radio>
-                      <el-radio label="dictionary">{{ $t('microConfig.dictionary') }}</el-radio>
-                      <el-radio label="esb">{{ $t('microConfig.esbDataSource') }}</el-radio>
+                      <el-radio value="manual">{{ $t('microConfig.manualOptions') }}</el-radio>
+                      <el-radio value="dictionary">{{ $t('microConfig.dictionary') }}</el-radio>
+                      <el-radio value="esb">{{ $t('microConfig.esbDataSource') }}</el-radio>
                     </el-radio-group>
                     <el-select
                       v-if="selectedFieldData.optionSource === 'dictionary'"

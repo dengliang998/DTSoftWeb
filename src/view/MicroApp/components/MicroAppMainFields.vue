@@ -69,7 +69,7 @@
             v-model="formData[field.fieldName]"
             :disabled="isFieldDisabled(field)"
           >
-            <el-radio v-for="opt in field.options || []" :key="opt.value" :label="opt.value">
+            <el-radio v-for="opt in field.options || []" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </el-radio>
           </el-radio-group>
