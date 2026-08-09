@@ -568,6 +568,16 @@
                         :placeholder="$t('microConfig.auto')"
                       ></el-input-number>
                     </el-form-item>
+                    <el-form-item :label="$t('microConfig.columnAlign')">
+                      <el-select
+                        v-model="selectedFieldData.columnAlign"
+                        :placeholder="$t('microConfig.selectColumnAlign')"
+                      >
+                        <el-option :label="$t('microConfig.alignLeft')" value="left"></el-option>
+                        <el-option :label="$t('microConfig.alignCenter')" value="center"></el-option>
+                        <el-option :label="$t('microConfig.alignRight')" value="right"></el-option>
+                      </el-select>
+                    </el-form-item>
                     <el-form-item :label="$t('microConfig.fixedColumn')">
                       <el-select v-model="selectedFieldData.fixed" :placeholder="$t('microConfig.selectFixedColumn')">
                         <el-option :label="$t('microConfig.fixedNone')" value="none"></el-option>
@@ -1177,6 +1187,10 @@ export default {
         field.sortable = false
       }
 
+      if (!['left', 'center', 'right'].includes(field.columnAlign)) {
+        field.columnAlign = 'left'
+      }
+
       if (this.supportsColumnLength(field)) {
         const defaultLength = this.getDefaultColumnLength(field)
         const parsedLength = Number(field.columnLength)
@@ -1375,6 +1389,7 @@ export default {
                 : null,
           sortable:
             field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
+          columnAlign: field.ColumnAlign || field.columnAlign || 'left',
           fixed: field.Fixed || field.fixed || 'none',
           queryMode: field.QueryMode || field.queryMode || 'none',
           queryWidth:
@@ -1650,6 +1665,7 @@ export default {
         validation: '',
         columnWidth: null,
         sortable: false,
+        columnAlign: 'left',
         fixed: 'none',
         queryMode: 'none',
         queryWidth: 150,
@@ -1940,6 +1956,7 @@ export default {
         ColumnWidth: field.columnWidth,
         ColumnLength: field.columnLength,
         Sortable: field.sortable,
+        ColumnAlign: field.columnAlign || 'left',
         Fixed: field.fixed || 'none',
         QueryMode: field.queryMode || 'none',
         QueryWidth: field.queryMode && field.queryMode !== 'none' ? field.queryWidth || 150 : null,

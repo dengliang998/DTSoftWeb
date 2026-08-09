@@ -199,6 +199,7 @@
                   :label="field.label || field.fieldName || $t('microRuntime.unknownField')"
                   :width="field.columnWidth || undefined"
                   :fixed="normalizeFixedColumn(field.fixed)"
+                  :align="normalizeColumnAlign(field.columnAlign)"
                   :sortable="field.sortable ? 'custom' : false"
                 >
                   <template #default="scope">
@@ -319,6 +320,7 @@
                       :prop="field.fieldName"
                       :label="field.label || field.fieldName"
                       :min-width="field.columnWidth || 140"
+                      :align="normalizeColumnAlign(field.columnAlign)"
                       show-overflow-tooltip
                     >
                       <template #default="{ row }">
@@ -780,6 +782,7 @@ export default {
                       : null,
                 sortable:
                   field.Sortable !== undefined ? field.Sortable : field.sortable !== undefined ? field.sortable : false,
+                columnAlign: field.ColumnAlign || field.columnAlign || 'left',
                 fixed: field.Fixed || field.fixed || 'none',
                 queryMode: field.QueryMode || field.queryMode || 'none',
                 queryWidth:
@@ -1434,6 +1437,9 @@ export default {
     },
     normalizeFixedColumn(fixed) {
       return fixed === 'left' || fixed === 'right' ? fixed : false
+    },
+    normalizeColumnAlign(align) {
+      return ['left', 'center', 'right'].includes(align) ? align : 'left'
     },
     getDateFormatType(field) {
       return getDateFormatType(field)
