@@ -1663,6 +1663,7 @@ export default {
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 /* 应用内容 */
 .app-content {
@@ -1670,6 +1671,7 @@ export default {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* 列表页面 */
@@ -1681,6 +1683,7 @@ export default {
   gap: 10px;
   overflow: hidden;
   min-height: 0;
+  box-sizing: border-box;
 }
 
 /* 表单页面 */
@@ -1702,6 +1705,7 @@ export default {
 
 .runtime-panel {
   min-height: 0;
+  box-sizing: border-box;
 }
 
 .table-container {
