@@ -186,7 +186,14 @@
                 fixed="left"
               ></el-table-column>
               <!-- 序号列 -->
-              <el-table-column label="#" width="72" fixed="left" align="center">
+              <el-table-column
+                label="#"
+                :width="runtimeIndexColumnWidth"
+                fixed="left"
+                align="center"
+                header-align="center"
+                class-name="rank-column"
+              >
                 <template #default="scope">
                   <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
                 </template>
@@ -309,7 +316,13 @@
                     class="related-subtable dt-table"
                     max-height="220"
                   >
-                    <el-table-column label="#" width="64" align="center">
+                    <el-table-column
+                      label="#"
+                      :width="getRelatedIndexColumnWidth(subTable)"
+                      align="center"
+                      header-align="center"
+                      class-name="rank-column"
+                    >
                       <template #default="scope">
                         <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
                       </template>
@@ -530,6 +543,9 @@ export default {
       }
 
       return rows
+    },
+    runtimeIndexColumnWidth() {
+      return this.getIndexColumnWidth(this.appData?.list?.length || 0)
     }
   },
   watch: {
@@ -577,6 +593,13 @@ export default {
       }
       const start = (pager.currentPage - 1) * pager.pageSize
       return rows.slice(start, start + pager.pageSize)
+    },
+    getIndexColumnWidth(maxIndex) {
+      const digits = String(Math.max(Number(maxIndex) || 1, 1)).length
+      return Math.max(48, digits * 8 + 32)
+    },
+    getRelatedIndexColumnWidth(subTable) {
+      return this.getIndexColumnWidth(this.getRelatedSubTablePageRows(subTable).length)
     },
     handleRelatedPageSizeChange(subTable, pageSize) {
       const pager = this.getRelatedPagination(subTable)
