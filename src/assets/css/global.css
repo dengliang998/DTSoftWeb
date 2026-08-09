@@ -39,16 +39,18 @@ html {
   --dt-shadow: 0 14px 36px rgba(18, 38, 63, 0.1);
   --dt-shadow-soft: 0 8px 22px rgba(18, 38, 63, 0.06);
   --dt-content-padding-block: 10px;
+  --dt-content-padding-top: 5px;
   --dt-content-padding-left: 5px;
   --dt-content-padding-right: 5px;
-  --dt-content-padding: var(--dt-content-padding-block) var(--dt-content-padding-right) var(--dt-content-padding-block)
+  --dt-content-padding: var(--dt-content-padding-top) var(--dt-content-padding-right) var(--dt-content-padding-block)
     var(--dt-content-padding-left);
   --dt-page-gap: 6px;
   --dt-page-padding-block: 6px;
+  --dt-page-padding-top: 3px;
   --dt-page-padding-bottom: 3px;
   --dt-page-padding-left: 3px;
   --dt-page-padding-right: 3px;
-  --dt-page-padding: var(--dt-page-padding-block) var(--dt-page-padding-right) var(--dt-page-padding-bottom)
+  --dt-page-padding: var(--dt-page-padding-top) var(--dt-page-padding-right) var(--dt-page-padding-bottom)
     var(--dt-page-padding-left);
   --dt-pagination-inline-padding: 10px;
   --dt-pagination-bottom-padding: 8px;
