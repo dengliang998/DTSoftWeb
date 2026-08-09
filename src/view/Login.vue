@@ -404,6 +404,8 @@ export default defineComponent({
 }
 
 .login_shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -555,6 +557,14 @@ html[data-theme='dark'] .login_container {
   --login-avatar-bg: var(--dt-surface);
   --login-captcha-bg: var(--dt-surface-soft);
   background-color: #09111d;
+}
+
+html[data-theme='dark'] .login_container::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: rgba(2, 6, 23, 0.48);
 }
 
 @media (max-width: 980px) {
