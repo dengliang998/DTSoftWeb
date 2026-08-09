@@ -2290,6 +2290,15 @@ html.theme-switching .brand_copy::before {
 .el-table,
 .dt-table.el-table,
 .dt-table {
+  --el-table-bg-color: var(--dt-surface) !important;
+  --el-table-tr-bg-color: var(--dt-surface) !important;
+  --el-table-expanded-cell-bg-color: var(--dt-surface) !important;
+  --el-table-header-bg-color: var(--dt-surface-soft) !important;
+  --el-table-row-hover-bg-color: color-mix(in srgb, var(--dt-primary) 6%, var(--dt-surface)) !important;
+  --el-table-current-row-bg-color: var(--dt-primary-subtle) !important;
+  --el-table-text-color: var(--dt-text) !important;
+  --el-table-header-text-color: var(--dt-text) !important;
+  --el-table-border-color: var(--dt-border) !important;
   border-radius: 0 !important;
   border-color: transparent !important;
   box-shadow: none !important;
@@ -2308,6 +2317,14 @@ html.theme-switching .brand_copy::before {
 .el-table th.is-leaf,
 .dt-table .el-table__row td {
   border-bottom-color: color-mix(in srgb, var(--dt-border) 76%, transparent) !important;
+}
+
+.el-table__body tr,
+.el-table__body tr > td,
+.dt-table .el-table__body tr,
+.dt-table .el-table__body tr > td {
+  color: var(--dt-text) !important;
+  background: var(--dt-surface) !important;
 }
 
 .el-table tr.current-row > td,

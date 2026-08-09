@@ -1024,12 +1024,20 @@ export default {
   },
   apiDoc: {
     title: '接口文档',
+    endpoint: '接口地址',
     description: '描述：',
     requestParams: '请求参数：',
     paramName: '参数名',
     type: '类型',
     required: '必填',
     descriptionColumn: '描述',
+    responseExample: '响应示例',
+    copyPath: '复制地址',
+    copyResponse: '复制响应',
+    copySuccess: '复制成功',
+    copyFailed: '复制失败，请手动选择复制',
+    noParams: '该接口无需请求参数',
+    noApis: '暂无接口文档',
     close: '关闭'
   },
   user: {

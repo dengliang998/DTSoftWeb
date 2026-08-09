@@ -1029,12 +1029,20 @@ export default {
   },
   apiDoc: {
     title: 'API Docs',
+    endpoint: 'Endpoint',
     description: 'Description:',
     requestParams: 'Request Parameters:',
     paramName: 'Parameter',
     type: 'Type',
     required: 'Required',
     descriptionColumn: 'Description',
+    responseExample: 'Response Example',
+    copyPath: 'Copy path',
+    copyResponse: 'Copy response',
+    copySuccess: 'Copied',
+    copyFailed: 'Copy failed. Select and copy manually.',
+    noParams: 'This endpoint has no request parameters',
+    noApis: 'No API docs available',
     close: 'Close'
   },
   user: {

@@ -603,6 +603,21 @@ export const applyThemeConfig = (themeConfig = getCachedThemeConfig(), appearanc
   rootStyle.setProperty('--el-disabled-bg-color', palette.surfaceSoft)
   rootStyle.setProperty('--el-disabled-border-color', palette.border)
   rootStyle.setProperty('--el-disabled-text-color', palette.textMuted)
+  rootStyle.setProperty('--el-table-bg-color', palette.surface)
+  rootStyle.setProperty('--el-table-tr-bg-color', palette.surface)
+  rootStyle.setProperty('--el-table-expanded-cell-bg-color', palette.surface)
+  rootStyle.setProperty('--el-table-header-bg-color', palette.surfaceSoft)
+  rootStyle.setProperty(
+    '--el-table-row-hover-bg-color',
+    `color-mix(in srgb, ${runtimeColors.primary} 6%, ${palette.surface})`
+  )
+  rootStyle.setProperty(
+    '--el-table-current-row-bg-color',
+    `color-mix(in srgb, ${runtimeColors.primary} 8%, ${primaryMixBase})`
+  )
+  rootStyle.setProperty('--el-table-text-color', palette.text)
+  rootStyle.setProperty('--el-table-header-text-color', palette.text)
+  rootStyle.setProperty('--el-table-border-color', palette.border)
   rootStyle.setProperty(
     '--el-mask-color',
     resolvedAppearance === 'dark' ? 'rgba(0, 0, 0, 0.68)' : 'rgba(255, 255, 255, 0.8)'
