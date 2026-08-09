@@ -174,10 +174,11 @@
           </div>
 
           <el-tree
+            ref="mainFieldTree"
             class="field-tree"
             :data="MicroAppForm.Fields"
             :props="{ label: 'label', children: 'children' }"
-            node-key="fieldName"
+            node-key="__uiKey"
             :expand-on-click-node="false"
             :current-node-key="selectedFieldKey"
             :default-expanded-keys="expandedKeys"
@@ -199,7 +200,7 @@
                   <el-tag size="small" effect="plain" :type="getFieldTypeTagType(data.fieldType)">
                     {{ getFieldTypeLabel(data.fieldType) }}
                   </el-tag>
-                  <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.fieldName)">
+                  <button class="field-tree-node__delete" type="button" @click.stop="deleteField(data.__uiKey)">
                     <el-icon><Delete /></el-icon>
                     <span>{{ $t('common.delete') }}</span>
                   </button>
@@ -368,7 +369,7 @@
                 class="field-tree subtable-field-tree"
                 :data="subTable.fields"
                 :props="{ label: 'label', children: 'children' }"
-                node-key="fieldName"
+                node-key="__uiKey"
                 :expand-on-click-node="false"
                 :current-node-key="selectedFieldKey"
                 draggable
@@ -392,7 +393,7 @@
                       <button
                         class="field-tree-node__delete"
                         type="button"
-                        @click.stop="deleteSubTableField(subTable, data.fieldName)"
+                        @click.stop="deleteSubTableField(subTable, data.__uiKey)"
                       >
                         <el-icon><Delete /></el-icon>
                         <span>{{ $t('common.delete') }}</span>
@@ -954,6 +955,7 @@ export default {
       activeApiTab: 'api-list',
       // 选中的字段 key
       selectedFieldKey: '',
+      fieldUiKeySeed: 0,
       selectedFieldScope: 'main',
       selectedSubTableName: '',
       // 展开的节点 keys
@@ -1340,8 +1342,10 @@ export default {
         return []
       }
 
+      const usedUiKeys = new Set()
       const normalizedFields = this.normalizeFieldOrder(
         normalized.map((field, index) => ({
+          __uiKey: this.getUniqueFieldUiKey(field.__uiKey, index, usedUiKeys),
           label: field.Label || field.label || '',
           fieldName: field.FieldName || field.fieldName || '',
           fieldType: field.FieldType || field.fieldType || 'string',
@@ -1402,6 +1406,17 @@ export default {
 
       normalizedFields.forEach((field) => this.normalizeFieldByType(field))
       return normalizedFields
+    },
+    getUniqueFieldUiKey(preferredKey, index, usedKeys) {
+      const baseKey = preferredKey || `field-${index + 1}`
+      let uiKey = baseKey
+      let suffix = 1
+      while (usedKeys.has(uiKey)) {
+        uiKey = `${baseKey}-${suffix}`
+        suffix += 1
+      }
+      usedKeys.add(uiKey)
+      return uiKey
     },
     normalizeSubTables(subTables) {
       let normalized = subTables || []
@@ -1625,6 +1640,7 @@ export default {
     // 添加字段
     createNewField(sortOrder) {
       return {
+        __uiKey: `field-new-${Date.now()}-${++this.fieldUiKeySeed}`,
         label: this.$t('microConfig.newField'),
         fieldName: 'new_field',
         fieldType: 'string',
@@ -1663,6 +1679,9 @@ export default {
       const newField = this.createNewField(this.MicroAppForm.Fields.length + 1)
       this.MicroAppForm.Fields.push(newField)
       this.selectField(newField)
+      this.$nextTick(() => {
+        this.$refs.mainFieldTree?.setCurrentKey(newField.__uiKey)
+      })
     },
     addSubTable() {
       const index = this.MicroAppForm.SubTables.length + 1
@@ -1698,14 +1717,15 @@ export default {
       subTable.fields.push(newField)
       this.selectSubTableField(subTable, newField)
     },
-    deleteSubTableField(subTable, fieldName) {
-      const index = subTable.fields.findIndex((item) => item.fieldName === fieldName)
+    deleteSubTableField(subTable, uiKey) {
+      const index = subTable.fields.findIndex((item) => item.__uiKey === uiKey)
       if (index > -1) {
+        const field = subTable.fields[index]
         subTable.fields.splice(index, 1)
         if (
           this.selectedFieldScope === 'sub' &&
           this.selectedSubTableName === subTable.tableName &&
-          this.selectedFieldData?.fieldName === fieldName
+          this.selectedFieldData?.__uiKey === field.__uiKey
         ) {
           this.selectedFieldKey = ''
           this.selectedFieldScope = 'main'
@@ -1829,13 +1849,13 @@ export default {
     },
     // 选择字段
     selectField(data) {
-      this.selectedFieldKey = data.fieldName
+      this.selectedFieldKey = data.__uiKey
       this.selectedFieldScope = 'main'
       this.selectedSubTableName = ''
       this.selectedFieldData = data
     },
     selectSubTableField(subTable, data) {
-      this.selectedFieldKey = data.fieldName
+      this.selectedFieldKey = data.__uiKey
       this.selectedFieldScope = 'sub'
       this.selectedSubTableName = subTable.tableName
       this.selectedFieldData = data
@@ -1851,7 +1871,7 @@ export default {
 
       if (this.selectedFieldScope === 'main' && this.selectedFieldKey) {
         this.selectedFieldData =
-          this.MicroAppForm.Fields.find((field) => field.fieldName === this.selectedFieldKey) || null
+          this.MicroAppForm.Fields.find((field) => field.__uiKey === this.selectedFieldKey) || null
       }
     },
     handleFieldDrop() {
@@ -1868,7 +1888,7 @@ export default {
         this.selectedSubTableName === subTable.tableName &&
         this.selectedFieldKey
       ) {
-        this.selectedFieldData = subTable.fields.find((field) => field.fieldName === this.selectedFieldKey) || null
+        this.selectedFieldData = subTable.fields.find((field) => field.__uiKey === this.selectedFieldKey) || null
       }
     },
     handleSubTableFieldDrop(subTable) {
@@ -1894,11 +1914,12 @@ export default {
       }, 0)
     },
     // 删除字段
-    deleteField(fieldName) {
-      const index = this.MicroAppForm.Fields.findIndex((item) => item.fieldName === fieldName)
+    deleteField(uiKey) {
+      const index = this.MicroAppForm.Fields.findIndex((item) => item.__uiKey === uiKey)
       if (index > -1) {
+        const field = this.MicroAppForm.Fields[index]
         this.MicroAppForm.Fields.splice(index, 1)
-        if (this.selectedFieldData && this.selectedFieldData.fieldName === fieldName) {
+        if (this.selectedFieldData && this.selectedFieldData.__uiKey === field.__uiKey) {
           this.selectedFieldKey = ''
           this.selectedFieldData = null
         }
