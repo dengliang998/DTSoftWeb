@@ -80,17 +80,16 @@
           :row-class-name="getMenuRowClassName"
           @expand-change="bindTableDrag"
         >
-          <el-table-column label="#" width="112" align="center" class-name="rank-column">
-            <template #default="scope">
+          <el-table-column label="" width="72" align="center" class-name="rank-column">
+            <template #default>
               <span class="rank-cell">
-                <el-icon class="menu-drag-handle">
+                <el-icon class="menu-drag-handle" draggable="true">
                   <Rank />
                 </el-icon>
-                <span class="index-chip dt-index-chip">{{ indexMethod(scope.$index) }}</span>
               </span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.menu')" prop="menuName" min-width="320">
+          <el-table-column :label="$t('menuPage.menu')" prop="menuName" min-width="320" align="center">
             <template #default="scope">
               <div class="menu-name-cell dt-name-cell">
                 <span class="menu-icon-shell dt-icon-shell">
@@ -106,29 +105,29 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.type')" prop="menuType" width="116">
+          <el-table-column :label="$t('menuPage.type')" prop="menuType" width="92" align="center">
             <template #default="scope">
               <span :class="['type-badge', 'dt-badge', `type-badge--${scope.row.menuType}`]">
                 {{ getMenuTypeMeta(scope.row.menuType).label }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.resourceKey')" prop="i18nKey" min-width="180">
+          <el-table-column :label="$t('menuPage.resourceKey')" prop="i18nKey" min-width="180" align="left">
             <template #default="scope">
               <code class="path-code dt-code">{{ scope.row.i18nKey || $t('menuPage.notSet') }}</code>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.path')" prop="path" min-width="260">
+          <el-table-column :label="$t('menuPage.path')" prop="path" min-width="260" align="center">
             <template #default="scope">
               <code class="path-code dt-code">{{ scope.row.path || $t('menuPage.notSet') }}</code>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.icon')" prop="icon" min-width="120">
+          <el-table-column :label="$t('menuPage.icon')" prop="icon" min-width="120" align="left">
             <template #default="scope">
               <span class="icon-name dt-muted-pill">{{ scope.row.icon || $t('menuPage.defaultIcon') }}</span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('common.status')" prop="visible" width="96">
+          <el-table-column :label="$t('common.status')" prop="visible" width="96" align="center">
             <template #default="scope">
               <span
                 :class="[
@@ -141,7 +140,14 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('common.actions')" width="156" align="right">
+          <el-table-column
+            :label="$t('common.actions')"
+            width="168"
+            fixed="right"
+            align="center"
+            header-align="center"
+            class-name="action-column"
+          >
             <template #default="scope">
               <div class="operation-buttons dt-operation-buttons">
                 <el-tooltip :content="$t('menuPage.addChild')" placement="top">
@@ -520,6 +526,18 @@ export default {
       return null
     }
 
+    const findMenuPathById = (menus, menuId, path = []) => {
+      for (const menu of menus) {
+        const nextPath = [...path, menu]
+        if (String(menu.id) === String(menuId)) return nextPath
+
+        const match = findMenuPathById(menu.children || [], menuId, nextPath)
+        if (match.length) return match
+      }
+
+      return []
+    }
+
     const getSiblingsByParentId = (parentId) => {
       if (String(parentId || 0) === '0') return menuList.value
 
@@ -556,6 +574,10 @@ export default {
         }))
         .filter(({ menu, orderNum }) => changedIds.has(String(menu.id)) || Number(menu.orderNum || 0) !== orderNum)
 
+      updates.forEach(({ menu, orderNum }) => {
+        menu.orderNum = orderNum
+      })
+
       for (const { menu, orderNum } of updates) {
         const formData = new FormData()
         formData.append('ItemId', menu.id)
@@ -569,40 +591,50 @@ export default {
         formData.append('MType', menu.menuType || '0')
 
         await updateMenu(formData)
-        menu.orderNum = orderNum
       }
     }
 
-    const handleRowDrop = async (event, targetId) => {
+    const resolveSortableDropTarget = (source, rawTargetId) => {
+      const targetPath = findMenuPathById(menuList.value, rawTargetId)
+      return targetPath.find((menu) => String(menu.parentId || 0) === String(source.parentId || 0)) || null
+    }
+
+    const handleRowDrop = async (event, rawTargetId, targetRow) => {
       event.preventDefault()
-      event.currentTarget.classList.remove('menu-row-drop-target')
+      targetRow?.classList.remove('menu-row-drop-target')
 
       const sourceId = draggingMenuId.value
       draggingMenuId.value = null
-      if (!sourceId || String(sourceId) === String(targetId) || sortSaving.value) return
+      if (!sourceId || String(sourceId) === String(rawTargetId) || sortSaving.value) return
 
       const source = findMenuById(menuList.value, sourceId)
-      const target = findMenuById(menuList.value, targetId)
+      const target = source ? resolveSortableDropTarget(source, rawTargetId) : null
       if (!source || !target) return
 
-      if (String(source.parentId || 0) !== String(target.parentId || 0)) {
-        proxy.$message.warning(proxy.$t('menuPage.sameLevelOnly'))
-        return
-      }
+      if (String(source.id) === String(target.id)) return
 
       const siblings = getSiblingsByParentId(source.parentId)
       const sourceIndex = siblings.findIndex((menu) => String(menu.id) === String(sourceId))
-      const targetIndex = siblings.findIndex((menu) => String(menu.id) === String(targetId))
+      const targetIndex = siblings.findIndex((menu) => String(menu.id) === String(target.id))
       if (sourceIndex < 0 || targetIndex < 0) return
 
-      const rowRect = event.currentTarget.getBoundingClientRect()
-      const insertAfter = event.clientY > rowRect.top + rowRect.height / 2
+      const rowRect = targetRow?.getBoundingClientRect()
+      if (!rowRect) return
+      let insertAfter = event.clientY > rowRect.top + rowRect.height / 2
       const movedRows = siblings.splice(sourceIndex, 1)
       const moved = movedRows[0]
-      const nextTargetIndex = siblings.findIndex((menu) => String(menu.id) === String(targetId))
-      siblings.splice(insertAfter ? nextTargetIndex + 1 : nextTargetIndex, 0, moved)
+      const nextTargetIndex = siblings.findIndex((menu) => String(menu.id) === String(target.id))
+      let insertIndex = insertAfter ? nextTargetIndex + 1 : nextTargetIndex
 
-      const changedIds = new Set([String(sourceId), String(targetId)])
+      if (insertIndex === sourceIndex) {
+        insertAfter = sourceIndex < targetIndex
+        insertIndex = insertAfter ? nextTargetIndex + 1 : nextTargetIndex
+      }
+
+      siblings.splice(insertIndex, 0, moved)
+      menuList.value = [...menuList.value]
+
+      const changedIds = new Set([String(sourceId), String(target.id)])
       sortSaving.value = true
 
       try {
@@ -625,51 +657,61 @@ export default {
       const tableElement = menuTableRef.value?.$el
       if (!tableElement) return
 
-      const rows = tableElement.querySelectorAll('.el-table__body-wrapper tbody tr.menu-drag-row')
-      rows.forEach((row) => {
+      const dragHandles = tableElement.querySelectorAll('.menu-drag-handle')
+      dragHandles.forEach((handle) => handle.setAttribute('draggable', 'true'))
+
+      const getDragRow = (target) => target?.closest?.('tr.menu-drag-row')
+      const clearDropState = () => {
+        tableElement
+          .querySelectorAll('tr.menu-row-drop-target')
+          .forEach((row) => row.classList.remove('menu-row-drop-target'))
+      }
+      const onDragStart = (event) => {
+        const row = getDragRow(event.target)
+        if (!row || !event.target.closest('.menu-drag-handle')) {
+          event.preventDefault()
+          return
+        }
+
         const rowId = getRowIdFromElement(row)
         if (!rowId) return
+        draggingMenuId.value = rowId
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.setData('text/plain', rowId)
+        row.classList.add('menu-row-dragging')
+      }
+      const onDragOver = (event) => {
+        const row = getDragRow(event.target)
+        const rowId = row && getRowIdFromElement(row)
+        if (!row || !draggingMenuId.value || draggingMenuId.value === rowId) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = 'move'
+        clearDropState()
+        row.classList.add('menu-row-drop-target')
+      }
+      const onDrop = (event) => {
+        const row = getDragRow(event.target)
+        const rowId = row && getRowIdFromElement(row)
+        if (rowId) handleRowDrop(event, rowId, row)
+      }
+      const onDragEnd = () => {
+        draggingMenuId.value = null
+        clearDropState()
+        tableElement
+          .querySelectorAll('tr.menu-row-dragging')
+          .forEach((row) => row.classList.remove('menu-row-dragging'))
+      }
 
-        row.setAttribute('draggable', 'true')
+      tableElement.addEventListener('dragstart', onDragStart)
+      tableElement.addEventListener('dragover', onDragOver)
+      tableElement.addEventListener('drop', onDrop)
+      tableElement.addEventListener('dragend', onDragEnd)
 
-        const onDragStart = (event) => {
-          if (!event.target.closest('.menu-drag-handle')) {
-            event.preventDefault()
-            return
-          }
-
-          draggingMenuId.value = rowId
-          event.dataTransfer.effectAllowed = 'move'
-          event.dataTransfer.setData('text/plain', rowId)
-          row.classList.add('menu-row-dragging')
-        }
-        const onDragOver = (event) => {
-          if (!draggingMenuId.value || draggingMenuId.value === rowId) return
-          event.preventDefault()
-          event.dataTransfer.dropEffect = 'move'
-          row.classList.add('menu-row-drop-target')
-        }
-        const onDragLeave = () => row.classList.remove('menu-row-drop-target')
-        const onDrop = (event) => handleRowDrop(event, rowId)
-        const onDragEnd = () => {
-          draggingMenuId.value = null
-          row.classList.remove('menu-row-dragging', 'menu-row-drop-target')
-        }
-
-        row.addEventListener('dragstart', onDragStart)
-        row.addEventListener('dragover', onDragOver)
-        row.addEventListener('dragleave', onDragLeave)
-        row.addEventListener('drop', onDrop)
-        row.addEventListener('dragend', onDragEnd)
-
-        rowDragCleanups.push(() => {
-          row.removeEventListener('dragstart', onDragStart)
-          row.removeEventListener('dragover', onDragOver)
-          row.removeEventListener('dragleave', onDragLeave)
-          row.removeEventListener('drop', onDrop)
-          row.removeEventListener('dragend', onDragEnd)
-          row.removeAttribute('draggable')
-        })
+      rowDragCleanups.push(() => {
+        tableElement.removeEventListener('dragstart', onDragStart)
+        tableElement.removeEventListener('dragover', onDragOver)
+        tableElement.removeEventListener('drop', onDrop)
+        tableElement.removeEventListener('dragend', onDragEnd)
       })
     }
 
@@ -795,7 +837,7 @@ export default {
               ? addForm.customPageRoute
               : addForm.path
 
-        if (!resolvedPath) {
+        if (addForm.menuType !== '0' && !resolvedPath) {
           proxy.$message.warning(proxy.$t('menuPage.routeRequired'))
           return
         }
@@ -1271,8 +1313,10 @@ export default {
 
 .menu-name-cell {
   min-width: 0;
+  width: min(100%, 260px);
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
 }
 
@@ -1280,7 +1324,6 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
 }
 
 .menu-icon-shell {
@@ -1404,10 +1447,14 @@ export default {
 
 .operation-buttons {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
   gap: 6px;
+}
+
+.table-wrapper :deep(.action-column .cell) {
+  padding: 0 10px;
 }
 
 .icon-action {

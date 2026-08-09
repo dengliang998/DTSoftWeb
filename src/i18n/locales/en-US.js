@@ -299,7 +299,7 @@ export default {
     empty: 'No matching menus',
     menu: 'Menu',
     type: 'Type',
-    resourceKey: 'Resource Key',
+    resourceKey: 'Resource Name',
     path: 'Path',
     icon: 'Icon',
     notSet: 'Not set',

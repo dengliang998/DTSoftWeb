@@ -297,7 +297,7 @@ export default {
     empty: '暂无匹配菜单',
     menu: '菜单',
     type: '类型',
-    resourceKey: '词条 Key',
+    resourceKey: '资源名称',
     path: '路径',
     icon: '图标',
     notSet: '未设置',
