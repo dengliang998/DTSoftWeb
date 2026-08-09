@@ -80,7 +80,7 @@
           :row-class-name="getMenuRowClassName"
           @expand-change="bindTableDrag"
         >
-          <el-table-column label="" width="72" align="center" class-name="rank-column">
+          <el-table-column label="" width="116" align="left" class-name="rank-column">
             <template #default>
               <span class="rank-cell">
                 <el-icon class="menu-drag-handle" draggable="true">
@@ -89,7 +89,7 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('menuPage.menu')" prop="menuName" min-width="320" align="center">
+          <el-table-column :label="$t('menuPage.menu')" prop="menuName" min-width="320" align="left">
             <template #default="scope">
               <div class="menu-name-cell dt-name-cell">
                 <span class="menu-icon-shell dt-icon-shell">
@@ -1248,10 +1248,10 @@ export default {
 .table-wrapper :deep(.rank-column .cell) {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 5px;
   width: 100%;
-  padding: 0 8px;
+  padding: 0 8px 0 14px;
 }
 
 .table-wrapper :deep(.el-table__expand-icon) {
@@ -1271,7 +1271,23 @@ export default {
 }
 
 .table-wrapper :deep(.el-table__placeholder) {
-  width: 12px;
+  width: 24px;
+}
+
+.table-wrapper :deep(.el-table__indent) {
+  display: inline-block;
+  width: 26px !important;
+  position: relative;
+}
+
+.table-wrapper :deep(.el-table__indent::before) {
+  position: absolute;
+  top: -18px;
+  bottom: -18px;
+  left: 12px;
+  width: 1px;
+  background: #dbe5ef;
+  content: '';
 }
 
 .menu-drag-handle {
@@ -1313,7 +1329,6 @@ export default {
 
 .menu-name-cell {
   min-width: 0;
-  width: min(100%, 260px);
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
@@ -1660,6 +1675,10 @@ html[data-theme='dark'] .table-wrapper :deep(.el-table__body-wrapper) {
 
 html[data-theme='dark'] .table-wrapper :deep(.el-table__row td) {
   border-bottom-color: var(--dt-border);
+}
+
+html[data-theme='dark'] .table-wrapper :deep(.el-table__indent::before) {
+  background: var(--dt-border);
 }
 
 html[data-theme='dark'] .table-wrapper :deep(.el-table__row:hover > td) {
