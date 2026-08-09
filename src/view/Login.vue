@@ -26,11 +26,7 @@
     </el-dropdown>
     <div class="login_shell">
       <section class="login_brand" :aria-label="$t('login.systemAria')">
-        <div class="brand_panel">
-          <div class="brand_copy">
-            <div class="login_brand-title">{{ systemName }}</div>
-          </div>
-        </div>
+        <div class="brand_panel"></div>
       </section>
 
       <section class="login_box" :aria-label="$t('login.loginAria')">
@@ -412,7 +408,7 @@ export default defineComponent({
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background-image: url('../assets/imgs/bg-optimized.jpg');
+  background-image: url('../assets/imgs/bg-optimized.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -512,45 +508,8 @@ export default defineComponent({
 .brand_panel {
   position: relative;
   width: min(100%, 620px);
-  padding: 0 0 0 34px;
   color: #f8fafc;
   box-sizing: border-box;
-}
-
-.brand_panel::before {
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    color-mix(in srgb, var(--dt-primary-light) 72%, transparent) 58%,
-    transparent 100%
-  );
-  border-radius: 999px;
-  content: '';
-  pointer-events: none;
-}
-
-.brand_copy {
-  position: relative;
-  z-index: 1;
-  max-width: 520px;
-}
-
-.login_brand-title {
-  position: relative;
-  color: rgba(255, 255, 255, 0.98);
-  font-size: clamp(44px, 5.3vw, 72px);
-  font-weight: 850;
-  line-height: 1.08;
-  letter-spacing: 0;
-  word-break: break-word;
-  text-shadow:
-    0 1px 2px rgba(2, 6, 23, 0.88),
-    0 12px 34px rgba(2, 6, 23, 0.58);
 }
 
 .login_box {
@@ -748,18 +707,6 @@ export default defineComponent({
     min-height: auto;
     padding: 0;
   }
-
-  .brand_copy {
-    margin-top: 0;
-  }
-
-  .brand_panel::before {
-    display: none;
-  }
-
-  .login_brand-title {
-    font-size: 34px;
-  }
 }
 
 @media (max-width: 520px) {
@@ -787,14 +734,6 @@ export default defineComponent({
     padding: 0;
   }
 
-  .brand_copy {
-    margin-top: 0;
-  }
-
-  .login_brand-title {
-    font-size: 30px;
-  }
-
   .captcha-row {
     grid-template-columns: 1fr 106px;
     gap: 10px;
@@ -803,10 +742,6 @@ export default defineComponent({
 
 html[data-theme='dark'] .login_container {
   background-color: #09111d;
-}
-
-html[data-theme='dark'] .login_brand-title {
-  color: rgba(241, 245, 249, 0.96);
 }
 
 html[data-theme='dark'] .login_box {
