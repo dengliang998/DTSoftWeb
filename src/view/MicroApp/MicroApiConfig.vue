@@ -3046,6 +3046,7 @@ html[data-theme='dark'] .crud-config-container .field-editor-title,
 html[data-theme='dark'] .crud-config-container .config-section-title,
 html[data-theme='dark'] .crud-config-container .subtable-config-card__head,
 html[data-theme='dark'] .crud-config-container .subtable-field-actions,
+html[data-theme='dark'] .crud-config-container .switch-tile,
 html[data-theme='dark'] .crud-config-container .subtable-lookup-switch {
   color: var(--dt-text) !important;
 }
