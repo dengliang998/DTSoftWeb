@@ -645,7 +645,7 @@
                         :min="1"
                         :max="2000"
                         :step="10"
-                        :placeholder="getDefaultColumnLength(selectedFieldData)"
+                        :placeholder="getDefaultColumnLengthPlaceholder(selectedFieldData)"
                       ></el-input-number>
                     </el-form-item>
                   </div>
@@ -1107,6 +1107,9 @@ export default {
     },
     getDefaultColumnLength(field) {
       return field?.fieldType === 'select' ? 200 : 500
+    },
+    getDefaultColumnLengthPlaceholder(field) {
+      return String(this.getDefaultColumnLength(field))
     },
     supportsLengthRule(field) {
       return this.isTextField(field)
