@@ -1717,6 +1717,7 @@ export default {
 .main-pagination {
   flex: 0 0 auto;
   margin-top: 0;
+  padding-right: 10px !important;
 }
 
 .related-data-panel {
