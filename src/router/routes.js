@@ -10,6 +10,7 @@ const Menus = () => import('../view/Common/Menus.vue')
 const SystemSettings = () => import('../view/Common/SystemSettings.vue')
 const SystemInfo = () => import('../view/Common/SystemInfo.vue')
 const OnlineUsers = () => import('../view/Common/OnlineUsers.vue')
+const PluginManagement = () => import('../view/Common/PluginManagement.vue')
 const Dictionaries = () => import('../view/Common/Dictionaries.vue')
 const Languages = () => import('../view/Common/Languages.vue')
 const EsbServiceConnections = () => import('../view/Common/EsbServiceConnections.vue')
@@ -74,6 +75,12 @@ export const routes = [
         name: 'OnlineUsers',
         component: OnlineUsers,
         meta: withCache('OnlineUsers')
+      },
+      {
+        path: '/common/plugins',
+        name: 'PluginManagement',
+        component: PluginManagement,
+        meta: withCache('PluginManagement')
       },
       {
         path: '/common/dictionaries',

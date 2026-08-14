@@ -62,6 +62,7 @@ const menuKeyByPath = {
   'common/systemsettings': 'menu.systemSettings',
   'common/systeminfo': 'menu.systemInfo',
   'common/onlineusers': 'menu.onlineUsers',
+  'common/plugins': 'menu.plugins',
   'log/logaction': 'menu.systemLog',
   'common/dictionaries': 'menu.dictionaries',
   'attachment/attachmentlist': 'menu.attachments',
