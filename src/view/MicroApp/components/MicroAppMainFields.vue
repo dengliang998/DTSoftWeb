@@ -3,7 +3,6 @@
   <section class="form-section form-section--main">
     <div class="form-section-head">
       <div>
-        <div class="section-kicker">{{ $t('microRuntime.mainTable') }}</div>
         <h3 class="form-section-title">{{ $t('microRuntime.baseInfo') }}</h3>
       </div>
       <span class="section-pill">
@@ -182,22 +181,18 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 18px 4px;
-}
-
-.section-kicker {
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 18px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #e6ebf2;
+  background: #f8fafc;
 }
 
 .form-section-title {
-  margin: 2px 0 0;
+  margin: 0;
   color: #172033;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
-  line-height: 26px;
+  line-height: 22px;
 }
 
 .section-pill {
@@ -212,15 +207,15 @@ export default {
 }
 
 .main-field-grid {
-  padding: 10px 18px 8px;
+  padding: 10px 12px 0;
 }
 
 .main-form-item {
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-columns: 82px minmax(0, 1fr);
   align-items: start;
   gap: 8px;
-  margin-bottom: 12px !important;
+  margin-bottom: 10px !important;
 }
 
 .main-form-item :deep(.el-form-item__label) {

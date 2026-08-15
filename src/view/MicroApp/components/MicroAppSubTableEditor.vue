@@ -2,9 +2,7 @@
   <section class="form-section subtable-form-sections">
     <div class="subtable-group-heading">
       <div>
-        <div class="section-kicker">{{ $t('microRuntime.detail') }}</div>
         <div class="subtable-group-title">{{ $t('microRuntime.detailInfo') }}</div>
-        <div class="subtable-group-subtitle">{{ $t('microRuntime.detailSubtitle') }}</div>
       </div>
       <span class="subtable-group-count">
         {{ $t('microRuntime.subTableSummary', { subTables: subTables.length, rows: totalSubTableRows }) }}
@@ -247,11 +245,11 @@ export default {
 .subtable-form-sections {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   height: 100%;
   min-height: 0;
   margin-top: 0 !important;
-  padding: 16px 18px 18px;
+  padding: 10px 12px 12px;
 }
 
 .subtable-group-heading {
@@ -259,27 +257,14 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.section-kicker {
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 18px;
+  min-height: 30px;
 }
 
 .subtable-group-title {
   color: #172033;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 26px;
-}
-
-.subtable-group-subtitle {
-  margin-top: 2px;
-  color: #768397;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 22px;
 }
 
 .subtable-group-count {
@@ -301,7 +286,7 @@ export default {
 }
 
 .subtable-tabs :deep(.el-tabs__content) {
-  height: calc(100% - 44px);
+  height: calc(100% - 38px);
   min-height: 0;
 }
 
@@ -311,7 +296,7 @@ export default {
 }
 
 .subtable-tabs :deep(.el-tabs__header) {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
 }
 
 .subtable-tabs :deep(.el-tabs__nav-wrap::after) {
@@ -362,7 +347,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 16px;
+  min-height: 46px;
+  padding: 7px 12px;
   border-bottom: 1px solid #e6ebf2;
   background: #f6f8fb;
 }
@@ -375,9 +361,9 @@ export default {
 }
 
 .subtable-title-marker {
-  width: 4px;
-  height: 32px;
-  flex: 0 0 4px;
+  width: 3px;
+  height: 26px;
+  flex: 0 0 3px;
   border-radius: 4px;
   background: #1677ff;
 }
@@ -407,9 +393,9 @@ export default {
 }
 
 .subtable-action-button {
-  height: 36px !important;
-  padding: 0 14px !important;
-  border-radius: 8px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
   font-weight: 700 !important;
 }
 
@@ -421,7 +407,7 @@ export default {
 .subtable-editor-wrap {
   min-height: 0;
   overflow: hidden;
-  padding: 12px 12px 64px;
+  padding: 8px 8px 46px;
   background: #ffffff;
 }
 
@@ -443,7 +429,7 @@ export default {
 }
 
 .subtable-editor :deep(.el-table__header th) {
-  height: 42px;
+  height: 36px;
   background: #f2f5f9;
   color: #364258;
   font-size: 13px;
@@ -474,6 +460,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   gap: 4px;
+  padding: 12px;
   color: #8a98aa;
   font-size: 13px;
 }
@@ -581,7 +568,6 @@ export default {
   color: var(--dt-text) !important;
 }
 
-:global(html[data-theme='dark']) .subtable-group-subtitle,
 :global(html[data-theme='dark']) .subtable-meta,
 :global(html[data-theme='dark']) .subtable-empty-text {
   color: var(--dt-text-muted) !important;

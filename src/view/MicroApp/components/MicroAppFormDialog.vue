@@ -1,68 +1,45 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <el-dialog
+  <el-drawer
     v-model="dialogVisible"
-    class="micro-app-form-dialog"
-    custom-class="micro-app-form-dialog"
+    class="micro-app-form-drawer"
+    direction="rtl"
+    size="80%"
     :title="title"
-    :width="runtimeDialogWidth"
-    :style="runtimeDialogStyle"
-    :top="'5vh'"
     :close-on-click-modal="false"
   >
     <div class="dialog-form-container">
       <el-form ref="formRef" class="runtime-form" :model="formData" :rules="formRules" label-position="top">
-        <div class="form-workspace">
-          <aside class="form-rail">
-            <div class="rail-card rail-card--summary">
-              <div class="rail-kicker">
+        <div class="form-workspace" :class="{ 'has-subtables': orderedSubTables.length > 0 }">
+          <div class="form-summary-strip">
+            <div class="summary-title">
+              <strong>{{ appConfig?.configName || appConfig?.modelName || $t('microRuntime.appDataFallback') }}</strong>
+              <span>
                 {{ dialogType === 'create' ? $t('microRuntime.createRecord') : $t('microRuntime.editRecord') }}
-              </div>
-              <div class="rail-title">
-                {{ appConfig?.configName || appConfig?.modelName || $t('microRuntime.appDataFallback') }}
-              </div>
-              <div class="rail-progress">
-                <span class="rail-progress__value">{{ completedRequiredFieldCount }}/{{ requiredFieldCount }}</span>
-                <span class="rail-progress__label">{{ $t('microRuntime.requiredComplete') }}</span>
-              </div>
+              </span>
             </div>
-            <div class="rail-card">
-              <div class="rail-card-title">{{ $t('microRuntime.operationPosition') }}</div>
-              <button
-                class="rail-nav-item"
-                :class="{ 'is-active': activeWorkSection === 'main' }"
-                type="button"
-                @click="scrollToMainFields"
-              >
-                <span>
-                  <strong>{{ $t('microRuntime.baseInfo') }}</strong>
-                  <em>{{ $t('microRuntime.fieldCount', { count: orderedFields.length }) }}</em>
-                </span>
-                <b>{{ completedRequiredFieldCount }}/{{ requiredFieldCount }}</b>
-              </button>
-              <button
-                v-for="subTable in orderedSubTables"
-                :key="subTable.tableName"
-                class="rail-nav-item"
-                :class="{ 'is-active': activeSubTableName === subTable.tableName && activeWorkSection === 'subtable' }"
-                type="button"
-                @click="switchSubTable(subTable)"
-              >
-                <span>
-                  <strong>{{ subTable.label || subTable.tableName }}</strong>
-                  <em>
-                    {{ $t('microRuntime.rowCount', { count: getSubTableRows(subTable).length }) }}
-                    <template v-if="subTable.maxRows">/ {{ subTable.maxRows }}</template>
-                  </em>
-                </span>
-                <b>{{ getSubTableRows(subTable).length }}</b>
-              </button>
+            <div class="summary-metrics">
+              <span class="summary-chip summary-chip--primary">
+                {{
+                  $t('microRuntime.requiredProgress', {
+                    completed: completedRequiredFieldCount,
+                    total: requiredFieldCount
+                  })
+                }}
+              </span>
+              <span class="summary-chip">
+                {{ $t('microRuntime.fieldCount', { count: orderedFields.length }) }}
+              </span>
+              <span v-if="orderedSubTables.length > 0" class="summary-chip">
+                {{
+                  $t('microRuntime.subTableSummary', { subTables: orderedSubTables.length, rows: totalSubTableRows })
+                }}
+              </span>
             </div>
-          </aside>
+          </div>
 
           <main class="form-canvas">
             <MicroAppMainFields
-              v-show="activeWorkSection === 'main'"
               ref="mainFieldsSection"
               :form-data="formData"
               :ordered-fields="orderedFields"
@@ -82,7 +59,6 @@
 
             <MicroAppSubTableEditor
               v-if="orderedSubTables.length > 0"
-              v-show="activeWorkSection === 'subtable'"
               ref="subtableSection"
               v-model="activeSubTableName"
               :sub-tables="orderedSubTables"
@@ -92,7 +68,6 @@
               :get-rows="getSubTableRows"
               :is-max-reached="isSubTableMaxReached"
               :get-field-rules="getFieldRules"
-              @activate="activeWorkSection = 'subtable'"
               @open-lookup="openSubTableLookupDialog"
               @add-row="addSubTableRow"
               @remove-row="removeSubTableRow"
@@ -112,7 +87,7 @@
         @submit="submitForm"
       />
     </template>
-  </el-dialog>
+  </el-drawer>
 
   <MicroAppLookupDialog
     v-model="lookupDialogVisible"
@@ -180,7 +155,6 @@ export default {
       activeLookupSubTable: null,
       lookupSelectedRows: [],
       submitLoading: false,
-      activeWorkSection: 'main',
       activeSubTableName: '',
       lookupRows: [],
       lookupTotal: 0,
@@ -197,15 +171,6 @@ export default {
       },
       set(v) {
         this.$emit('update:modelValue', v)
-      }
-    },
-    runtimeDialogWidth() {
-      return '80vw'
-    },
-    runtimeDialogStyle() {
-      return {
-        height: '90vh',
-        maxHeight: '90vh'
       }
     },
     subTableEditorHeight() {
@@ -254,7 +219,6 @@ export default {
       immediate: true,
       handler(visible) {
         if (visible) {
-          this.activeWorkSection = 'main'
           this.ensureActiveSubTable()
         }
       }
@@ -286,19 +250,6 @@ export default {
         return value.length > 0
       }
       return value !== '' && value !== null && value !== undefined
-    },
-    scrollToMainFields() {
-      this.activeWorkSection = 'main'
-      this.$nextTick(() => {
-        this.$refs.mainFieldsSection?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-      })
-    },
-    switchSubTable(subTable) {
-      this.activeWorkSection = 'subtable'
-      this.activeSubTableName = subTable.tableName
-      this.$nextTick(() => {
-        this.$refs.subtableSection?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-      })
     },
     normalizeFieldOrder(fields) {
       return normalizeFieldOrder(fields)
@@ -671,39 +622,37 @@ export default {
 </script>
 
 <style scoped>
-:deep(.micro-app-form-dialog) {
+:deep(.micro-app-form-drawer) {
   display: flex;
-  width: 80vw !important;
-  max-width: none;
-  height: 90vh !important;
-  max-height: 90vh !important;
   flex-direction: column;
-  margin-bottom: 0;
-  border-radius: 12px;
+  height: 100vh !important;
   background: #ffffff;
-  box-shadow: 0 18px 56px rgba(21, 34, 57, 0.24);
+  box-shadow: -18px 0 56px rgba(21, 34, 57, 0.18);
 }
 
-:deep(.micro-app-form-dialog .el-dialog__header) {
+:deep(.micro-app-form-drawer .el-drawer__header) {
   position: relative;
   flex: 0 0 auto;
-  margin-right: 0;
+  align-items: center;
+  min-height: 40px;
+  margin-bottom: 0;
   padding: 6px 16px 5px;
   border-bottom: 1px solid #e6ebf2;
   background: var(--dt-surface);
 }
 
-:deep(.micro-app-form-dialog .el-dialog__title) {
+:deep(.micro-app-form-drawer .el-drawer__title) {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
+  margin: 0;
   color: #172033;
   font-size: 17px;
   font-weight: 700;
   line-height: 24px;
 }
 
-:deep(.micro-app-form-dialog .el-dialog__title::before) {
+:deep(.micro-app-form-drawer .el-drawer__title::before) {
   width: 4px;
   height: 18px;
   margin-right: 10px;
@@ -712,28 +661,27 @@ export default {
   content: '';
 }
 
-:deep(.micro-app-form-dialog .el-dialog__headerbtn) {
-  top: 50%;
-  right: 14px;
+:deep(.micro-app-form-drawer .el-drawer__close-btn) {
   width: 30px;
   height: 30px;
+  padding: 0;
   border-radius: 50%;
   background: #f3f6fb;
-  transform: translateY(-50%);
+  color: #526175;
 }
 
-:deep(.micro-app-form-dialog .el-dialog__headerbtn:hover) {
+:deep(.micro-app-form-drawer .el-drawer__close-btn:hover) {
   background: #e8eef7;
 }
 
-:deep(.micro-app-form-dialog .el-dialog__body) {
+:deep(.micro-app-form-drawer .el-drawer__body) {
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden;
   padding: 0;
 }
 
-:deep(.micro-app-form-dialog .el-dialog__footer) {
+:deep(.micro-app-form-drawer .el-drawer__footer) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -778,160 +726,89 @@ export default {
 .form-workspace {
   display: grid;
   align-items: stretch;
-  grid-template-columns: 248px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
   height: 100%;
   min-height: 0;
 }
 
-.form-rail {
+.form-summary-strip {
   display: flex;
-  min-height: 0;
-  overflow-y: auto;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
-}
-
-.rail-card {
+  min-height: 42px;
+  padding: 6px 10px;
   border: 1px solid #dfe7f2;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 8px 22px rgba(26, 42, 68, 0.05);
+  box-shadow: 0 6px 18px rgba(26, 42, 68, 0.04);
 }
 
-.rail-card--summary {
-  padding: 16px;
-  border-color: #c9e8e3;
-  background: linear-gradient(180deg, #f7fffd 0%, #ffffff 78%);
-}
-
-.rail-kicker,
-.section-kicker {
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 18px;
-}
-
-.rail-title {
-  margin-top: 4px;
-  overflow: hidden;
-  color: #172033;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 26px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rail-progress {
+.summary-title {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid #d9eee9;
-}
-
-.rail-progress__value {
-  color: var(--dt-primary);
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 34px;
-}
-
-.rail-progress__label {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 18px;
-}
-
-.rail-card-title {
-  padding: 12px 14px 8px;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 20px;
-}
-
-.rail-nav-item {
-  display: grid;
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border: 0;
-  border-top: 1px solid #eef2f7;
-  background: #ffffff;
-  color: #26344d;
-  cursor: pointer;
-  text-align: left;
-}
-
-.rail-nav-item:hover,
-.rail-nav-item:focus {
-  background: #f6fafc;
-  outline: none;
-}
-
-.rail-nav-item.is-active {
-  background: #eefaf8;
-  box-shadow: 3px 0 0 #16a6a0 inset;
-}
-
-.rail-nav-item span {
-  display: flex;
   min-width: 0;
-  flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 }
 
-.rail-nav-item strong,
-.rail-nav-item em {
+.summary-title strong {
   overflow: hidden;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 22px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rail-nav-item strong {
-  color: #172033;
-  font-size: 13px;
-  font-style: normal;
-  font-weight: 800;
-  line-height: 19px;
-}
-
-.rail-nav-item em {
-  color: #78879a;
+.summary-title span {
+  flex: 0 0 auto;
+  color: #64748b;
   font-size: 12px;
-  font-style: normal;
   line-height: 18px;
 }
 
-.rail-nav-item b {
-  min-width: 28px;
-  padding: 2px 8px;
+.summary-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
   border-radius: 999px;
   background: #eef2f7;
-  color: #42526b;
+  color: #536176;
   font-size: 12px;
   font-weight: 800;
-  line-height: 18px;
-  text-align: center;
+  line-height: 24px;
+  white-space: nowrap;
 }
 
-.rail-nav-item.is-active b {
+.summary-chip--primary {
   background: #16a6a0;
   color: #ffffff;
 }
 
 .form-canvas {
+  display: grid;
   min-width: 0;
   height: 100%;
   min-height: 0;
+  grid-template-rows: minmax(160px, 0.82fr);
+  gap: 10px;
   overflow: hidden;
+}
+
+.form-workspace.has-subtables .form-canvas {
+  grid-template-rows: minmax(160px, 0.58fr) minmax(260px, 1fr);
 }
 
 .runtime-form :deep(.el-form-item) {
@@ -1006,26 +883,18 @@ export default {
 }
 
 @media (max-width: 1100px) {
-  .form-workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .form-rail {
-    position: static;
-  }
-
-  .rail-card:not(.rail-card--summary) {
-    display: none;
+  .form-workspace.has-subtables .form-canvas {
+    grid-template-rows: minmax(180px, 0.52fr) minmax(300px, 1fr);
   }
 }
 
 @media (max-width: 900px) {
-  :deep(.micro-app-form-dialog) {
-    width: calc(100vw - 16px) !important;
+  :deep(.micro-app-form-drawer) {
+    width: 96vw !important;
   }
 
-  :deep(.micro-app-form-dialog .el-dialog__header),
-  :deep(.micro-app-form-dialog .el-dialog__footer) {
+  :deep(.micro-app-form-drawer .el-drawer__header),
+  :deep(.micro-app-form-drawer .el-drawer__footer) {
     padding-right: 16px;
     padding-left: 16px;
   }
@@ -1033,31 +902,42 @@ export default {
   .dialog-form-container {
     padding: 12px;
   }
+
+  .form-summary-strip {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .summary-metrics {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .form-canvas,
+  .form-workspace.has-subtables .form-canvas {
+    overflow-y: auto;
+    grid-template-rows: auto auto;
+  }
 }
 
-html[data-theme='dark'] :deep(.micro-app-form-dialog) {
+html[data-theme='dark'] :deep(.micro-app-form-drawer) {
   background: var(--dt-surface) !important;
   box-shadow: var(--dt-shadow) !important;
 }
 
 html[data-theme='dark'] .dialog-form-container,
-html[data-theme='dark'] .rail-card {
+html[data-theme='dark'] .form-summary-strip {
   background: var(--dt-surface) !important;
   border-color: var(--dt-border) !important;
   box-shadow: var(--dt-shadow-soft);
 }
 
-html[data-theme='dark'] .rail-card__header {
-  background: var(--dt-surface-soft) !important;
-  border-color: var(--dt-border) !important;
-}
-
-html[data-theme='dark'] .rail-card__title {
+html[data-theme='dark'] .summary-title strong {
   color: var(--dt-text) !important;
 }
 
-html[data-theme='dark'] .rail-card__desc,
-html[data-theme='dark'] .form-section-desc {
+html[data-theme='dark'] .summary-title span {
   color: var(--dt-text-muted) !important;
 }
 </style>
