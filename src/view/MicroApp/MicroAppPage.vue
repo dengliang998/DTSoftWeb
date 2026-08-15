@@ -52,21 +52,6 @@
         </div>
 
         <div class="dt-panel runtime-panel">
-          <div class="dt-panel__header">
-            <div>
-              <strong>{{ $t('microRuntime.dataList') }}</strong>
-              <span>{{ $t('microRuntime.serverTotal', { count: appData.total }) }}</span>
-            </div>
-            <div class="dt-panel__meta">
-              <span class="dt-chip">{{ $t('microRuntime.currentPage', { count: appData.list.length }) }}</span>
-              <span v-if="queryableFields.length > 0" class="dt-chip">
-                {{ $t('microRuntime.queryFields', { count: queryableFields.length }) }}
-              </span>
-              <span v-if="selectedRows.length > 0" class="dt-chip dt-chip--warning">
-                {{ $t('microRuntime.selectedCount', { count: selectedRows.length }) }}
-              </span>
-            </div>
-          </div>
           <div v-if="queryableFields.length > 0" class="advanced-query-row">
             <div v-for="(row, rowIndex) in queryFieldRows" :key="rowIndex" class="advanced-query-line">
               <div v-for="field in row" :key="field.fieldName" class="query-field">
@@ -164,200 +149,228 @@
             </div>
           </div>
 
-          <!-- 数据列表 -->
-          <div class="table-container">
-            <el-table
-              :data="appData.list"
-              :row-style="{ height: '52px' }"
-              :row-class-name="getTableRowClassName"
-              :cell-style="{ padding: '0px' }"
-              highlight-current-row
-              class="table-wrapper dt-table"
-              height="100%"
-              :empty-text="$t('microRuntime.noData')"
-              @selection-change="handleSelectionChange"
-              @sort-change="handleSortChange"
-              @row-click="handleRuntimeRowClick"
-            >
-              <el-table-column
-                v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
-                type="selection"
-                width="50"
-                fixed="left"
-              ></el-table-column>
-              <!-- 序号列 -->
-              <el-table-column
-                label="#"
-                :width="runtimeIndexColumnWidth"
-                fixed="left"
-                align="center"
-                header-align="center"
-                class-name="rank-column"
-              >
-                <template #default="scope">
-                  <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
-                </template>
-              </el-table-column>
-              <!-- 渲染所有有效的字段 -->
-              <template v-for="field in orderedFields" :key="field.fieldName">
-                <el-table-column
-                  v-if="field?.showInList && field?.fieldName"
-                  :prop="field.fieldName"
-                  :label="field.label || field.fieldName || $t('microRuntime.unknownField')"
-                  :width="field.columnWidth || undefined"
-                  :fixed="normalizeFixedColumn(field.fixed)"
-                  :align="normalizeColumnAlign(field.columnAlign)"
-                  :sortable="field.sortable ? 'custom' : false"
+          <div
+            class="runtime-data-layout"
+            :class="{
+              'has-related': showSubTablesInList && orderedSubTables.length > 0,
+              'is-related-horizontal': subTableListLayout === 'horizontal',
+              'is-related-vertical': subTableListLayout === 'vertical'
+            }"
+          >
+            <div class="main-data-pane">
+              <!-- 数据列表 -->
+              <div class="table-container">
+                <el-table
+                  :data="appData.list"
+                  :row-style="{ height: '52px' }"
+                  :row-class-name="getTableRowClassName"
+                  :cell-style="{ padding: '0px' }"
+                  highlight-current-row
+                  class="table-wrapper dt-table"
+                  height="100%"
+                  :empty-text="$t('microRuntime.noData')"
+                  @selection-change="handleSelectionChange"
+                  @sort-change="handleSortChange"
+                  @row-click="handleRuntimeRowClick"
                 >
-                  <template #default="scope">
-                    <div v-if="field.fieldType === 'attachment'" class="attachment-cell">
-                      <template v-if="getAttachmentList(scope.row[field.fieldName]).length > 0">
-                        <div
-                          v-for="(attachment, attachmentIndex) in getAttachmentList(scope.row[field.fieldName])"
-                          :key="getAttachmentKey(attachment, attachmentIndex)"
-                          class="attachment-cell-item"
-                        >
-                          <span class="attachment-type-badge">{{ getAttachmentExtLabel(attachment) }}</span>
-                          <button
-                            class="attachment-download-link"
-                            type="button"
-                            :title="getAttachmentName(attachment)"
-                            @click="downloadAttachment(attachment)"
-                          >
-                            {{ getAttachmentName(attachment) }}
-                          </button>
-                          <button
-                            v-if="isPreviewableAttachment(attachment)"
-                            class="attachment-preview-link"
-                            type="button"
-                            @click="previewAttachment(attachment)"
-                          >
-                            {{ $t('microRuntime.preview') }}
-                          </button>
-                        </div>
-                      </template>
-                      <span v-else class="attachment-empty-cell">-</span>
-                    </div>
-                    <template v-else>
-                      {{ formatFieldValue(scope.row[field.fieldName], field) }}
-                    </template>
-                  </template>
-                </el-table-column>
-              </template>
-              <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="center">
-                <template #default="scope">
-                  <div class="dt-operation-buttons operation-buttons runtime-actions">
-                    <el-tooltip v-if="appConfig.supportUpdate" :content="$t('microRuntime.editData')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--edit"
-                        :icon="Edit"
-                        @click="openEditDialog(scope.row)"
-                      />
-                    </el-tooltip>
-                    <el-tooltip v-if="appConfig.supportDelete" :content="$t('microRuntime.deleteData')" placement="top">
-                      <el-button
-                        class="dt-icon-action dt-icon-action--danger"
-                        :icon="Delete"
-                        @click="deleteData(scope.row)"
-                      />
-                    </el-tooltip>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-          <el-pagination
-            class="main-pagination dt-pagination"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="appData.total"
-            :page-size="pagination.pageSize"
-            :current-page="pagination.currentPage"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-          <div v-if="showSubTablesInList && orderedSubTables.length > 0" class="related-data-panel">
-            <div class="related-data-header">
-              <div class="related-title-area">
-                <span class="related-title-marker"></span>
-                <div>
-                  <div class="related-title">{{ $t('microRuntime.relatedData') }}</div>
-                  <div class="related-subtitle">
-                    {{
-                      activeRuntimeRowId
-                        ? $t('microRuntime.currentSubTableDetails')
-                        : $t('microRuntime.selectMainRowDetails')
-                    }}
-                  </div>
-                </div>
-              </div>
-              <el-button
-                v-if="activeRuntimeRowId"
-                size="small"
-                :loading="relatedDataLoading"
-                @click="loadRelatedData(activeRuntimeRowId)"
-              >
-                <el-icon class="button-leading-icon"><Refresh /></el-icon>
-                {{ $t('common.refresh') }}
-              </el-button>
-            </div>
-            <div v-if="!activeRuntimeRowId" class="related-empty-state">{{ $t('microRuntime.selectOneRow') }}</div>
-            <div v-else v-loading="relatedDataLoading" class="related-content">
-              <el-tabs v-model="activeSubTableName" class="related-tabs">
-                <el-tab-pane v-for="subTable in orderedSubTables" :key="subTable.tableName" :name="subTable.tableName">
-                  <template #label>
-                    <span class="related-tab-label">
-                      {{ subTable.label || subTable.tableName }}
-                      <em>{{ getRelatedSubTableRows(subTable).length }}</em>
-                    </span>
-                  </template>
-                  <el-table
-                    :data="getRelatedSubTablePageRows(subTable)"
-                    size="small"
-                    class="related-subtable dt-table"
-                    max-height="220"
+                  <el-table-column
+                    v-if="appConfig.supportDelete && appConfig.supportBatchDelete"
+                    type="selection"
+                    width="50"
+                    fixed="left"
+                  ></el-table-column>
+                  <!-- 序号列 -->
+                  <el-table-column
+                    label="#"
+                    :width="runtimeIndexColumnWidth"
+                    fixed="left"
+                    align="center"
+                    header-align="center"
+                    class-name="rank-column"
                   >
+                    <template #default="scope">
+                      <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+                    </template>
+                  </el-table-column>
+                  <!-- 渲染所有有效的字段 -->
+                  <template v-for="field in orderedFields" :key="field.fieldName">
                     <el-table-column
-                      label="#"
-                      :width="getRelatedIndexColumnWidth(subTable)"
-                      align="center"
-                      header-align="center"
-                      class-name="rank-column"
+                      v-if="field?.showInList && field?.fieldName"
+                      :prop="field.fieldName"
+                      :label="field.label || field.fieldName || $t('microRuntime.unknownField')"
+                      :width="field.columnWidth || undefined"
+                      :fixed="normalizeFixedColumn(field.fixed)"
+                      :align="normalizeColumnAlign(field.columnAlign)"
+                      :sortable="field.sortable ? 'custom' : false"
                     >
                       <template #default="scope">
-                        <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+                        <div v-if="field.fieldType === 'attachment'" class="attachment-cell">
+                          <template v-if="getAttachmentList(scope.row[field.fieldName]).length > 0">
+                            <div
+                              v-for="(attachment, attachmentIndex) in getAttachmentList(scope.row[field.fieldName])"
+                              :key="getAttachmentKey(attachment, attachmentIndex)"
+                              class="attachment-cell-item"
+                            >
+                              <span class="attachment-type-badge">{{ getAttachmentExtLabel(attachment) }}</span>
+                              <button
+                                class="attachment-download-link"
+                                type="button"
+                                :title="getAttachmentName(attachment)"
+                                @click="downloadAttachment(attachment)"
+                              >
+                                {{ getAttachmentName(attachment) }}
+                              </button>
+                              <button
+                                v-if="isPreviewableAttachment(attachment)"
+                                class="attachment-preview-link"
+                                type="button"
+                                @click="previewAttachment(attachment)"
+                              >
+                                {{ $t('microRuntime.preview') }}
+                              </button>
+                            </div>
+                          </template>
+                          <span v-else class="attachment-empty-cell">-</span>
+                        </div>
+                        <template v-else>
+                          {{ formatFieldValue(scope.row[field.fieldName], field) }}
+                        </template>
                       </template>
                     </el-table-column>
-                    <el-table-column
-                      v-for="field in normalizeFieldOrder(subTable.fields).filter((item) => item.showInList !== false)"
-                      :key="field.fieldName"
-                      :prop="field.fieldName"
-                      :label="field.label || field.fieldName"
-                      :min-width="field.columnWidth || 140"
-                      :align="normalizeColumnAlign(field.columnAlign)"
-                      show-overflow-tooltip
-                    >
-                      <template #default="{ row }">
-                        {{ formatFieldValue(row[field.fieldName], field) }}
-                      </template>
-                    </el-table-column>
-                    <template #empty>
-                      <div class="related-table-empty">{{ $t('microRuntime.noRelatedData') }}</div>
+                  </template>
+                  <el-table-column :label="$t('common.actions')" width="108" fixed="right" align="center">
+                    <template #default="scope">
+                      <div class="dt-operation-buttons operation-buttons runtime-actions">
+                        <el-tooltip
+                          v-if="appConfig.supportUpdate"
+                          :content="$t('microRuntime.editData')"
+                          placement="top"
+                        >
+                          <el-button
+                            class="dt-icon-action dt-icon-action--edit"
+                            :icon="Edit"
+                            @click="openEditDialog(scope.row)"
+                          />
+                        </el-tooltip>
+                        <el-tooltip
+                          v-if="appConfig.supportDelete"
+                          :content="$t('microRuntime.deleteData')"
+                          placement="top"
+                        >
+                          <el-button
+                            class="dt-icon-action dt-icon-action--danger"
+                            :icon="Delete"
+                            @click="deleteData(scope.row)"
+                          />
+                        </el-tooltip>
+                      </div>
                     </template>
-                  </el-table>
-                  <div class="related-pagination">
-                    <el-pagination
-                      layout="total, sizes, prev, pager, next"
-                      :total="getRelatedSubTableRows(subTable).length"
-                      :page-size="getRelatedPagination(subTable).pageSize"
-                      :current-page="getRelatedPagination(subTable).currentPage"
-                      :page-sizes="[5, 10, 20, 50]"
-                      small
-                      @size-change="(size) => handleRelatedPageSizeChange(subTable, size)"
-                      @current-change="(page) => handleRelatedPageChange(subTable, page)"
-                    ></el-pagination>
+                  </el-table-column>
+                </el-table>
+              </div>
+              <el-pagination
+                class="main-pagination dt-pagination"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="appData.total"
+                :page-size="pagination.pageSize"
+                :current-page="pagination.currentPage"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+              />
+            </div>
+
+            <div v-if="showSubTablesInList && orderedSubTables.length > 0" class="related-data-panel">
+              <div class="related-data-header">
+                <div class="related-title-area">
+                  <span class="related-title-marker"></span>
+                  <div>
+                    <div class="related-title">{{ $t('microRuntime.relatedData') }}</div>
+                    <div class="related-subtitle">
+                      {{
+                        activeRuntimeRowId
+                          ? $t('microRuntime.currentSubTableDetails')
+                          : $t('microRuntime.selectMainRowDetails')
+                      }}
+                    </div>
                   </div>
-                </el-tab-pane>
-              </el-tabs>
+                </div>
+                <el-button
+                  v-if="activeRuntimeRowId"
+                  size="small"
+                  :loading="relatedDataLoading"
+                  @click="loadRelatedData(activeRuntimeRowId)"
+                >
+                  <el-icon class="button-leading-icon"><Refresh /></el-icon>
+                  {{ $t('common.refresh') }}
+                </el-button>
+              </div>
+              <div v-if="!activeRuntimeRowId" class="related-empty-state">{{ $t('microRuntime.selectOneRow') }}</div>
+              <div v-else v-loading="relatedDataLoading" class="related-content">
+                <el-tabs v-model="activeSubTableName" class="related-tabs">
+                  <el-tab-pane
+                    v-for="subTable in orderedSubTables"
+                    :key="subTable.tableName"
+                    :name="subTable.tableName"
+                  >
+                    <template #label>
+                      <span class="related-tab-label">
+                        {{ subTable.label || subTable.tableName }}
+                        <em>{{ getRelatedSubTableRows(subTable).length }}</em>
+                      </span>
+                    </template>
+                    <div class="related-tab-pane-body">
+                      <el-table
+                        :data="getRelatedSubTablePageRows(subTable)"
+                        size="small"
+                        class="related-subtable dt-table"
+                        height="100%"
+                      >
+                        <el-table-column
+                          label="#"
+                          :width="getRelatedIndexColumnWidth(subTable)"
+                          align="center"
+                          header-align="center"
+                          class-name="rank-column"
+                        >
+                          <template #default="scope">
+                            <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
+                          </template>
+                        </el-table-column>
+                        <el-table-column
+                          v-for="field in normalizeFieldOrder(subTable.fields).filter(
+                            (item) => item.showInList !== false
+                          )"
+                          :key="field.fieldName"
+                          :prop="field.fieldName"
+                          :label="field.label || field.fieldName"
+                          :min-width="field.columnWidth || 140"
+                          :align="normalizeColumnAlign(field.columnAlign)"
+                          show-overflow-tooltip
+                        >
+                          <template #default="{ row }">
+                            {{ formatFieldValue(row[field.fieldName], field) }}
+                          </template>
+                        </el-table-column>
+                        <template #empty>
+                          <div class="related-table-empty">{{ $t('microRuntime.noRelatedData') }}</div>
+                        </template>
+                      </el-table>
+                      <div class="related-pagination">
+                        <el-pagination
+                          layout="total, sizes, prev, pager, next"
+                          :total="getRelatedSubTableRows(subTable).length"
+                          :page-size="getRelatedPagination(subTable).pageSize"
+                          :current-page="getRelatedPagination(subTable).currentPage"
+                          :page-sizes="[5, 10, 20, 50]"
+                          small
+                          @size-change="(size) => handleRelatedPageSizeChange(subTable, size)"
+                          @current-change="(page) => handleRelatedPageChange(subTable, page)"
+                        ></el-pagination>
+                      </div>
+                    </div>
+                  </el-tab-pane>
+                </el-tabs>
+              </div>
             </div>
           </div>
         </div>
@@ -531,6 +544,9 @@ export default {
     },
     showSubTablesInList() {
       return this.appConfig?.showSubTablesInList !== false
+    },
+    subTableListLayout() {
+      return this.appConfig?.subTableListLayout === 'horizontal' ? 'horizontal' : 'vertical'
     },
     queryableFields() {
       return this.orderedFields.filter((field) => field?.fieldName && field.queryMode && field.queryMode !== 'none')
@@ -956,6 +972,8 @@ export default {
                   : config.showSubTablesInList !== undefined
                     ? config.showSubTablesInList
                     : true,
+              subTableListLayout:
+                (config.SubTableListLayout || config.subTableListLayout) === 'horizontal' ? 'horizontal' : 'vertical',
               dataScope: config.DataScope || config.dataScope || 'all',
               formColumns: this.normalizeFormColumns(config.FormColumns || config.formColumns),
               queryColumns: this.normalizeQueryColumns(config.QueryColumns || config.queryColumns),
@@ -1712,6 +1730,45 @@ export default {
   box-sizing: border-box;
 }
 
+.runtime-data-layout {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.runtime-data-layout.has-related {
+  padding: 12px;
+  background: #f5f8fc;
+}
+
+.runtime-data-layout.has-related.is-related-horizontal {
+  grid-template-columns: minmax(0, 1fr) minmax(520px, 38%);
+}
+
+.runtime-data-layout.has-related.is-related-vertical {
+  grid-template-rows: minmax(0, 1fr) minmax(280px, 42%);
+}
+
+.main-data-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dce5f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.runtime-data-layout:not(.has-related) .main-data-pane {
+  border: 0;
+  border-radius: 0;
+}
+
 .table-container {
   flex: 1;
   min-height: 0;
@@ -1724,20 +1781,25 @@ export default {
 }
 
 .related-data-panel {
-  flex: 0 0 auto;
-  margin-top: var(--dt-page-gap);
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid #dce5f2;
   border-radius: 8px;
   background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
 }
 
 .related-data-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: 0 0 auto;
   gap: 12px;
-  padding: 11px 14px;
+  min-height: 56px;
+  padding: 9px 12px;
   border-bottom: 1px solid #e7edf6;
   background: #f7faff;
 }
@@ -1775,7 +1837,8 @@ export default {
 
 .related-empty-state {
   display: flex;
-  min-height: 104px;
+  flex: 1;
+  min-height: 0;
   align-items: center;
   justify-content: center;
   color: #8a98aa;
@@ -1783,17 +1846,34 @@ export default {
 }
 
 .related-content {
-  min-height: 150px;
-  padding: 0 var(--dt-pagination-inline-padding) var(--dt-pagination-bottom-padding);
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  padding: 0 12px 12px;
+}
+
+.related-tabs {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .related-tabs :deep(.el-tabs__header) {
-  margin-bottom: 10px;
+  flex: 0 0 auto;
+  margin: 0 0 10px;
 }
 
 .related-tabs :deep(.el-tabs__nav-wrap::after) {
   height: 1px;
   background: #e7edf6;
+}
+
+.related-tabs :deep(.el-tabs__content),
+.related-tabs :deep(.el-tab-pane) {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .related-tab-label {
@@ -1822,17 +1902,26 @@ export default {
   font-weight: 700;
 }
 
+.related-tab-pane-body {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
 .related-pagination {
   display: flex;
+  flex: 0 0 auto;
   justify-content: flex-end;
-  padding-top: 10px;
+  padding-top: 0;
 }
 
 .related-table-empty {
-  min-height: 72px;
+  min-height: 160px;
   color: #8a98aa;
   font-size: 13px;
-  line-height: 72px;
+  line-height: 160px;
 }
 
 .button-leading-icon {

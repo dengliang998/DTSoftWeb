@@ -475,6 +475,16 @@
                     <el-option :label="$t('microConfig.fourColumns')" :value="4"></el-option>
                   </el-select>
                 </el-form-item>
+                <el-form-item :label="$t('microConfig.subTableListLayout')">
+                  <el-select
+                    v-model="MicroAppForm.SubTableListLayout"
+                    :disabled="MicroAppForm.ShowSubTablesInList === false"
+                    :placeholder="$t('microConfig.selectSubTableListLayout')"
+                  >
+                    <el-option :label="$t('microConfig.subTableLayoutVertical')" value="vertical"></el-option>
+                    <el-option :label="$t('microConfig.subTableLayoutHorizontal')" value="horizontal"></el-option>
+                  </el-select>
+                </el-form-item>
               </div>
             </el-form>
           </section>
@@ -1006,6 +1016,7 @@ export default {
         SupportImport: false,
         SupportExport: false,
         ShowSubTablesInList: true,
+        SubTableListLayout: 'vertical',
         DataScope: 'all',
         FormColumns: 1,
         QueryColumns: 1,
@@ -1353,6 +1364,10 @@ export default {
       }
       return true
     },
+    normalizeSubTableListLayout(config) {
+      const layout = config?.SubTableListLayout || config?.subTableListLayout || ''
+      return layout === 'horizontal' ? 'horizontal' : 'vertical'
+    },
     normalizeFieldOrder(fields) {
       return Array.isArray(fields)
         ? [...fields]
@@ -1534,6 +1549,7 @@ export default {
             FormColumns: this.normalizeFormColumns(item.FormColumns || item.formColumns),
             QueryColumns: this.normalizeQueryColumns(item.QueryColumns || item.queryColumns),
             ShowSubTablesInList: this.normalizeShowSubTablesInList(item),
+            SubTableListLayout: this.normalizeSubTableListLayout(item),
             SubTables: this.normalizeSubTables(item.SubTables || item.subTables || []),
             configDesc: item.ConfigDesc || item.configDesc || ''
           }))
@@ -1572,6 +1588,7 @@ export default {
         SupportImport: false,
         SupportExport: false,
         ShowSubTablesInList: true,
+        SubTableListLayout: 'vertical',
         DataScope: 'all',
         FormColumns: 1,
         QueryColumns: 1,
@@ -1590,6 +1607,7 @@ export default {
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
+        SubTableListLayout: this.normalizeSubTableListLayout(row),
         SubTables: this.normalizeSubTables(row.SubTables || row.subTables || []),
         configDesc: row.ConfigDesc || row.configDesc || ''
       }
@@ -1630,7 +1648,8 @@ export default {
             MicroAppPath: this.MicroAppForm.MicroAppPath || this.MicroAppForm.ModelName,
             FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
             QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
-            ShowSubTablesInList: this.MicroAppForm.ShowSubTablesInList !== false
+            ShowSubTablesInList: this.MicroAppForm.ShowSubTablesInList !== false,
+            SubTableListLayout: this.normalizeSubTableListLayout(this.MicroAppForm)
           }
           let res
           if (this.MicroAppForm.ItemId) {
@@ -1665,6 +1684,7 @@ export default {
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
+        SubTableListLayout: this.normalizeSubTableListLayout(row),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields,
         SubTables: subTables
@@ -2110,6 +2130,7 @@ export default {
           FormColumns: this.normalizeFormColumns(this.MicroAppForm.FormColumns),
           QueryColumns: this.normalizeQueryColumns(this.MicroAppForm.QueryColumns),
           ShowSubTablesInList: this.MicroAppForm.ShowSubTablesInList !== false,
+          SubTableListLayout: this.normalizeSubTableListLayout(this.MicroAppForm),
           Fields: this.normalizeFieldOrder(this.MicroAppForm.Fields).map((field) => this.toFieldSubmitData(field)),
           SubTables: normalizedSubTables.map((subTable, index) => ({
             Label: subTable.label,
@@ -2157,6 +2178,7 @@ export default {
         FormColumns: this.normalizeFormColumns(row.FormColumns || row.formColumns),
         QueryColumns: this.normalizeQueryColumns(row.QueryColumns || row.queryColumns),
         ShowSubTablesInList: this.normalizeShowSubTablesInList(row),
+        SubTableListLayout: this.normalizeSubTableListLayout(row),
         configDesc: row.ConfigDesc || row.configDesc || '',
         Fields: fields,
         SubTables: subTables
