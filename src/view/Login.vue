@@ -564,6 +564,12 @@ export default defineComponent({
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--login-primary) 18%, transparent);
 }
 
+.login_container.is-dark .login-language-choice.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--login-primary) 0%, var(--login-primary-hover) 100%);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--login-primary) 28%, transparent);
+}
+
 .login_shell {
   position: relative;
   z-index: 1;
@@ -586,6 +592,14 @@ export default defineComponent({
   border-radius: 14px;
   background: var(--login-surface);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+}
+
+.login_container.is-light .panel_logo {
+  background: linear-gradient(135deg, #162238 0%, #0e1628 100%);
+  border-color: rgba(24, 38, 64, 0.22);
+  box-shadow:
+    0 14px 30px rgba(47, 66, 97, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .panel_logo {
