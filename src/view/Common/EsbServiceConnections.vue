@@ -70,17 +70,14 @@
               <span class="dt-index-chip">{{ scope.$index + 1 }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="Name" :label="$t('esb.connection')" min-width="220">
+          <el-table-column prop="ItemId" :label="$t('esb.connectionId')" width="190">
             <template #default="{ row }">
-              <span class="dt-name-copy">
-                <strong>{{ row.Name }}</strong>
-                <small>{{ row.Code }}</small>
-              </span>
+              <code class="dt-code">{{ row.ItemId || row.itemId || '-' }}</code>
             </template>
           </el-table-column>
-          <el-table-column prop="Code" :label="$t('esb.code')" min-width="170">
+          <el-table-column prop="Name" :label="$t('esb.connection')" min-width="220">
             <template #default="{ row }">
-              <code class="dt-code">{{ row.Code }}</code>
+              <strong>{{ row.Name }}</strong>
             </template>
           </el-table-column>
           <el-table-column :label="$t('esb.serviceType')" width="116">
@@ -153,20 +150,17 @@
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <div class="form-grid">
-          <el-form-item :label="$t('esb.connectionCode')" prop="Code">
-            <el-input v-model="form.Code" :placeholder="$t('esb.connectionCodePlaceholder')"></el-input>
-          </el-form-item>
           <el-form-item :label="$t('esb.connectionName')" prop="Name">
             <el-input v-model="form.Name" :placeholder="$t('esb.namePlaceholder')"></el-input>
           </el-form-item>
           <el-form-item :label="$t('esb.serviceType')">
-            <el-select v-model="form.ServiceType">
+            <el-select v-model="form.ServiceType" @change="handleServiceTypeChange">
               <el-option :label="$t('welcome.overview.database')" value="database"></el-option>
               <el-option label="WebApi" value="webapi"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item v-if="form.ServiceType === 'database'" :label="$t('esb.databaseType')" prop="DbType">
-            <el-select v-model="form.DbType" :placeholder="$t('esb.selectDatabaseType')">
+            <el-select v-model="form.DbType" :placeholder="$t('esb.selectDatabaseType')" @change="handleDbTypeChange">
               <el-option
                 v-for="dbType in supportedDatabaseTypes"
                 :key="dbType"
@@ -245,6 +239,14 @@ const createDefaultForm = () => ({
   Remark: ''
 })
 
+const defaultConnectionStrings = {
+  sqlserver: 'Server=localhost;Database=DTSoftDB;User Id=sa;Password=your_password;TrustServerCertificate=True;',
+  mysql: 'Server=localhost;Port=3306;Database=DTSoftDB;Uid=root;Pwd=your_password;CharSet=utf8mb4;',
+  postgresql:
+    'Host=localhost;Port=5432;Database=DTSoftDB;Username=postgres;Password=your_password;Pooling=true;SSL Mode=Disable',
+  oracle: 'User Id=system;Password=your_password;Data Source=localhost:1521/ORCLPDB1;'
+}
+
 export default {
   name: 'EsbServiceConnections',
   components: {
@@ -271,7 +273,6 @@ export default {
       saving: false,
       testing: false,
       rules: {
-        Code: [{ required: true, message: this.$t('esb.connectionCodePlaceholder'), trigger: 'blur' }],
         Name: [{ required: true, message: this.$t('esb.namePlaceholder'), trigger: 'blur' }],
         DbType: [{ required: true, message: this.$t('esb.selectDatabaseType'), trigger: 'change' }],
         ConnectionString: [{ required: true, message: this.$t('esb.connectionStringPlaceholder'), trigger: 'blur' }],
@@ -365,6 +366,27 @@ export default {
       }
       return labels[dbType] || dbType
     },
+    getDefaultConnectionString(dbType) {
+      return defaultConnectionStrings[dbType] || ''
+    },
+    shouldApplyDefaultConnectionString() {
+      if (!this.form.ItemId) return true
+      if (!this.form.ConnectionString) return true
+      return Object.values(defaultConnectionStrings).includes(this.form.ConnectionString)
+    },
+    applyDefaultConnectionString(dbType, force = false) {
+      if (!force && !this.shouldApplyDefaultConnectionString()) return
+      this.form.ConnectionString = this.getDefaultConnectionString(dbType)
+    },
+    handleDbTypeChange(dbType) {
+      this.applyDefaultConnectionString(dbType)
+    },
+    handleServiceTypeChange(serviceType) {
+      if (serviceType === 'database') {
+        this.form.DbType = this.form.DbType || 'sqlserver'
+        this.applyDefaultConnectionString(this.form.DbType)
+      }
+    },
     handleSizeChange(size) {
       this.query.pageSize = size
       this.query.pageNum = 1
@@ -381,6 +403,7 @@ export default {
     },
     openCreateDialog() {
       this.form = createDefaultForm()
+      this.applyDefaultConnectionString(this.form.DbType, true)
       this.formDialogVisible = true
     },
     openEditDialog(row) {
