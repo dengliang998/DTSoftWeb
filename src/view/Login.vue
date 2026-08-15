@@ -1,64 +1,90 @@
 <template>
-  <div class="login_container" :style="loginContainerStyle">
-    <div
-      v-if="enabledLanguages.length > 0"
-      class="login-language"
-      role="group"
-      :aria-label="$t('language.switchLabel')"
-    >
+  <div :class="['login_container', loginThemeClass]" :style="loginContainerStyle">
+    <div class="login_toolbar">
       <button
-        v-for="item in enabledLanguages"
-        :key="item.LanguageCode"
         type="button"
-        :class="['login-language-choice', { 'is-active': item.LanguageCode === currentLanguage }]"
-        :aria-pressed="item.LanguageCode === currentLanguage"
-        :title="item.NativeName || item.LanguageName || item.LanguageCode"
-        @click="handleLanguageChange(item.LanguageCode)"
+        class="login-theme-toggle"
+        :aria-label="currentAppearance === 'dark' ? $t('theme.switchToLight') : $t('theme.switchToDark')"
+        :title="currentAppearance === 'dark' ? $t('theme.switchToLight') : $t('theme.switchToDark')"
+        @click="toggleAppearance"
       >
-        {{ getLanguageShortLabel(item) }}
+        <el-icon class="login-theme-toggle__icon">
+          <Sunny v-if="currentAppearance === 'dark'" />
+          <Moon v-else />
+        </el-icon>
       </button>
+
+      <div
+        v-if="enabledLanguages.length > 0"
+        class="login-language"
+        role="group"
+        :aria-label="$t('language.switchLabel')"
+      >
+        <button
+          v-for="item in enabledLanguages"
+          :key="item.LanguageCode"
+          type="button"
+          :class="['login-language-choice', { 'is-active': item.LanguageCode === currentLanguage }]"
+          :aria-pressed="item.LanguageCode === currentLanguage"
+          :title="item.NativeName || item.LanguageName || item.LanguageCode"
+          @click="handleLanguageChange(item.LanguageCode)"
+        >
+          {{ getLanguageShortLabel(item) }}
+        </button>
+      </div>
     </div>
-    <div class="login_shell">
-      <section class="login_box" :aria-label="$t('login.loginAria')">
-        <div class="login_box-header">
-          <div>
-            <h1>{{ $t('login.title') }}</h1>
-            <p>{{ $t('login.subtitle') }}</p>
+
+    <main class="login_shell">
+      <section class="login_panel" :aria-label="$t('login.loginAria')">
+        <div class="login_panel_header">
+          <div class="panel_logo">
+            <img :src="brandLogoUrl" alt="" />
           </div>
-          <div class="avatar_box">
-            <img :src="avatarUrl" :alt="$t('login.avatarAlt')" @error="onAvatarError" />
+          <div class="panel_header_text">
+            <span>{{ $t('login.panelKicker') }}</span>
+            <strong>{{ systemTitle }}</strong>
+            <p>{{ $t('login.panelSubtitle') }}</p>
           </div>
         </div>
 
         <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">
           <el-form-item prop="username">
-            <el-input
-              v-model="loginForm.username"
-              :placeholder="$t('login.usernamePlaceholder')"
-              prefix-icon="User"
-            ></el-input>
+            <div class="field_block">
+              <label class="field_label">{{ $t('login.usernameLabel') }}</label>
+              <el-input
+                v-model="loginForm.username"
+                :placeholder="$t('login.usernamePlaceholder')"
+                prefix-icon="User"
+              />
+            </div>
           </el-form-item>
           <el-form-item prop="password">
-            <el-input
-              v-model="loginForm.password"
-              type="password"
-              :placeholder="$t('login.passwordPlaceholder')"
-              prefix-icon="Lock"
-              show-password
-              @keyup.enter="login"
-            ></el-input>
+            <div class="field_block">
+              <label class="field_label">{{ $t('login.passwordLabel') }}</label>
+              <el-input
+                v-model="loginForm.password"
+                type="password"
+                :placeholder="$t('login.passwordPlaceholder')"
+                prefix-icon="Lock"
+                show-password
+                @keyup.enter="login"
+              />
+            </div>
           </el-form-item>
           <el-form-item v-if="captchaEnabled" prop="captchaCode">
             <div class="captcha-row">
-              <el-input
-                v-model="loginForm.captchaCode"
-                maxlength="4"
-                :placeholder="$t('login.captchaPlaceholder')"
-                prefix-icon="Key"
-                autocomplete="off"
-                @input="formatCaptchaCode"
-                @keyup.enter="login"
-              ></el-input>
+              <div class="field_block captcha-input">
+                <label class="field_label">{{ $t('login.captchaLabel') }}</label>
+                <el-input
+                  v-model="loginForm.captchaCode"
+                  maxlength="4"
+                  :placeholder="$t('login.captchaPlaceholder')"
+                  prefix-icon="CircleCheck"
+                  autocomplete="off"
+                  @input="formatCaptchaCode"
+                  @keyup.enter="login"
+                />
+              </div>
               <button
                 type="button"
                 class="captcha-image"
@@ -78,41 +104,53 @@
           </el-form-item>
         </el-form>
 
-        <div class="security_note">{{ securityNote }}</div>
+        <div class="panel_footer">
+          <span class="security_note">{{ securityNote }}</span>
+          <span>{{ $t('login.panelFooter') }}</span>
+        </div>
       </section>
-    </div>
+    </main>
   </div>
 </template>
 
 <script>
-import { defineComponent, reactive, ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Moon, Sunny } from '@element-plus/icons-vue'
 import { getCaptcha, getLoginToken, loadLoginEncryptionKey, login as loginApi } from '@/api/auth'
 import { getEnabledLanguages } from '@/api/language'
-import { getUserAvatarUrl } from '@/api/user'
 import { getData, getMessage, isSuccessPayload } from '@/core/response'
 import { setAuthSession } from '@/core/session'
+import defaultHomeLogo from '@/assets/imgs/homelogo.png'
 import {
   fetchAndCacheSystemInfo,
+  getCachedAppearance,
   getCachedLoginCaptchaEnabled,
   getCachedLoginImgDataUrl,
   getCachedSystemName,
-  normalizeBase64Image
+  normalizeBase64Image,
+  toggleUserAppearance
 } from '@/utils/sysConfig'
 import { cacheEnabledLanguages, getCurrentLanguage, i18nState, setLanguage, translate } from '@/i18n'
 
 export default defineComponent({
   name: 'Login',
+  components: {
+    Moon,
+    Sunny
+  },
   setup() {
     const router = useRouter()
     const route = useRoute()
     const loginFormRef = ref(null)
-    const loginBgUrl = ref(getCachedLoginImgDataUrl())
+    const loginBgUrl = ref(getCachedLoginImgDataUrl() || '')
     const captchaEnabled = ref(getCachedLoginCaptchaEnabled())
     const captchaImage = ref('')
     const captchaLoading = ref(false)
     const loggingIn = ref(false)
+    const systemTitle = ref(getCachedSystemName() || translate('login.defaultSystemName'))
+    const currentAppearance = ref(getCachedAppearance())
 
     const loginForm = reactive({
       username: '',
@@ -120,10 +158,6 @@ export default defineComponent({
       captchaId: '',
       captchaCode: ''
     })
-
-    const defaultAvatarUrl = 'https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png'
-    const avatarUrl = ref(defaultAvatarUrl)
-    let avatarDebounceTimer = null
 
     const loginFormRules = computed(() => ({
       username: [{ required: true, message: translate('login.usernameRequired'), trigger: 'blur' }],
@@ -138,6 +172,14 @@ export default defineComponent({
     )
     const enabledLanguages = computed(() => i18nState.enabledLanguages)
     const currentLanguage = computed(() => getCurrentLanguage())
+    const brandLogoUrl = defaultHomeLogo
+    const loginThemeClass = computed(() => (currentAppearance.value === 'dark' ? 'is-dark' : 'is-light'))
+
+    const refreshSystemTitle = () => {
+      systemTitle.value = getCachedSystemName() || translate('login.defaultSystemName')
+      document.title = systemTitle.value
+    }
+
     const getLanguageShortLabel = (language) =>
       String(language?.LanguageCode || '')
         .toLowerCase()
@@ -145,17 +187,23 @@ export default defineComponent({
         ? '中'
         : 'EN'
 
-    const refreshDefaultSystemName = () => {
-      if (!getCachedSystemName()) {
-        document.title = translate('login.defaultSystemName')
-      }
-    }
-
     const handleLanguageChange = (language) => {
       if (!language || language === currentLanguage.value) return
       setLanguage(language)
-      refreshDefaultSystemName()
+      refreshSystemTitle()
       loginFormRef.value?.clearValidate?.()
+    }
+
+    const syncAppearance = (appearance) => {
+      currentAppearance.value = appearance === 'dark' ? 'dark' : 'light'
+    }
+
+    const handleThemeApplied = (event) => {
+      syncAppearance(event?.detail?.appearance || getCachedAppearance())
+    }
+
+    const toggleAppearance = () => {
+      syncAppearance(toggleUserAppearance({ animate: true }))
     }
 
     const loadEnabledLanguages = async () => {
@@ -165,28 +213,8 @@ export default defineComponent({
           cacheEnabledLanguages(res.data)
         }
       } catch {
-        // App.vue also attempts to load this; keep the current fallback if the request fails here.
+        // Ignore and keep fallback language pack.
       }
-    }
-
-    const onAvatarError = () => {
-      avatarUrl.value = defaultAvatarUrl
-    }
-
-    const loadUserAvatar = () => {
-      const username = loginForm.username.trim()
-      if (!username) {
-        avatarUrl.value = defaultAvatarUrl
-        return
-      }
-
-      const avatarApiUrl = getUserAvatarUrl(username, 'account')
-      const img = new Image()
-      img.onload = () => {
-        avatarUrl.value = avatarApiUrl
-      }
-      img.onerror = onAvatarError
-      img.src = avatarApiUrl
     }
 
     const loadCaptcha = () => {
@@ -287,17 +315,16 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      loadUserAvatar()
+      syncAppearance(getCachedAppearance())
+      window.addEventListener('dt-theme-applied', handleThemeApplied)
+      refreshSystemTitle()
       loadEnabledLanguages()
       loadLoginEncryptionKey().catch(() => {})
       fetchAndCacheSystemInfo()
         .then((res) => {
-          loginBgUrl.value = normalizeBase64Image(res?.data?.loginImg) || getCachedLoginImgDataUrl()
+          loginBgUrl.value = normalizeBase64Image(res?.data?.loginImg) || ''
           captchaEnabled.value = getCachedLoginCaptchaEnabled()
-          const title = getCachedSystemName()
-          if (title) {
-            document.title = title
-          }
+          refreshSystemTitle()
           loadCaptcha()
         })
         .catch(() => {
@@ -305,53 +332,39 @@ export default defineComponent({
         })
     })
 
-    watch(
-      () => loginForm.username,
-      () => {
-        if (avatarDebounceTimer) {
-          clearTimeout(avatarDebounceTimer)
-        }
-        avatarDebounceTimer = setTimeout(() => {
-          loadUserAvatar()
-        }, 300)
-      }
-    )
+    onBeforeUnmount(() => {
+      window.removeEventListener('dt-theme-applied', handleThemeApplied)
+    })
 
     watch(
       () => i18nState.language,
       () => {
-        refreshDefaultSystemName()
+        refreshSystemTitle()
       }
     )
-
-    onUnmounted(() => {
-      if (avatarDebounceTimer) {
-        clearTimeout(avatarDebounceTimer)
-      }
-    })
 
     return {
       loginFormRef,
       loginForm,
       loginFormRules,
-      avatarUrl,
       captchaEnabled,
       captchaImage,
       captchaLoading,
       currentLanguage,
       enabledLanguages,
+      currentAppearance,
+      loginThemeClass,
       loggingIn,
       securityNote,
+      brandLogoUrl,
+      systemTitle,
       getLanguageShortLabel,
-      onAvatarError,
+      handleLanguageChange,
+      toggleAppearance,
       loadCaptcha,
       formatCaptchaCode,
-      handleLanguageChange,
       login,
-      loginContainerStyle: computed(() => {
-        if (!loginBgUrl.value) return {}
-        return { backgroundImage: `url('${loginBgUrl.value}')` }
-      })
+      loginContainerStyle: computed(() => (loginBgUrl.value ? { backgroundImage: `url('${loginBgUrl.value}')` } : {}))
     }
   }
 })
@@ -359,123 +372,330 @@ export default defineComponent({
 
 <style lang="less" scoped>
 .login_container {
-  --login-card-bg: rgba(255, 255, 255, 0.95);
-  --login-card-border: rgba(255, 255, 255, 0.78);
-  --login-text: #182230;
-  --login-muted: #667085;
-  --login-input-border: #d7e0ec;
-  --login-avatar-bg: #ffffff;
-  --login-captcha-bg: #eef5ff;
+  --login-primary: #2a4fd0;
+  --login-primary-hover: #2445b5;
+  --login-primary-soft: rgba(42, 79, 208, 0.16);
+  --login-page-bg: #0f0f0f;
+  --login-surface: rgba(24, 24, 24, 0.78);
+  --login-surface-strong: rgba(34, 34, 34, 0.92);
+  --login-surface-soft: rgba(24, 24, 24, 0.56);
+  --login-border: rgba(64, 64, 64, 0.92);
+  --login-border-soft: rgba(34, 34, 34, 0.92);
+  --login-text: #ffffff;
+  --login-heading: #ffffff;
+  --login-muted: #a8a8a8;
+  --login-subtle: #888888;
+  --login-input-bg: rgba(0, 0, 0, 0.42);
+  --login-input-border: rgba(64, 64, 64, 0.96);
+  --login-input-text: #ffffff;
+  --login-input-placeholder: #888888;
+  --login-control-bg: rgba(24, 24, 24, 0.78);
+  --login-control-border: rgba(64, 64, 64, 0.94);
+  --login-control-text: #ffffff;
+  --login-terminal-bg: rgba(0, 0, 0, 0.7);
+  --login-terminal-border: rgba(64, 64, 64, 0.92);
+  --login-terminal-highlight: rgba(42, 79, 208, 0.16);
+  --login-terminal-glow: rgba(42, 79, 208, 0.2);
+  --login-terminal-pane: rgba(34, 34, 34, 0.82);
+  --login-terminal-pane-strong: rgba(42, 42, 42, 0.94);
+  --login-terminal-text: #a8a8a8;
+  --login-terminal-title: #ffffff;
+  --login-panel-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+  --login-stage-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
+  --login-captcha-bg: rgba(255, 255, 255, 0.94);
+  --login-captcha-text: #182230;
 
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background: #101828 url('../assets/imgs/bg-optimized.png') center / cover no-repeat;
+  color: var(--login-text);
+  background:
+    linear-gradient(180deg, rgba(15, 15, 15, 0.02) 0%, rgba(15, 15, 15, 0.28) 100%),
+    var(--login-page-bg) center / cover no-repeat;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.login_container.is-light {
+  --login-page-bg: #e9eef5;
+  --login-primary: #315bd4;
+  --login-primary-hover: #274ab0;
+  --login-primary-soft: color-mix(in srgb, var(--login-primary) 12%, #ffffff);
+  --login-surface: rgba(248, 251, 255, 0.9);
+  --login-surface-strong: rgba(255, 255, 255, 0.96);
+  --login-surface-soft: rgba(248, 251, 255, 0.72);
+  --login-border: rgba(120, 146, 186, 0.28);
+  --login-border-soft: rgba(120, 146, 186, 0.2);
+  --login-text: #142235;
+  --login-heading: #0d1724;
+  --login-muted: #5f7085;
+  --login-subtle: #61748b;
+  --login-input-bg: rgba(255, 255, 255, 0.94);
+  --login-input-border: rgba(120, 146, 186, 0.24);
+  --login-input-text: #122133;
+  --login-input-placeholder: #6f8195;
+  --login-control-bg: rgba(255, 255, 255, 0.8);
+  --login-control-border: rgba(120, 146, 186, 0.2);
+  --login-control-text: #142235;
+  --login-terminal-bg: rgba(255, 255, 255, 0.76);
+  --login-terminal-border: rgba(120, 146, 186, 0.24);
+  --login-terminal-highlight: rgba(49, 91, 212, 0.1);
+  --login-terminal-glow: rgba(49, 91, 212, 0.12);
+  --login-terminal-pane: rgba(255, 255, 255, 0.92);
+  --login-terminal-pane-strong: rgba(255, 255, 255, 0.98);
+  --login-terminal-text: #5f7085;
+  --login-terminal-title: #102030;
+  --login-panel-shadow: 0 22px 58px rgba(63, 89, 122, 0.16);
+  --login-stage-shadow: 0 20px 44px rgba(63, 89, 122, 0.12);
+  --login-captcha-bg: rgba(255, 255, 255, 0.98);
+  --login-captcha-text: #122133;
+}
+
+.login_container.is-dark {
+  color-scheme: dark;
+}
+
+.login_container::before,
+.login_container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.login_container::before {
+  background:
+    radial-gradient(circle at 19% 18%, rgba(42, 79, 208, 0.1), transparent 28%),
+    radial-gradient(circle at 80% 20%, rgba(42, 79, 208, 0.07), transparent 26%),
+    linear-gradient(120deg, rgba(15, 15, 15, 0.18) 0%, rgba(15, 15, 15, 0.03) 52%, rgba(15, 15, 15, 0.2) 100%);
+  opacity: 1;
+}
+
+.login_container.is-light::before {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(49, 91, 212, 0.08), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(49, 91, 212, 0.05), transparent 28%),
+    linear-gradient(120deg, rgba(232, 238, 245, 0.08) 0%, rgba(232, 238, 245, 0.02) 52%, rgba(232, 238, 245, 0.12) 100%);
+}
+
+.login_container::after {
+  background:
+    linear-gradient(90deg, rgba(64, 64, 64, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(64, 64, 64, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.08;
+  animation: loginGridDrift 24s linear infinite;
+}
+
+.login_toolbar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--login-control-text);
+  cursor: pointer;
+  background: var(--login-control-bg);
+  border: 1px solid var(--login-control-border);
+  border-radius: 8px;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(16px);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.login-theme-toggle:hover,
+.login-theme-toggle:focus-visible {
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--login-primary) 62%, transparent);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.login-theme-toggle__icon {
+  font-size: 16px;
 }
 
 .login-language {
-  position: absolute;
-  top: 24px;
-  right: 28px;
-  z-index: 1;
   display: flex;
-  padding: 2px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(226, 232, 240, 0.72);
-  border-radius: 7px;
+  padding: 4px;
+  background: var(--login-control-bg);
+  border: 1px solid var(--login-control-border);
+  border-radius: 8px;
+  backdrop-filter: blur(16px);
 }
 
 .login-language-choice {
-  width: 32px;
-  height: 26px;
+  width: 34px;
+  height: 28px;
   padding: 0;
-  color: #334155;
+  color: var(--login-control-text);
   background: transparent;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .login-language-choice.is-active {
-  color: #ffffff;
-  background: var(--dt-primary);
+  color: var(--login-heading);
+  background: color-mix(in srgb, var(--login-primary) 8%, var(--login-control-bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--login-primary) 18%, transparent);
 }
 
 .login_shell {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 420px);
+  gap: 0;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-end;
-  width: min(1120px, calc(100% - 96px));
-  min-height: 100vh;
+  align-content: center;
+  width: min(420px, calc(100% - 40px));
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 56px 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
-.login_box {
-  width: 400px;
-  padding: 30px 32px 28px;
-  color: var(--login-text);
-  background: var(--login-card-bg);
-  border: 1px solid var(--login-card-border);
-  border-radius: 12px;
-  box-sizing: border-box;
+.panel_logo {
+  overflow: hidden;
+  border: 1px solid var(--login-border);
+  border-radius: 14px;
+  background: var(--login-surface);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
 }
 
-.login_box-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 26px;
-}
-
-.login_box h1,
-.login_box p {
-  margin: 0;
-  letter-spacing: 0;
-}
-
-.login_box h1 {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.login_box p,
-.security_note {
-  color: var(--login-muted);
-  font-weight: 500;
-}
-
-.login_box p {
-  margin-top: 10px;
-  font-size: 13px;
-}
-
-.avatar_box {
-  flex: 0 0 auto;
+.panel_logo {
   width: 48px;
   height: 48px;
-  padding: 2px;
-  overflow: hidden;
-  background: var(--login-avatar-bg);
-  border: 1px solid var(--login-input-border);
-  border-radius: 50%;
-  box-sizing: border-box;
+  flex: none;
 }
 
-.avatar_box img {
+.panel_logo img {
   display: block;
   width: 100%;
   height: 100%;
-  background: #eef2f7;
-  border-radius: 50%;
   object-fit: cover;
+}
+
+.login_panel {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 420px);
+  aspect-ratio: 1 / 1;
+  justify-self: center;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--login-border) 88%, transparent);
+  border-radius: 16px;
+  background: var(--login-surface-strong);
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(16px);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.login_panel:hover {
+  transform: translateY(-1px);
+}
+
+.login_form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.login_panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: 16px;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--login-primary) 48%, transparent),
+    color-mix(in srgb, var(--login-primary) 12%, transparent),
+    color-mix(in srgb, var(--login-heading) 10%, transparent)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.login_panel_header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.panel_header_text {
+  min-width: 0;
+}
+
+.panel_header_text span {
+  display: inline-flex;
+  padding: 5px 10px;
+  color: #dfe7ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 1px solid color-mix(in srgb, var(--login-primary) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--login-primary) 7%, transparent);
+}
+
+.login_container.is-light .panel_header_text span {
+  color: var(--login-heading);
+}
+
+.panel_header_text strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--login-heading);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.panel_header_text p {
+  margin: 8px 0 0;
+  color: var(--login-subtle);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .login_form {
@@ -483,16 +703,59 @@ export default defineComponent({
 }
 
 .login_form :deep(.el-form-item) {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+}
+
+.login_form :deep(.el-form-item__content) {
+  width: 100%;
+}
+
+.field_block {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.field_label {
+  color: var(--login-heading);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .login_form :deep(.el-input__wrapper) {
+  height: 44px;
   min-height: 44px;
+  background: var(--login-input-bg) !important;
+  border: 1px solid var(--login-input-border);
   border-radius: 8px !important;
+  box-shadow: none !important;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.login_container.is-light .login_form :deep(.el-input__wrapper) {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.login_form :deep(.el-input__wrapper.is-focus) {
+  border-color: color-mix(in srgb, var(--login-primary) 72%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--login-primary) 12%, transparent) !important;
 }
 
 .login_form :deep(.el-input__inner) {
+  color: var(--login-input-text);
   font-weight: 500;
+}
+
+.login_form :deep(.el-input__inner::placeholder) {
+  color: var(--login-input-placeholder);
+}
+
+.login_form :deep(.el-input__prefix-inner) {
+  color: color-mix(in srgb, var(--login-primary) 85%, var(--login-heading));
 }
 
 .btns {
@@ -502,103 +765,143 @@ export default defineComponent({
 .login-btn {
   width: 100%;
   height: 44px;
+  border: 0;
   border-radius: 8px !important;
+  background: linear-gradient(135deg, var(--login-primary) 0%, var(--login-primary-hover) 100%) !important;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--login-primary) 14%, transparent) !important;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 750;
   letter-spacing: 0;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.login-btn:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--login-primary) 86%, white) 0%,
+    color-mix(in srgb, var(--login-primary-hover) 86%, white) 100%
+  ) !important;
+}
+
+.login-btn:active {
+  transform: translateY(1px);
 }
 
 .captcha-row {
   display: grid;
-  grid-template-columns: 1fr 118px;
+  grid-template-columns: minmax(0, 1fr) 134px;
+  grid-template-rows: auto 44px;
   gap: 12px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.captcha-input,
+.captcha-input :deep(.el-input) {
+  width: 100%;
+}
+
+.captcha-input {
+  grid-column: 1;
+  grid-row: 1 / span 2;
 }
 
 .captcha-image {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 42px;
+  width: 134px;
+  height: 44px;
+  min-height: 44px;
+  margin-top: -2px;
   padding: 0;
   overflow: hidden;
-  color: var(--login-muted);
-  background: var(--login-captcha-bg);
-  border: 1px solid var(--login-input-border);
-  border-radius: 8px;
+  color: var(--login-captcha-text);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
+  background: var(--login-captcha-bg);
+  border: 1px solid color-mix(in srgb, var(--login-primary) 24%, transparent);
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
-.captcha-image:disabled {
-  cursor: wait;
-  opacity: 0.72;
+.captcha-image:hover {
+  border-color: color-mix(in srgb, var(--login-primary) 54%, transparent);
+  transform: translateY(-1px);
+}
+
+.login_container.is-light .captcha-image {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .captcha-image img {
   display: block;
   width: 100%;
   height: 100%;
+  border-radius: 8px;
   object-fit: cover;
+  object-position: center;
+}
+
+.panel_footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--login-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .security_note {
-  margin-top: 18px;
-  font-size: 12px;
-  text-align: center;
+  color: color-mix(in srgb, var(--login-primary) 88%, var(--login-heading));
 }
 
-html[data-theme='dark'] .login_container {
-  --login-card-bg: rgba(15, 23, 42, 0.82);
-  --login-card-border: color-mix(in srgb, var(--dt-text) 14%, transparent);
-  --login-text: var(--dt-text);
-  --login-muted: var(--dt-text-muted);
-  --login-input-border: var(--dt-border);
-  --login-avatar-bg: var(--dt-surface);
-  --login-captcha-bg: var(--dt-surface-soft);
-  background-color: #09111d;
+@keyframes loginGridDrift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-72px, -72px, 0);
+  }
 }
 
-html[data-theme='dark'] .login_container::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: '';
-  background: rgba(2, 6, 23, 0.48);
-}
-
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .login_shell {
-    width: min(460px, calc(100% - 48px));
-    justify-content: center;
-    padding: 42px 0;
+    width: min(420px, calc(100% - 32px));
+    padding: 0;
   }
 }
 
-@media (max-width: 520px) {
-  .login-language {
-    top: 14px;
-    right: 18px;
-  }
-
-  .login-language-choice {
-    width: 30px;
-    height: 24px;
-  }
-
-  .login_shell {
-    width: min(400px, calc(100% - 36px));
-    padding: 34px 0;
-  }
-
-  .login_box {
+@media (max-width: 640px) {
+  .login_panel {
     width: 100%;
-    padding: 28px 24px;
+    aspect-ratio: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login_container::after {
+    animation: none;
   }
 
-  .captcha-row {
-    grid-template-columns: 1fr 106px;
-    gap: 10px;
+  .login-theme-toggle,
+  .login-language-choice,
+  .login_panel,
+  .terminal_pane,
+  .captcha-image,
+  .login-btn {
+    transition: none;
   }
 }
 </style>
