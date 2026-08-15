@@ -274,7 +274,7 @@
                     <el-option
                       v-for="source in esbDataSources"
                       :key="source.Code || source.code"
-                      :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                      :label="getEsbDataSourceLabel(source)"
                       :value="source.Code || source.code"
                     ></el-option>
                   </el-select>
@@ -708,7 +708,7 @@
                         <el-option
                           v-for="source in esbDataSources"
                           :key="source.Code || source.code"
-                          :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                          :label="getEsbDataSourceLabel(source)"
                           :value="source.Code || source.code"
                         ></el-option>
                       </el-select>
@@ -846,12 +846,22 @@
                       <el-option
                         v-for="source in esbDataSources"
                         :key="source.Code || source.code"
-                        :label="`${source.Name || source.name}（${source.Code || source.code}）`"
+                        :label="getEsbDataSourceLabel(source)"
                         :value="source.Code || source.code"
                       ></el-option>
                     </el-select>
                   </div>
                   <div v-if="selectedFieldData.optionSource === 'esb'" class="esb-option-grid">
+                    <div class="esb-mapping-row">
+                      <el-input
+                        v-model="selectedFieldData.esbLabelField"
+                        :placeholder="$t('microConfig.esbLabelFieldPlaceholder')"
+                      ></el-input>
+                      <el-input
+                        v-model="selectedFieldData.esbValueField"
+                        :placeholder="$t('microConfig.esbValueFieldPlaceholder')"
+                      ></el-input>
+                    </div>
                     <el-input
                       ref="esbParamsInput"
                       v-model="selectedFieldData.esbParams"
@@ -1074,7 +1084,6 @@ export default {
     async loadEsbDataSources() {
       try {
         const { data: res } = await getEsbDataSources({
-          sourceType: 'sql',
           status: 1,
           pageNum: 1,
           pageSize: 200
@@ -1083,6 +1092,13 @@ export default {
       } catch (error) {
         this.esbDataSources = []
       }
+    },
+    getEsbDataSourceLabel(source) {
+      const name = source.Name || source.name || ''
+      const code = source.Code || source.code || ''
+      const sourceType = source.SourceType || source.sourceType || 'sql'
+      const typeLabel = sourceType === 'restful' ? 'RESTful' : 'SQL'
+      return `${name}（${code} / ${typeLabel}）`
     },
     isTextField(field) {
       return ['string', 'textarea'].includes(field?.fieldType)
@@ -1208,11 +1224,15 @@ export default {
         field.dictCode = ''
         field.esbDataSourceCode = ''
         field.esbParams = ''
+        field.esbLabelField = ''
+        field.esbValueField = ''
       } else {
         field.optionSource = ['dictionary', 'esb'].includes(field.optionSource) ? field.optionSource : 'manual'
         if (field.optionSource === 'dictionary') {
           field.esbDataSourceCode = ''
           field.esbParams = ''
+          field.esbLabelField = ''
+          field.esbValueField = ''
         } else if (field.optionSource === 'esb') {
           field.dictCode = ''
           field.options = []
@@ -1220,6 +1240,8 @@ export default {
           field.dictCode = ''
           field.esbDataSourceCode = ''
           field.esbParams = ''
+          field.esbLabelField = ''
+          field.esbValueField = ''
         }
       }
 
@@ -1412,6 +1434,8 @@ export default {
           dictCode: field.DictCode || field.dictCode || '',
           esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
           esbParams: field.EsbParams || field.esbParams || '',
+          esbLabelField: field.EsbLabelField || field.esbLabelField || '',
+          esbValueField: field.EsbValueField || field.esbValueField || '',
           lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
           lookupParams: field.LookupParams || field.lookupParams || '',
           lookupValueField: field.LookupValueField || field.lookupValueField || '',
@@ -1685,6 +1709,8 @@ export default {
         dictCode: '',
         esbDataSourceCode: '',
         esbParams: '',
+        esbLabelField: '',
+        esbValueField: '',
         lookupDataSourceCode: '',
         lookupParams: '',
         lookupValueField: '',
@@ -1782,6 +1808,8 @@ export default {
         this.selectedFieldData.options = []
         this.selectedFieldData.esbDataSourceCode = ''
         this.selectedFieldData.esbParams = ''
+        this.selectedFieldData.esbLabelField = ''
+        this.selectedFieldData.esbValueField = ''
       } else if (this.selectedFieldData.optionSource === 'esb') {
         this.selectedFieldData.options = []
         this.selectedFieldData.dictCode = ''
@@ -1789,6 +1817,8 @@ export default {
         this.selectedFieldData.dictCode = ''
         this.selectedFieldData.esbDataSourceCode = ''
         this.selectedFieldData.esbParams = ''
+        this.selectedFieldData.esbLabelField = ''
+        this.selectedFieldData.esbValueField = ''
         this.selectedFieldData.options = this.selectedFieldData.options || []
       }
     },
@@ -1974,6 +2004,8 @@ export default {
         DictCode: field.optionSource === 'dictionary' ? field.dictCode || '' : '',
         EsbDataSourceCode: field.optionSource === 'esb' ? field.esbDataSourceCode || '' : '',
         EsbParams: field.optionSource === 'esb' ? field.esbParams || '' : '',
+        EsbLabelField: field.optionSource === 'esb' ? field.esbLabelField || '' : '',
+        EsbValueField: field.optionSource === 'esb' ? field.esbValueField || '' : '',
         LookupDataSourceCode: field.fieldType === 'lookup' ? field.lookupDataSourceCode || '' : '',
         LookupParams: field.fieldType === 'lookup' ? field.lookupParams || '' : '',
         LookupValueField: field.fieldType === 'lookup' ? field.lookupValueField || '' : '',
@@ -2846,6 +2878,13 @@ export default {
   margin: 0 0 12px;
 }
 
+.esb-mapping-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .esb-variable-panel {
   display: flex;
   align-items: center;
@@ -2863,6 +2902,12 @@ export default {
 .esb-variable-tag {
   cursor: pointer;
   user-select: none;
+}
+
+@media (max-width: 768px) {
+  .esb-mapping-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .lookup-config-list {

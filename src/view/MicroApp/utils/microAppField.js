@@ -90,6 +90,82 @@ export function normalizeFieldOptions(options) {
     }))
 }
 
+function isOptionValuePresent(value) {
+  return value !== undefined && value !== null && value !== ''
+}
+
+function getFirstRowValue(row, fields) {
+  for (const field of fields) {
+    const value = getRowValue(row, field)
+    if (isOptionValuePresent(value)) return value
+  }
+  return undefined
+}
+
+function isPrimitiveOptionValue(value) {
+  return ['string', 'number', 'boolean'].includes(typeof value)
+}
+
+function getFallbackRowValue(row, preferString = false) {
+  if (!row || typeof row !== 'object') return undefined
+
+  const values = Object.values(row).filter((value) => isOptionValuePresent(value) && isPrimitiveOptionValue(value))
+  if (values.length === 0) return undefined
+  if (preferString) {
+    const textValue = values.find((value) => typeof value === 'string')
+    if (isOptionValuePresent(textValue)) return textValue
+  }
+  return values[0]
+}
+
+export function normalizeEsbExecuteRows(payload) {
+  if (Array.isArray(payload)) return payload
+  if (!payload || typeof payload !== 'object') return []
+
+  const rowContainers = ['List', 'list', 'Rows', 'rows', 'Items', 'items', 'Records', 'records', 'Data', 'data']
+  for (const field of rowContainers) {
+    const value = getRowValue(payload, field)
+    if (Array.isArray(value)) return value
+    if (value && typeof value === 'object') {
+      const nestedRows = normalizeEsbExecuteRows(value)
+      if (nestedRows.length > 0) return nestedRows
+    }
+  }
+
+  return []
+}
+
+export function normalizeEsbFieldOptions(payload, { labelField = '', valueField = '' } = {}) {
+  return normalizeEsbExecuteRows(payload)
+    .map((row) => {
+      if (isPrimitiveOptionValue(row)) {
+        return {
+          label: String(row),
+          value: row
+        }
+      }
+
+      if (!row || typeof row !== 'object') return null
+
+      const label =
+        getFirstRowValue(row, [labelField]) ??
+        getFirstRowValue(row, ['Label', 'label', 'Name', 'name', 'Text', 'text', 'Title', 'title', 'DisplayName']) ??
+        getFallbackRowValue(row, true)
+      const value =
+        getFirstRowValue(row, [valueField]) ??
+        getFirstRowValue(row, ['Value', 'value', 'Id', 'id', 'ID', 'Code', 'code', 'Key', 'key', 'No', 'no']) ??
+        getFallbackRowValue(row)
+
+      if (!isOptionValuePresent(label) && !isOptionValuePresent(value)) return null
+
+      return {
+        label: String(isOptionValuePresent(label) ? label : value),
+        value: isOptionValuePresent(value) ? value : label
+      }
+    })
+    .filter(Boolean)
+}
+
 export function normalizeFormColumns(formColumns) {
   const value = Number(formColumns)
   return Number.isInteger(value) && value >= 1 && value <= 4 ? value : 1

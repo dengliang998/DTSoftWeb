@@ -258,13 +258,6 @@
           </div>
         </el-form-item>
 
-        <el-form-item :label="$t('esb.resultMapping')">
-          <div class="mapping-row">
-            <el-input v-model="form.ResultMapping.LabelField" :placeholder="$t('esb.labelField')"></el-input>
-            <el-input v-model="form.ResultMapping.ValueField" :placeholder="$t('esb.valueField')"></el-input>
-          </div>
-        </el-form-item>
-
         <el-form-item :label="$t('esb.remark')">
           <el-input v-model="form.Remark" type="textarea" :rows="2"></el-input>
         </el-form-item>
@@ -313,10 +306,6 @@ const createDefaultForm = () => ({
   SqlText: '',
   HttpConfig: createDefaultHttpConfig(),
   Parameters: [],
-  ResultMapping: {
-    LabelField: '',
-    ValueField: ''
-  },
   Status: 1,
   MaxRows: 500,
   TimeoutSeconds: 30,
@@ -432,7 +421,6 @@ export default {
         SqlText: row.SqlText || row.sqlText || '',
         HttpConfig: this.normalizeHttpConfig(row.HttpConfig || row.httpConfig || ''),
         Parameters: this.normalizeParameters(row.Parameters || row.parameters || []),
-        ResultMapping: row.ResultMapping || row.resultMapping || { LabelField: '', ValueField: '' },
         Status: row.Status !== undefined ? row.Status : row.status !== undefined ? row.status : 1,
         MaxRows: row.MaxRows || row.maxRows || 500,
         TimeoutSeconds: row.TimeoutSeconds || row.timeoutSeconds || 30,
@@ -608,11 +596,7 @@ export default {
           Type: item.Type,
           Required: item.Required,
           DefaultValue: item.DefaultValue === '' ? null : item.DefaultValue
-        })),
-        ResultMapping: {
-          LabelField: this.form.ResultMapping?.LabelField || '',
-          ValueField: this.form.ResultMapping?.ValueField || ''
-        }
+        }))
       }
     },
     saveDataSource() {
@@ -739,13 +723,6 @@ export default {
   align-items: center;
 }
 
-.mapping-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-}
-
 .test-result {
   min-height: 220px;
   max-height: 360px;
@@ -772,7 +749,6 @@ export default {
 
 @media (max-width: 760px) {
   .form-grid,
-  .mapping-row,
   .kv-row,
   .parameter-row {
     grid-template-columns: 1fr;

@@ -440,6 +440,7 @@ import {
   isVideoAttachment,
   normalizeAttachmentValue,
   normalizeDateValueForSubmit,
+  normalizeEsbFieldOptions,
   normalizeFieldOptions,
   normalizeFieldOrder,
   normalizeFormColumns,
@@ -711,11 +712,12 @@ export default {
               code: field.esbDataSourceCode,
               parameters: this.parseEsbParams(field.esbParams)
             })
-            const rows = res?.success && Array.isArray(res.data) ? res.data : []
-            field.options = rows.map((row) => ({
-              label: row.Label ?? row.label ?? '',
-              value: row.Value ?? row.value ?? ''
-            }))
+            field.options = res?.success
+              ? normalizeEsbFieldOptions(res.data, {
+                  labelField: field.esbLabelField,
+                  valueField: field.esbValueField
+                })
+              : []
           } catch (error) {
             field.options = []
           }
@@ -825,6 +827,8 @@ export default {
                 dictCode: field.DictCode || field.dictCode || '',
                 esbDataSourceCode: field.EsbDataSourceCode || field.esbDataSourceCode || '',
                 esbParams: field.EsbParams || field.esbParams || '',
+                esbLabelField: field.EsbLabelField || field.esbLabelField || '',
+                esbValueField: field.EsbValueField || field.esbValueField || '',
                 lookupDataSourceCode: field.LookupDataSourceCode || field.lookupDataSourceCode || '',
                 lookupParams: field.LookupParams || field.lookupParams || '',
                 lookupValueField: field.LookupValueField || field.lookupValueField || '',
