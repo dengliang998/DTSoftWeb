@@ -51,7 +51,7 @@
             <span class="dt-chip dt-chip--success">
               {{ $t('esb.databaseCount', { count: connectionStats.database }) }}
             </span>
-            <span class="dt-chip">WebApi {{ connectionStats.webapi }}</span>
+            <span class="dt-chip">RESTful {{ connectionStats.webapi }}</span>
             <span class="dt-chip dt-chip--warning">
               {{ $t('organization.disabledCount', { count: connectionStats.disabled }) }}
             </span>
@@ -111,7 +111,7 @@
                   <el-button
                     class="dt-icon-action dt-icon-action--add"
                     :icon="Document"
-                    :disabled="row.ServiceType !== 'database'"
+                    :disabled="!['database', 'restful'].includes(row.ServiceType)"
                     @click="testConnection(row)"
                   />
                 </el-tooltip>
@@ -156,7 +156,7 @@
           <el-form-item :label="$t('esb.serviceType')">
             <el-select v-model="form.ServiceType" @change="handleServiceTypeChange">
               <el-option :label="$t('welcome.overview.database')" value="database"></el-option>
-              <el-option label="WebApi" value="webapi"></el-option>
+              <el-option label="RESTful" value="restful"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item v-if="form.ServiceType === 'database'" :label="$t('esb.databaseType')" prop="DbType">
@@ -190,21 +190,129 @@
           ></el-input>
         </el-form-item>
 
-        <el-form-item v-if="form.ServiceType === 'webapi'" :label="$t('esb.webApiConfig')" prop="WebApiConfig">
-          <el-input
-            v-model="form.WebApiConfig"
-            type="textarea"
-            :rows="6"
-            :placeholder="$t('esb.webApiConfigPlaceholder')"
-          ></el-input>
-        </el-form-item>
+        <template v-if="form.ServiceType === 'restful'">
+          <el-tabs v-model="webApiActiveTab" class="webapi-tabs">
+            <el-tab-pane :label="$t('esb.basicConfig')" name="basic">
+              <div class="form-grid">
+                <el-form-item :label="$t('esb.baseUrl')">
+                  <el-input
+                    v-model="form.WebApiConfigData.BaseUrl"
+                    :placeholder="$t('esb.baseUrlPlaceholder')"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-tab-pane>
+
+            <el-tab-pane :label="$t('esb.authConfig')" name="auth">
+              <div class="form-grid">
+                <el-form-item :label="$t('esb.authType')">
+                  <el-select v-model="form.WebApiConfigData.AuthType">
+                    <el-option :label="$t('esb.none')" value="none"></el-option>
+                    <el-option label="Bearer Token" value="bearer"></el-option>
+                    <el-option label="API Key" value="apikey"></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+
+              <template v-if="form.WebApiConfigData.AuthType === 'bearer'">
+                <div class="form-grid">
+                  <el-form-item :label="$t('esb.tokenUrl')">
+                    <el-input
+                      v-model="form.WebApiConfigData.TokenUrl"
+                      :placeholder="$t('esb.tokenUrlPlaceholder')"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item :label="$t('esb.httpMethod')">
+                    <el-select v-model="form.WebApiConfigData.TokenMethod">
+                      <el-option label="GET" value="GET"></el-option>
+                      <el-option label="POST" value="POST"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item :label="$t('esb.tokenPath')">
+                    <el-input
+                      v-model="form.WebApiConfigData.TokenPath"
+                      :placeholder="$t('esb.tokenPathPlaceholder')"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item :label="$t('esb.tokenExpiresInPath')">
+                    <el-input
+                      v-model="form.WebApiConfigData.TokenExpiresInPath"
+                      :placeholder="$t('esb.tokenExpiresInPathPlaceholder')"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item :label="$t('esb.tokenExpiresAtPath')">
+                    <el-input
+                      v-model="form.WebApiConfigData.TokenExpiresAtPath"
+                      :placeholder="$t('esb.tokenExpiresAtPathPlaceholder')"
+                    ></el-input>
+                  </el-form-item>
+                  <el-form-item :label="$t('esb.tokenRefreshSkewSeconds')">
+                    <el-input-number
+                      v-model="form.WebApiConfigData.TokenRefreshSkewSeconds"
+                      :min="0"
+                      :max="3600"
+                    ></el-input-number>
+                  </el-form-item>
+                </div>
+
+                <el-form-item :label="$t('esb.tokenHeaders')">
+                  <div class="kv-editor">
+                    <div v-for="(item, index) in form.WebApiConfigData.TokenHeaderRows" :key="index" class="kv-row">
+                      <el-input v-model="item.Key" :placeholder="$t('esb.headerName')"></el-input>
+                      <el-input v-model="item.Value" :placeholder="$t('esb.templateValuePlaceholder')"></el-input>
+                      <el-button type="danger" icon="Delete" @click="removeTokenHeaderRow(index)"></el-button>
+                    </div>
+                    <el-button icon="Plus" @click="addTokenHeaderRow">{{ $t('esb.addRequestHeader') }}</el-button>
+                  </div>
+                </el-form-item>
+
+                <el-form-item v-if="form.WebApiConfigData.TokenMethod === 'POST'" :label="$t('esb.tokenBody')">
+                  <el-input
+                    v-model="form.WebApiConfigData.TokenBody"
+                    type="textarea"
+                    :rows="5"
+                    :placeholder="$t('esb.tokenBodyPlaceholder')"
+                  ></el-input>
+                </el-form-item>
+              </template>
+
+              <el-form-item v-if="form.WebApiConfigData.AuthType === 'apikey'" label="API Key">
+                <div class="api-key-grid">
+                  <el-input v-model="form.WebApiConfigData.ApiKeyName" :placeholder="$t('esb.apiKeyName')"></el-input>
+                  <el-input
+                    v-model="form.WebApiConfigData.ApiKeyValue"
+                    :placeholder="$t('esb.apiKeyValue')"
+                    show-password
+                  ></el-input>
+                  <el-select v-model="form.WebApiConfigData.ApiKeyIn">
+                    <el-option label="Header" value="header"></el-option>
+                    <el-option label="Query" value="query"></el-option>
+                  </el-select>
+                </div>
+              </el-form-item>
+            </el-tab-pane>
+
+            <el-tab-pane :label="$t('esb.commonHeaders')" name="headers">
+              <el-form-item :label="$t('esb.commonHeaders')">
+                <div class="kv-editor">
+                  <div v-for="(item, index) in form.WebApiConfigData.HeaderRows" :key="index" class="kv-row">
+                    <el-input v-model="item.Key" :placeholder="$t('esb.headerName')"></el-input>
+                    <el-input v-model="item.Value" :placeholder="$t('esb.templateValuePlaceholder')"></el-input>
+                    <el-button type="danger" icon="Delete" @click="removeWebApiHeaderRow(index)"></el-button>
+                  </div>
+                  <el-button icon="Plus" @click="addWebApiHeaderRow">{{ $t('esb.addRequestHeader') }}</el-button>
+                </div>
+              </el-form-item>
+            </el-tab-pane>
+          </el-tabs>
+        </template>
 
         <el-form-item :label="$t('esb.remark')">
           <el-input v-model="form.Remark" type="textarea" :rows="2"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button :disabled="form.ServiceType !== 'database'" :loading="testing" @click="testCurrentForm">
+        <el-button :loading="testing" @click="testCurrentForm">
           {{ $t('esb.testConnection') }}
         </el-button>
         <el-button @click="formDialogVisible = false">{{ $t('common.cancel') }}</el-button>
@@ -234,9 +342,27 @@ const createDefaultForm = () => ({
   DbType: 'sqlserver',
   ConnectionString: '',
   WebApiConfig: '',
+  WebApiConfigData: createDefaultWebApiConfig(),
   Status: 1,
   TimeoutSeconds: 30,
   Remark: ''
+})
+
+const createDefaultWebApiConfig = () => ({
+  BaseUrl: '',
+  AuthType: 'none',
+  TokenUrl: '',
+  TokenMethod: 'POST',
+  TokenHeaderRows: [],
+  TokenBody: '',
+  TokenPath: '$.access_token',
+  TokenExpiresInPath: '$.expires_in',
+  TokenExpiresAtPath: '',
+  TokenRefreshSkewSeconds: 60,
+  ApiKeyName: '',
+  ApiKeyValue: '',
+  ApiKeyIn: 'header',
+  HeaderRows: []
 })
 
 const defaultConnectionStrings = {
@@ -269,6 +395,7 @@ export default {
       supportedDatabaseTypes: [],
       total: 0,
       formDialogVisible: false,
+      webApiActiveTab: 'basic',
       form: createDefaultForm(),
       saving: false,
       testing: false,
@@ -276,7 +403,7 @@ export default {
         Name: [{ required: true, message: this.$t('esb.namePlaceholder'), trigger: 'blur' }],
         DbType: [{ required: true, message: this.$t('esb.selectDatabaseType'), trigger: 'change' }],
         ConnectionString: [{ required: true, message: this.$t('esb.connectionStringPlaceholder'), trigger: 'blur' }],
-        WebApiConfig: [{ required: true, message: this.$t('esb.webApiConfig'), trigger: 'blur' }]
+        WebApiConfig: []
       }
     }
   },
@@ -285,13 +412,13 @@ export default {
       return [
         { label: this.$t('organization.all'), value: '' },
         { label: this.$t('welcome.overview.database'), value: 'database' },
-        { label: 'WebApi', value: 'webapi' }
+        { label: 'RESTful', value: 'restful' }
       ]
     },
     connectionStats() {
       return this.serviceConnections.reduce(
         (stats, row) => {
-          if (row.ServiceType === 'webapi') {
+          if (row.ServiceType === 'restful') {
             stats.webapi += 1
           } else {
             stats.database += 1
@@ -322,6 +449,7 @@ export default {
         DbType: row.DbType || row.dbType || '',
         ConnectionString: row.ConnectionString || row.connectionString || '',
         WebApiConfig: row.WebApiConfig || row.webApiConfig || '',
+        WebApiConfigData: this.normalizeWebApiConfig(row.WebApiConfig || row.webApiConfig || ''),
         Status: row.Status !== undefined ? row.Status : row.status !== undefined ? row.status : 1,
         TimeoutSeconds: row.TimeoutSeconds || row.timeoutSeconds || 30,
         Remark: row.Remark || row.remark || '',
@@ -355,7 +483,7 @@ export default {
       }
     },
     getServiceTypeLabel(serviceType) {
-      return serviceType === 'webapi' ? 'WebApi' : this.$t('welcome.overview.database')
+      return serviceType === 'restful' ? 'RESTful' : this.$t('welcome.overview.database')
     },
     getDatabaseTypeLabel(dbType) {
       const labels = {
@@ -368,6 +496,45 @@ export default {
     },
     getDefaultConnectionString(dbType) {
       return defaultConnectionStrings[dbType] || ''
+    },
+    normalizeWebApiConfig(value) {
+      let config = {}
+      if (typeof value === 'string' && value) {
+        try {
+          config = JSON.parse(value)
+        } catch {
+          config = {}
+        }
+      } else if (value && typeof value === 'object') {
+        config = value
+      }
+
+      return {
+        BaseUrl: config.BaseUrl || config.baseUrl || '',
+        AuthType: config.AuthType || config.authType || 'none',
+        TokenUrl: config.TokenUrl || config.tokenUrl || '',
+        TokenMethod: config.TokenMethod || config.tokenMethod || 'POST',
+        TokenHeaderRows: this.objectToRows(config.TokenHeaders || config.tokenHeaders),
+        TokenBody: config.TokenBody || config.tokenBody || '',
+        TokenPath: config.TokenPath || config.tokenPath || '$.access_token',
+        TokenExpiresInPath: config.TokenExpiresInPath || config.tokenExpiresInPath || '$.expires_in',
+        TokenExpiresAtPath: config.TokenExpiresAtPath || config.tokenExpiresAtPath || '',
+        TokenRefreshSkewSeconds: config.TokenRefreshSkewSeconds ?? config.tokenRefreshSkewSeconds ?? 60,
+        ApiKeyName: config.ApiKeyName || config.apiKeyName || '',
+        ApiKeyValue: config.ApiKeyValue || config.apiKeyValue || '',
+        ApiKeyIn: config.ApiKeyIn || config.apiKeyIn || 'header',
+        HeaderRows: this.objectToRows(config.Headers || config.headers)
+      }
+    },
+    objectToRows(value) {
+      if (!value || typeof value !== 'object') return []
+      return Object.keys(value).map((key) => ({ Key: key, Value: value[key] }))
+    },
+    rowsToObject(rows) {
+      return (rows || []).reduce((result, item) => {
+        if (item.Key) result[item.Key] = item.Value || ''
+        return result
+      }, {})
     },
     shouldApplyDefaultConnectionString() {
       if (!this.form.ItemId) return true
@@ -385,6 +552,8 @@ export default {
       if (serviceType === 'database') {
         this.form.DbType = this.form.DbType || 'sqlserver'
         this.applyDefaultConnectionString(this.form.DbType)
+      } else if (serviceType === 'restful') {
+        this.form.WebApiConfigData = this.form.WebApiConfigData || createDefaultWebApiConfig()
       }
     },
     handleSizeChange(size) {
@@ -404,23 +573,69 @@ export default {
     openCreateDialog() {
       this.form = createDefaultForm()
       this.applyDefaultConnectionString(this.form.DbType, true)
+      this.webApiActiveTab = 'basic'
       this.formDialogVisible = true
     },
     openEditDialog(row) {
       this.form = this.normalizeConnection(row)
+      this.webApiActiveTab = 'basic'
       this.formDialogVisible = true
     },
+    addWebApiHeaderRow() {
+      this.form.WebApiConfigData.HeaderRows.push({ Key: '', Value: '' })
+    },
+    removeWebApiHeaderRow(index) {
+      this.form.WebApiConfigData.HeaderRows.splice(index, 1)
+    },
+    addTokenHeaderRow() {
+      this.form.WebApiConfigData.TokenHeaderRows.push({ Key: '', Value: '' })
+    },
+    removeTokenHeaderRow(index) {
+      this.form.WebApiConfigData.TokenHeaderRows.splice(index, 1)
+    },
+    validateRestfulConfig() {
+      if (this.form.ServiceType !== 'restful') return true
+      if (!this.form.WebApiConfigData.BaseUrl) {
+        this.webApiActiveTab = 'basic'
+        this.$message.error(this.$t('esb.baseUrlRequired'))
+        return false
+      }
+      if (this.form.WebApiConfigData.AuthType === 'bearer' && !this.form.WebApiConfigData.TokenUrl) {
+        this.webApiActiveTab = 'auth'
+        this.$message.error(this.$t('esb.tokenUrlRequired'))
+        return false
+      }
+      return true
+    },
     buildSubmitData() {
+      const webApiConfig = {
+        BaseUrl: this.form.WebApiConfigData.BaseUrl,
+        AuthType: this.form.WebApiConfigData.AuthType,
+        TokenUrl: this.form.WebApiConfigData.AuthType === 'bearer' ? this.form.WebApiConfigData.TokenUrl : '',
+        TokenMethod: this.form.WebApiConfigData.TokenMethod,
+        TokenHeaders: this.rowsToObject(this.form.WebApiConfigData.TokenHeaderRows),
+        TokenBody: this.form.WebApiConfigData.AuthType === 'bearer' ? this.form.WebApiConfigData.TokenBody : '',
+        TokenPath: this.form.WebApiConfigData.TokenPath || '$.access_token',
+        TokenExpiresInPath: this.form.WebApiConfigData.TokenExpiresInPath || '$.expires_in',
+        TokenExpiresAtPath: this.form.WebApiConfigData.TokenExpiresAtPath || '',
+        TokenRefreshSkewSeconds: this.form.WebApiConfigData.TokenRefreshSkewSeconds ?? 60,
+        ApiKeyName: this.form.WebApiConfigData.AuthType === 'apikey' ? this.form.WebApiConfigData.ApiKeyName : '',
+        ApiKeyValue: this.form.WebApiConfigData.AuthType === 'apikey' ? this.form.WebApiConfigData.ApiKeyValue : '',
+        ApiKeyIn: this.form.WebApiConfigData.ApiKeyIn,
+        Headers: this.rowsToObject(this.form.WebApiConfigData.HeaderRows)
+      }
+
       return {
         ...this.form,
         DbType: this.form.ServiceType === 'database' ? this.form.DbType : null,
         ConnectionString: this.form.ServiceType === 'database' ? this.form.ConnectionString : null,
-        WebApiConfig: this.form.ServiceType === 'webapi' ? this.form.WebApiConfig : null
+        WebApiConfig: this.form.ServiceType === 'restful' ? JSON.stringify(webApiConfig) : null
       }
     },
     saveConnection() {
       this.$refs.formRef.validate(async (valid) => {
         if (!valid) return
+        if (!this.validateRestfulConfig()) return
         this.saving = true
         try {
           const submitData = this.buildSubmitData()
@@ -468,6 +683,7 @@ export default {
     testCurrentForm() {
       this.$refs.formRef.validate(async (valid) => {
         if (!valid) return
+        if (!this.validateRestfulConfig()) return
         this.testing = true
         try {
           const { data: res } = await testEsbServiceConnection({
@@ -509,6 +725,30 @@ export default {
   min-width: 0;
 }
 
+.webapi-tabs {
+  margin-bottom: 16px;
+}
+
+.api-key-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px;
+  gap: 8px;
+  width: 100%;
+}
+
+.kv-editor {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+
 :global(.esb-service-dialog .el-form-item__label) {
   height: auto;
   margin-bottom: 6px;
@@ -536,7 +776,9 @@ export default {
 }
 
 @media (max-width: 720px) {
-  .form-grid {
+  .form-grid,
+  .api-key-grid,
+  .kv-row {
     grid-template-columns: 1fr;
   }
 }

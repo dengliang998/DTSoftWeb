@@ -35,7 +35,7 @@
           @change="loadDataSources"
         >
           <el-option
-            v-for="connection in databaseConnectionOptions"
+            v-for="connection in connectionOptions"
             :key="connection.ItemId"
             :label="getConnectionDisplayName(connection)"
             :value="connection.ItemId"
@@ -57,7 +57,7 @@
             <span class="dt-chip dt-chip--warning">
               {{ $t('organization.disabledCount', { count: dataSourceStats.disabled }) }}
             </span>
-            <span class="dt-chip">{{ $t('esb.connectionCount', { count: databaseConnectionOptions.length }) }}</span>
+            <span class="dt-chip">{{ $t('esb.connectionCount', { count: connectionOptions.length }) }}</span>
           </div>
         </div>
 
@@ -155,20 +155,21 @@
             <el-input v-model="form.Name" :placeholder="$t('esb.namePlaceholder')"></el-input>
           </el-form-item>
           <el-form-item :label="$t('esb.sourceType')">
-            <el-select v-model="form.SourceType" disabled>
+            <el-select v-model="form.SourceType" @change="handleSourceTypeChange">
               <el-option label="SQL" value="sql"></el-option>
+              <el-option label="RESTful" value="restful"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('esb.serviceConnection')" prop="ConnectionId">
             <el-select v-model="form.ConnectionId" filterable :placeholder="$t('esb.selectServiceConnection')">
               <el-option
-                v-for="connection in databaseConnectionOptions"
+                v-for="connection in availableConnectionOptions"
                 :key="connection.ItemId"
                 :label="getConnectionDisplayName(connection)"
                 :value="connection.ItemId"
               >
                 <span>{{ getConnectionDisplayName(connection) }}</span>
-                <span class="connection-option-extra">{{ connection.DbType }}</span>
+                <span class="connection-option-extra">{{ getConnectionTypeMeta(connection) }}</span>
               </el-option>
             </el-select>
           </el-form-item>
@@ -183,9 +184,60 @@
           </el-form-item>
         </div>
 
-        <el-form-item label="SQL" prop="SqlText">
+        <el-form-item v-if="form.SourceType === 'sql'" label="SQL" prop="SqlText">
           <el-input v-model="form.SqlText" type="textarea" :rows="8" :placeholder="$t('esb.sqlPlaceholder')"></el-input>
         </el-form-item>
+
+        <template v-if="form.SourceType === 'restful'">
+          <div class="form-grid">
+            <el-form-item :label="$t('esb.httpMethod')">
+              <el-select v-model="form.HttpConfig.Method">
+                <el-option label="GET" value="GET"></el-option>
+                <el-option label="POST" value="POST"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="$t('esb.requestPath')">
+              <el-input v-model="form.HttpConfig.Path" :placeholder="$t('esb.requestPathPlaceholder')"></el-input>
+            </el-form-item>
+            <el-form-item :label="$t('esb.resultPath')">
+              <el-input v-model="form.HttpConfig.ResultPath" :placeholder="$t('esb.resultPathPlaceholder')"></el-input>
+            </el-form-item>
+            <el-form-item :label="$t('esb.totalPath')">
+              <el-input v-model="form.HttpConfig.TotalPath" :placeholder="$t('esb.totalPathPlaceholder')"></el-input>
+            </el-form-item>
+          </div>
+
+          <el-form-item :label="$t('esb.queryParameters')">
+            <div class="kv-editor">
+              <div v-for="(item, index) in form.HttpConfig.QueryRows" :key="index" class="kv-row">
+                <el-input v-model="item.Key" :placeholder="$t('esb.paramName')"></el-input>
+                <el-input v-model="item.Value" :placeholder="$t('esb.templateValuePlaceholder')"></el-input>
+                <el-button type="danger" icon="Delete" @click="removeQueryRow(index)"></el-button>
+              </div>
+              <el-button icon="Plus" @click="addQueryRow">{{ $t('esb.addQueryParameter') }}</el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item :label="$t('esb.requestHeaders')">
+            <div class="kv-editor">
+              <div v-for="(item, index) in form.HttpConfig.HeaderRows" :key="index" class="kv-row">
+                <el-input v-model="item.Key" :placeholder="$t('esb.headerName')"></el-input>
+                <el-input v-model="item.Value" :placeholder="$t('esb.templateValuePlaceholder')"></el-input>
+                <el-button type="danger" icon="Delete" @click="removeHeaderRow(index)"></el-button>
+              </div>
+              <el-button icon="Plus" @click="addHeaderRow">{{ $t('esb.addRequestHeader') }}</el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item v-if="form.HttpConfig.Method === 'POST'" :label="$t('esb.requestBody')">
+            <el-input
+              v-model="form.HttpConfig.Body"
+              type="textarea"
+              :rows="6"
+              :placeholder="$t('esb.requestBodyPlaceholder')"
+            ></el-input>
+          </el-form-item>
+        </template>
 
         <el-form-item :label="$t('esb.parameters')">
           <div class="parameter-editor">
@@ -259,6 +311,7 @@ const createDefaultForm = () => ({
   SourceType: 'sql',
   ExecuteMode: 'query',
   SqlText: '',
+  HttpConfig: createDefaultHttpConfig(),
   Parameters: [],
   ResultMapping: {
     LabelField: '',
@@ -268,6 +321,17 @@ const createDefaultForm = () => ({
   MaxRows: 500,
   TimeoutSeconds: 30,
   Remark: ''
+})
+
+const createDefaultHttpConfig = () => ({
+  Method: 'GET',
+  Path: '',
+  QueryRows: [],
+  HeaderRows: [],
+  Body: '',
+  ContentType: 'application/json',
+  ResultPath: '$',
+  TotalPath: ''
 })
 
 export default {
@@ -309,7 +373,10 @@ export default {
     }
   },
   computed: {
-    databaseConnectionOptions() {
+    availableConnectionOptions() {
+      if (this.form.SourceType === 'restful') {
+        return this.connectionOptions.filter((item) => item.ServiceType === 'restful')
+      }
       return this.connectionOptions.filter((item) => item.ServiceType === 'database')
     },
     dataSourceStats() {
@@ -363,6 +430,7 @@ export default {
         SourceType: row.SourceType || row.sourceType || 'sql',
         ExecuteMode: row.ExecuteMode || row.executeMode || 'query',
         SqlText: row.SqlText || row.sqlText || '',
+        HttpConfig: this.normalizeHttpConfig(row.HttpConfig || row.httpConfig || ''),
         Parameters: this.normalizeParameters(row.Parameters || row.parameters || []),
         ResultMapping: row.ResultMapping || row.resultMapping || { LabelField: '', ValueField: '' },
         Status: row.Status !== undefined ? row.Status : row.status !== undefined ? row.status : 1,
@@ -387,6 +455,39 @@ export default {
         Required: item.Required !== undefined ? item.Required : item.required || false,
         DefaultValue: item.DefaultValue ?? item.defaultValue ?? ''
       }))
+    },
+    normalizeHttpConfig(value) {
+      let config = {}
+      if (typeof value === 'string' && value) {
+        try {
+          config = JSON.parse(value)
+        } catch {
+          config = {}
+        }
+      } else if (value && typeof value === 'object') {
+        config = value
+      }
+
+      return {
+        Method: config.Method || config.method || 'GET',
+        Path: config.Path || config.path || '',
+        QueryRows: this.objectToRows(config.Query || config.query),
+        HeaderRows: this.objectToRows(config.Headers || config.headers),
+        Body: config.Body || config.body || '',
+        ContentType: config.ContentType || config.contentType || 'application/json',
+        ResultPath: config.ResultPath || config.resultPath || '$',
+        TotalPath: config.TotalPath || config.totalPath || ''
+      }
+    },
+    objectToRows(value) {
+      if (!value || typeof value !== 'object') return []
+      return Object.keys(value).map((key) => ({ Key: key, Value: value[key] }))
+    },
+    rowsToObject(rows) {
+      return (rows || []).reduce((result, item) => {
+        if (item.Key) result[item.Key] = item.Value || ''
+        return result
+      }, {})
     },
     async loadDataSources() {
       const { data: res } = await getEsbDataSources({
@@ -422,6 +523,10 @@ export default {
       if (this.isDefaultSystemConnection(connection)) return this.$t('esb.defaultSystemDb')
       return connection?.Name || connection?.name || ''
     },
+    getConnectionTypeMeta(connection) {
+      if (connection.ServiceType === 'restful') return 'RESTful'
+      return connection.DbType || this.$t('welcome.overview.database')
+    },
     getDataSourceConnectionName(row) {
       const connectionId = row.ConnectionId ?? row.connectionId ?? 0
       if (Number(connectionId) === 0) return this.$t('esb.defaultSystemDb')
@@ -448,6 +553,14 @@ export default {
       this.form = this.normalizeRow(row)
       this.formDialogVisible = true
     },
+    handleSourceTypeChange(sourceType) {
+      this.form.ConnectionId = sourceType === 'sql' ? 0 : null
+      if (sourceType === 'sql') {
+        this.form.HttpConfig = createDefaultHttpConfig()
+      } else {
+        this.form.SqlText = ''
+      }
+    },
     addParameter() {
       this.form.Parameters.push({
         Name: '',
@@ -460,10 +573,35 @@ export default {
     removeParameter(index) {
       this.form.Parameters.splice(index, 1)
     },
+    addQueryRow() {
+      this.form.HttpConfig.QueryRows.push({ Key: '', Value: '' })
+    },
+    removeQueryRow(index) {
+      this.form.HttpConfig.QueryRows.splice(index, 1)
+    },
+    addHeaderRow() {
+      this.form.HttpConfig.HeaderRows.push({ Key: '', Value: '' })
+    },
+    removeHeaderRow(index) {
+      this.form.HttpConfig.HeaderRows.splice(index, 1)
+    },
     buildSubmitData() {
+      const httpConfig = {
+        Method: this.form.HttpConfig.Method,
+        Path: this.form.HttpConfig.Path,
+        Query: this.rowsToObject(this.form.HttpConfig.QueryRows),
+        Headers: this.rowsToObject(this.form.HttpConfig.HeaderRows),
+        Body: this.form.HttpConfig.Method === 'POST' ? this.form.HttpConfig.Body : '',
+        ContentType: this.form.HttpConfig.ContentType || 'application/json',
+        ResultPath: this.form.HttpConfig.ResultPath || '$',
+        TotalPath: this.form.HttpConfig.TotalPath || ''
+      }
+
       return {
         ...this.form,
         ConnectionId: this.form.ConnectionId === 0 ? null : this.form.ConnectionId,
+        SqlText: this.form.SourceType === 'sql' ? this.form.SqlText : '',
+        HttpConfig: this.form.SourceType === 'restful' ? JSON.stringify(httpConfig) : '',
         Parameters: this.form.Parameters.filter((item) => item.Name).map((item) => ({
           Name: item.Name,
           Label: item.Label,
@@ -581,6 +719,19 @@ export default {
   width: 100%;
 }
 
+.kv-editor {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+
 .parameter-row {
   display: grid;
   grid-template-columns: 1fr 1fr 120px 110px 1fr 44px;
@@ -622,6 +773,7 @@ export default {
 @media (max-width: 760px) {
   .form-grid,
   .mapping-row,
+  .kv-row,
   .parameter-row {
     grid-template-columns: 1fr;
   }
