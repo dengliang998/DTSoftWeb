@@ -9,18 +9,41 @@ const normalizePageKey = (value = '') => trimSlash(value || 'index') || 'index'
 
 const normalizePageName = (value = '') => trimSlash(value).replace(/[^\w-]/g, '_')
 
+const getDocumentDirectoryUrl = () => {
+  const currentUrl = new URL(window.location.href)
+  currentUrl.hash = ''
+  currentUrl.search = ''
+
+  if (!currentUrl.pathname.endsWith('/')) {
+    currentUrl.pathname = currentUrl.pathname.slice(0, currentUrl.pathname.lastIndexOf('/') + 1)
+  }
+
+  return currentUrl.href
+}
+
+const resolveUrl = (url, baseUrl) => {
+  if (!url) return ''
+  if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) {
+    return url
+  }
+  return new URL(url, baseUrl).href
+}
+
+const getAppBaseUrl = () => resolveUrl(process.env.BASE_URL || './', getDocumentDirectoryUrl())
+
+const resolveManifestUrl = () => {
+  return resolveUrl(CUSTOM_PAGE_MANIFEST_URL, getAppBaseUrl())
+}
+
 const getManifestBaseUrl = () => {
-  const cleanUrl = CUSTOM_PAGE_MANIFEST_URL.split('?')[0]
+  const cleanUrl = resolveManifestUrl().split('?')[0]
   const slashIndex = cleanUrl.lastIndexOf('/')
   return slashIndex >= 0 ? cleanUrl.slice(0, slashIndex + 1) : './'
 }
 
 export const resolveCustomPageAssetUrl = (assetUrl = '') => {
   if (!assetUrl) return ''
-  if (/^(https?:)?\/\//i.test(assetUrl) || assetUrl.startsWith('/') || assetUrl.startsWith('data:')) {
-    return assetUrl
-  }
-  return `${getManifestBaseUrl()}${assetUrl}`
+  return resolveUrl(assetUrl, getManifestBaseUrl())
 }
 
 const normalizeManifestPages = (manifest) => {
@@ -56,7 +79,10 @@ export const loadCustomPageManifest = async ({ force = false } = {}) => {
     return manifestPromise
   }
 
-  manifestPromise = fetch(`${CUSTOM_PAGE_MANIFEST_URL}?t=${Date.now()}`, {
+  const manifestUrl = resolveManifestUrl()
+  const joiner = manifestUrl.includes('?') ? '&' : '?'
+
+  manifestPromise = fetch(`${manifestUrl}${joiner}t=${Date.now()}`, {
     cache: 'no-store'
   })
     .then((response) => {

@@ -1260,7 +1260,7 @@ export default {
   },
   auth: {
     loginDecryptionFailed: '登录参数解密失败，请刷新页面后重试',
-    cryptoUnsupported: '当前浏览器环境不支持登录加密，请使用 HTTPS 或现代浏览器后重试',
+    cryptoUnsupported: '当前浏览器环境不支持登录加密，请升级浏览器后重试',
     publicKeyIncomplete: '登录加密公钥数据不完整，请刷新页面后重试'
   },
   sso: {

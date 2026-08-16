@@ -7,15 +7,18 @@ const LOGIN_DECRYPTION_FAILED_MESSAGE =
 
 let loginEncryptionKey = null
 let loginEncryptionKeyRequest = null
+let forgeRequest = null
 
 const getCrypto = () => {
-  const cryptoApi = typeof window !== 'undefined' ? window.crypto : null
+  return typeof window !== 'undefined' ? window.crypto : null
+}
 
-  if (!cryptoApi?.subtle) {
-    throw new Error(translate('auth.cryptoUnsupported'))
+const getForge = async () => {
+  if (!forgeRequest) {
+    forgeRequest = import('node-forge').then((module) => module.default || module)
   }
 
-  return cryptoApi
+  return forgeRequest
 }
 
 const base64ToArrayBuffer = (base64) => {
@@ -40,6 +43,45 @@ const arrayBufferToBase64 = (buffer) => {
   return window.btoa(binary)
 }
 
+const formatPublicKeyPem = (publicKey) => {
+  const lines = String(publicKey || '').match(/.{1,64}/g) || []
+  return ['-----BEGIN PUBLIC KEY-----', ...lines, '-----END PUBLIC KEY-----'].join('\n')
+}
+
+const importLoginEncryptionKey = async ({ publicKey, publicKeyPem }) => {
+  const cryptoApi = getCrypto()
+
+  if (cryptoApi?.subtle) {
+    const key = await cryptoApi.subtle.importKey(
+      'spki',
+      base64ToArrayBuffer(publicKey),
+      {
+        name: 'RSA-OAEP',
+        hash: 'SHA-256'
+      },
+      false,
+      ['encrypt']
+    )
+
+    return {
+      type: 'webCrypto',
+      key
+    }
+  }
+
+  const forge = await getForge().catch(() => null)
+
+  if (!forge) {
+    throw new Error(translate('auth.cryptoUnsupported'))
+  }
+
+  return {
+    type: 'forge',
+    key: forge.pki.publicKeyFromPem(publicKeyPem || formatPublicKeyPem(publicKey)),
+    forge
+  }
+}
+
 const isLoginDecryptionFailed = (response) => {
   const message = getMessage(response)
   return message === translate('auth.loginDecryptionFailed') || message === LOGIN_DECRYPTION_FAILED_MESSAGE
@@ -59,22 +101,14 @@ export const loadLoginEncryptionKey = ({ force = false } = {}) => {
     .then(async (response) => {
       const data = getData(response)
       const publicKey = data.PublicKey || data.publicKey
+      const publicKeyPem = data.PublicKeyPem || data.publicKeyPem
       const keyId = data.KeyId || data.keyId
 
       if (!publicKey || !keyId) {
         throw new Error(translate('auth.publicKeyIncomplete'))
       }
 
-      const key = await getCrypto().subtle.importKey(
-        'spki',
-        base64ToArrayBuffer(publicKey),
-        {
-          name: 'RSA-OAEP',
-          hash: 'SHA-256'
-        },
-        false,
-        ['encrypt']
-      )
+      const key = await importLoginEncryptionKey({ publicKey, publicKeyPem })
 
       loginEncryptionKey = { keyId, key }
 
@@ -89,16 +123,30 @@ export const loadLoginEncryptionKey = ({ force = false } = {}) => {
 
 export const encryptLoginText = async (text) => {
   const encryptionKey = await loadLoginEncryptionKey()
-  const plainBytes = new TextEncoder().encode(String(text || ''))
-  const cipherBuffer = await getCrypto().subtle.encrypt(
+  const plainText = String(text || '')
+
+  if (encryptionKey.key.type === 'forge') {
+    const { forge, key } = encryptionKey.key
+    const cipherText = key.encrypt(forge.util.encodeUtf8(plainText), 'RSA-OAEP', {
+      md: forge.md.sha256.create(),
+      mgf1: {
+        md: forge.md.sha256.create()
+      }
+    })
+
+    return window.btoa(cipherText)
+  }
+
+  const plainBytes = new TextEncoder().encode(plainText)
+  const cipherBuffer = getCrypto().subtle.encrypt(
     {
       name: 'RSA-OAEP'
     },
-    encryptionKey.key,
+    encryptionKey.key.key,
     plainBytes
   )
 
-  return arrayBufferToBase64(cipherBuffer)
+  return arrayBufferToBase64(await cipherBuffer)
 }
 
 export const getLoginEncryptionKeyId = () => loginEncryptionKey?.keyId || ''

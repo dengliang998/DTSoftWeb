@@ -1266,8 +1266,7 @@ export default {
   },
   auth: {
     loginDecryptionFailed: 'Login parameters could not be decrypted. Refresh the page and try again.',
-    cryptoUnsupported:
-      'This browser environment does not support login encryption. Use HTTPS or a modern browser and try again.',
+    cryptoUnsupported: 'This browser environment does not support login encryption. Update your browser and try again.',
     publicKeyIncomplete: 'Login encryption public key data is incomplete. Refresh the page and try again.'
   },
   sso: {
